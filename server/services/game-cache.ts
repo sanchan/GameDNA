@@ -1,4 +1,4 @@
-import { eq, and, gt, inArray } from 'drizzle-orm';
+import { eq, and, gt, isNull, isNotNull, inArray, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { games } from '../db/schema';
 import { getAppDetails } from './steam-api';
@@ -19,8 +19,8 @@ export async function getCachedGame(appid: number): Promise<Game | null> {
   return null; // stale
 }
 
-export async function cacheGame(appid: number): Promise<Game | null> {
-  const details = await getAppDetails(appid);
+export async function cacheGame(appid: number, cc?: string): Promise<Game | null> {
+  const details = await getAppDetails(appid, cc);
   if (!details) return null;
 
   const now = Math.floor(Date.now() / 1000);
@@ -34,6 +34,7 @@ export async function cacheGame(appid: number): Promise<Game | null> {
     tags: JSON.stringify(details.tags),
     release_date: details.release_date,
     price_cents: details.price_cents,
+    price_currency: details.price_currency,
     review_score: details.metacritic_score,
     review_count: details.review_count,
     developers: JSON.stringify(details.developers),
@@ -55,6 +56,7 @@ export async function cacheGame(appid: number): Promise<Game | null> {
         tags: values.tags,
         release_date: values.release_date,
         price_cents: values.price_cents,
+        price_currency: values.price_currency,
         review_score: values.review_score,
         review_count: values.review_count,
         developers: values.developers,
@@ -71,6 +73,7 @@ export async function cacheGame(appid: number): Promise<Game | null> {
 export async function ensureGamesCached(
   appids: number[],
   onProgress?: (cached: number, total: number) => void,
+  cc?: string,
 ): Promise<void> {
   if (appids.length === 0) return;
 
@@ -100,7 +103,7 @@ export async function ensureGamesCached(
   const batchSize = 3;
   for (let i = 0; i < needsCaching.length; i += batchSize) {
     const batch = needsCaching.slice(i, i + batchSize);
-    await Promise.allSettled(batch.map((appid) => cacheGame(appid)));
+    await Promise.allSettled(batch.map((appid) => cacheGame(appid, cc)));
 
     if (onProgress) {
       onProgress(Math.min(i + batchSize, needsCaching.length), needsCaching.length);
@@ -111,4 +114,32 @@ export async function ensureGamesCached(
       await new Promise((r) => setTimeout(r, 1000));
     }
   }
+}
+
+/** Re-cache games that have a price but no currency info (legacy data). */
+export async function recacheGamesWithoutCurrency(cc?: string): Promise<number> {
+  const rows = db
+    .select({ id: games.id })
+    .from(games)
+    .where(and(isNotNull(games.price_cents), gt(games.price_cents, 0), isNull(games.price_currency)))
+    .all();
+
+  if (rows.length === 0) return 0;
+
+  const appids = rows.map((r) => r.id);
+  console.log(`[game-cache] Re-caching ${appids.length} games missing currency info`);
+
+  const batchSize = 3;
+  let done = 0;
+  for (let i = 0; i < appids.length; i += batchSize) {
+    const batch = appids.slice(i, i + batchSize);
+    await Promise.allSettled(batch.map((appid) => cacheGame(appid, cc)));
+    done += batch.length;
+    if (i + batchSize < appids.length) {
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+
+  console.log(`[game-cache] Re-cached ${done} games with regional pricing`);
+  return done;
 }

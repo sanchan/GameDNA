@@ -16,9 +16,15 @@ function formatPlaytime(mins: number): string {
   return `${Math.floor(mins / 60)}h`;
 }
 
-function formatPrice(cents: number | null): string {
+function formatPrice(cents: number | null, currency?: string | null): string {
   if (cents === null || cents === 0) return 'Free';
-  return `$${(cents / 100).toFixed(2)}`;
+  const amount = cents / 100;
+  if (currency) {
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+    } catch { /* fall through */ }
+  }
+  return `$${amount.toFixed(2)}`;
 }
 
 function ReviewBadge({ score }: { score: number | null }) {
@@ -204,7 +210,7 @@ function GameItemCard({ game, children, rightContent }: { game: Game; children?:
         <div className="shrink-0 flex flex-col items-end gap-2">
           {game.priceCents !== null && (
             <span className="text-2xl font-black text-[var(--primary)]">
-              {formatPrice(game.priceCents)}
+              {formatPrice(game.priceCents, game.priceCurrency)}
             </span>
           )}
           {children}

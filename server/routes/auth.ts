@@ -40,6 +40,7 @@ auth.get('/callback', async (c) => {
   let displayName: string | null = null;
   let avatarUrl: string | null = null;
   let profileUrl: string | null = null;
+  let countryCode: string | null = null;
 
   if (STEAM_API_KEY) {
     try {
@@ -47,13 +48,14 @@ auth.get('/callback', async (c) => {
         `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${steamId}`
       );
       const data = await res.json() as {
-        response: { players: Array<{ personaname?: string; avatarfull?: string; profileurl?: string }> };
+        response: { players: Array<{ personaname?: string; avatarfull?: string; profileurl?: string; loccountrycode?: string }> };
       };
       const player = data.response?.players?.[0];
       if (player) {
         displayName = player.personaname || null;
         avatarUrl = player.avatarfull || null;
         profileUrl = player.profileurl || null;
+        countryCode = player.loccountrycode || null;
       }
     } catch {
       // Non-fatal: proceed with just steamId
@@ -72,6 +74,7 @@ auth.get('/callback', async (c) => {
         display_name: displayName ?? existing.display_name,
         avatar_url: avatarUrl ?? existing.avatar_url,
         profile_url: profileUrl ?? existing.profile_url,
+        country_code: countryCode ?? existing.country_code,
         last_login: nowUnix,
       })
       .where(eq(users.id, existing.id))
@@ -83,6 +86,7 @@ auth.get('/callback', async (c) => {
       display_name: displayName,
       avatar_url: avatarUrl,
       profile_url: profileUrl,
+      country_code: countryCode,
       last_login: nowUnix,
     }).returning({ id: users.id }).get();
     userId = result.id;

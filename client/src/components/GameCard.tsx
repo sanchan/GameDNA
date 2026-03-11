@@ -6,9 +6,15 @@ import BookmarkButton from './BookmarkButton';
 import MediaGallery from './MediaGallery';
 import { api } from '../lib/api';
 
-function formatPrice(cents: number | null): string | null {
+function formatPrice(cents: number | null, currency?: string | null): string | null {
   if (cents === null || cents === 0) return cents === 0 ? 'Free' : null;
-  return `$${(cents / 100).toFixed(2)}`;
+  const amount = cents / 100;
+  if (currency) {
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+    } catch { /* fall through */ }
+  }
+  return `$${amount.toFixed(2)}`;
 }
 
 function formatReviewCount(count: number | null): string | null {
@@ -53,7 +59,7 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
   const [currentIndex, setCurrentIndex] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
 
-  const price = formatPrice(game.priceCents);
+  const price = formatPrice(game.priceCents, game.priceCurrency);
   const year = extractYear(game.releaseDate);
   const developer = game.developers?.[0];
   const reviewCount = formatReviewCount(game.reviewCount);

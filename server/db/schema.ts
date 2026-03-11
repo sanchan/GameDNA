@@ -7,6 +7,7 @@ export const users = sqliteTable('users', {
   display_name: text('display_name'),
   avatar_url: text('avatar_url'),
   profile_url: text('profile_url'),
+  country_code: text('country_code'),
   last_login: integer('last_login'),
   ignored_tags: text('ignored_tags'), // JSON array of ignored tag names
   created_at: integer('created_at').default(sql`(unixepoch())`),
@@ -21,6 +22,7 @@ export const games = sqliteTable('games', {
   tags: text('tags'),
   release_date: text('release_date'),
   price_cents: integer('price_cents'),
+  price_currency: text('price_currency'),
   review_score: integer('review_score'),
   review_count: integer('review_count'),
   developers: text('developers'),

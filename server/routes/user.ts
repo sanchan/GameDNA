@@ -42,15 +42,16 @@ user.post('/sync', async (c) => {
   }
 
   const steamId = userRow.steam_id;
-  console.log(`[sync] Starting sync for user ${userId} (steam: ${steamId})`);
+  const countryCode = userRow.country_code ?? undefined;
+  console.log(`[sync] Starting sync for user ${userId} (steam: ${steamId}, cc: ${countryCode ?? 'auto'})`);
 
   // Run sync in background (don't await)
-  runSyncInBackground(userId, steamId);
+  runSyncInBackground(userId, steamId, countryCode);
 
   return c.json({ status: 'started' });
 });
 
-async function runSyncInBackground(userId: number, steamId: string) {
+async function runSyncInBackground(userId: number, steamId: string, cc?: string) {
   try {
     // Step 1: Fetch library from Steam Web API (1 call each, fast)
     updateSync(userId, { step: 'fetching-library', progress: 10, detail: 'Fetching your Steam library...' });
@@ -162,7 +163,7 @@ async function runSyncInBackground(userId: number, steamId: string) {
           progress,
           detail: `Fetching game details... (${cached}/${total})`,
         });
-      });
+      }, cc);
     }
 
     await recalculateTasteProfile(userId).catch((e) => {
@@ -184,7 +185,7 @@ async function runSyncInBackground(userId: number, steamId: string) {
           progress: seedProgress,
           detail: `Loading discovery catalog... (${cached}/${total})`,
         });
-      });
+      }, cc);
 
       console.log('[sync] Popular games seeding complete');
     } catch (e) {

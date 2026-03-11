@@ -11,6 +11,10 @@ import backlogRoutes from './routes/backlog';
 import recommendationRoutes from './routes/recommendations';
 import historyRoutes from './routes/history';
 import listsRoutes from './routes/lists';
+import { recacheGamesWithoutCurrency } from './services/game-cache';
+import { db } from './db';
+import { users } from './db/schema';
+import { desc } from 'drizzle-orm';
 
 const app = new Hono();
 
@@ -59,6 +63,19 @@ if (process.env.NODE_ENV === 'production') {
 const port = Number(process.env.PORT) || 3000;
 console.log(`Server running on http://localhost:${port}`);
 serve({ fetch: app.fetch, port });
+
+// Background: re-cache games missing currency info with the most recent user's country code
+setTimeout(async () => {
+  try {
+    const lastUser = db.select({ country_code: users.country_code }).from(users).orderBy(desc(users.last_login)).limit(1).get();
+    const cc = lastUser?.country_code ?? undefined;
+    if (cc) {
+      await recacheGamesWithoutCurrency(cc);
+    }
+  } catch (e) {
+    console.error('[startup] Failed to re-cache game prices:', e);
+  }
+}, 2000);
 
 export { app };
 export type AppType = typeof app;
