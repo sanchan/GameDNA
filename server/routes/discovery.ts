@@ -125,7 +125,7 @@ discovery.get('/queue', async (c) => {
     .from(games)
     .where(whereClause)
     .orderBy(desc(games.review_count), desc(games.review_score))
-    .limit(hasProfile ? 200 : 10)
+    .limit(hasProfile ? 50 : 10)
     .all();
 
   if (!hasProfile) {

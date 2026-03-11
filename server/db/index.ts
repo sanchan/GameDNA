@@ -85,6 +85,15 @@ sqlite.exec(`
 
   CREATE UNIQUE INDEX IF NOT EXISTS rec_user_game_idx ON recommendations (user_id, game_id);
 
+  CREATE TABLE IF NOT EXISTS bookmarks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    game_id INTEGER NOT NULL REFERENCES games(id),
+    created_at INTEGER DEFAULT (unixepoch())
+  );
+
+  CREATE UNIQUE INDEX IF NOT EXISTS bookmark_user_game_idx ON bookmarks (user_id, game_id);
+
   CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id),

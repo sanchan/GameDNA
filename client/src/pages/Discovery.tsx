@@ -10,7 +10,7 @@ import type { SwipeDecision } from '../../../shared/types';
 
 export default function Discovery() {
   const { user, loading: authLoading, syncStatus } = useAuth();
-  const { currentGame, swipe, isLoading, filters, setFilters, animatingOut, refetchQueue } = useDiscovery();
+  const { currentGame, swipe, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
 
   // Keyboard shortcuts
@@ -61,6 +61,21 @@ export default function Discovery() {
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex flex-col items-center">
         <FilterPanel filters={filters} onApply={setFilters} />
+
+        {totalLoaded > 0 && (
+          <div className="w-full max-w-sm mb-4">
+            <div className="flex justify-between text-xs text-[var(--muted-foreground)] mb-1">
+              <span>{swipedCount} swiped</span>
+              <span>{totalLoaded - swipedCount} remaining</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-[var(--muted)] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[var(--primary)] transition-all duration-300"
+                style={{ width: `${Math.round((swipedCount / totalLoaded) * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="relative min-h-[500px] flex items-start justify-center w-full">
           {isLoading || loadingMore ? (
