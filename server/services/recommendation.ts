@@ -1,7 +1,8 @@
 import { eq, and, notInArray, desc } from 'drizzle-orm';
 import { db } from '../db';
-import { games, user_games, swipe_history, taste_profiles, recommendations } from '../db/schema';
+import { games, user_games, swipe_history, taste_profiles, recommendations, users } from '../db/schema';
 import { checkOllamaHealth, generateJSON } from './ollama';
+import { getIgnoredTagsSet, DEFAULT_IGNORED_TAGS } from './tag-filter';
 import type { TasteProfile } from '../../shared/types';
 
 interface AIScoredGame {
@@ -53,6 +54,11 @@ export async function generateRecommendations(userId: number): Promise<number> {
 
   const taste = parseTasteProfile(profile);
 
+  // Load user's ignored tags to filter from scoring
+  const userRow = db.select({ ignored_tags: users.ignored_tags }).from(users).where(eq(users.id, userId)).get();
+  const userIgnoredTags: string[] = userRow?.ignored_tags ? JSON.parse(userRow.ignored_tags) : DEFAULT_IGNORED_TAGS;
+  const ignoredSet = getIgnoredTagsSet(userIgnoredTags);
+
   const topGenres = new Set(
     Object.entries(taste.genreScores)
       .sort(([, a], [, b]) => b - a)
@@ -62,6 +68,7 @@ export async function generateRecommendations(userId: number): Promise<number> {
 
   const topTags = new Set(
     Object.entries(taste.tagScores)
+      .filter(([name]) => !ignoredSet.has(name.toLowerCase()))
       .sort(([, a], [, b]) => b - a)
       .slice(0, 15)
       .map(([name]) => name.toLowerCase()),
@@ -128,6 +135,7 @@ export async function generateRecommendations(userId: number): Promise<number> {
       .map(([name]) => name);
 
     const topTagsList = Object.entries(taste.tagScores)
+      .filter(([name]) => !ignoredSet.has(name.toLowerCase()))
       .sort(([, a], [, b]) => b - a)
       .slice(0, 8)
       .map(([name]) => name);
@@ -218,12 +226,18 @@ export async function explainRecommendation(userId: number, gameId: number): Pro
 
   const taste = parseTasteProfile(profile);
 
+  // Load user's ignored tags
+  const userRow = db.select({ ignored_tags: users.ignored_tags }).from(users).where(eq(users.id, userId)).get();
+  const userIgnored: string[] = userRow?.ignored_tags ? JSON.parse(userRow.ignored_tags) : DEFAULT_IGNORED_TAGS;
+  const ignoredSetExplain = getIgnoredTagsSet(userIgnored);
+
   const topGenresList = Object.entries(taste.genreScores)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5)
     .map(([name]) => name);
 
   const topTagsList = Object.entries(taste.tagScores)
+    .filter(([name]) => !ignoredSetExplain.has(name.toLowerCase()))
     .sort(([, a], [, b]) => b - a)
     .slice(0, 8)
     .map(([name]) => name);

@@ -58,6 +58,7 @@ export interface DiscoveryFilters {
 export interface GamingDNA {
   topGenres: { name: string; score: number }[];
   topTags: { name: string; score: number }[];
+  allTags: { name: string; score: number; ignored: boolean }[];
   totalGames: number;
   totalPlaytimeHours: number;
   swipeStats: { yes: number; no: number; maybe: number };

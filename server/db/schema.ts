@@ -8,6 +8,7 @@ export const users = sqliteTable('users', {
   avatar_url: text('avatar_url'),
   profile_url: text('profile_url'),
   last_login: integer('last_login'),
+  ignored_tags: text('ignored_tags'), // JSON array of ignored tag names
   created_at: integer('created_at').default(sql`(unixepoch())`),
 });
 
