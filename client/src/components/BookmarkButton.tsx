@@ -16,10 +16,10 @@ export default function BookmarkButton({ gameId, size = 16 }: BookmarkButtonProp
         e.stopPropagation();
         toggle(gameId);
       }}
-      className={`p-1.5 rounded-lg hover:bg-[var(--muted)] transition-colors ${
+      className={`w-8 h-8 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center transition-all ${
         active
           ? 'text-[var(--primary)]'
-          : 'text-[var(--muted-foreground)] hover:text-[var(--primary)]'
+          : 'text-white/70 hover:text-[var(--primary)]'
       }`}
       title={active ? 'Remove bookmark' : 'Bookmark'}
     >

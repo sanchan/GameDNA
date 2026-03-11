@@ -68,20 +68,26 @@ export default function Recommendations() {
   if (!user) return <Navigate to="/" />;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Recommended For You</h1>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl lg:text-4xl font-black mb-3">For You</h1>
+          <p className="text-[var(--muted-foreground)]">
+            Personalized picks based on your gaming taste
+          </p>
+        </div>
         <button
           onClick={handleGenerate}
           disabled={generating || syncStatus === 'syncing'}
-          className="bg-[var(--primary)] text-[var(--primary-foreground)] px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
+          className="bg-[var(--primary)] text-[var(--primary-foreground)] px-5 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
         >
+          <i className="fa-solid fa-arrows-rotate mr-2" />
           {generating ? 'Generating...' : 'Regenerate'}
         </button>
       </div>
 
       {loading || syncStatus === 'syncing' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {syncStatus === 'syncing' && (
             <div className="col-span-full text-center py-8 text-[var(--muted-foreground)]">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)] mb-3" />
@@ -89,15 +95,15 @@ export default function Recommendations() {
             </div>
           )}
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-xl overflow-hidden bg-[var(--card)] shadow-lg">
-              <div className="w-full aspect-video bg-[var(--muted)] animate-pulse" />
-              <div className="p-4 flex flex-col gap-3">
-                <div className="h-5 w-3/4 bg-[var(--muted)] rounded animate-pulse" />
-                <div className="flex gap-1">
-                  <div className="h-5 w-14 bg-[var(--muted)] rounded-full animate-pulse" />
-                  <div className="h-5 w-10 bg-[var(--muted)] rounded-full animate-pulse" />
+            <div key={i} className="bg-[#242424] border border-[#333] rounded-xl overflow-hidden">
+              <div className="h-48 bg-[#1a1a1a] animate-pulse" />
+              <div className="p-5 flex flex-col gap-3">
+                <div className="h-6 w-3/4 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="flex gap-2">
+                  <div className="h-6 w-16 bg-[#1a1a1a] rounded animate-pulse" />
+                  <div className="h-6 w-12 bg-[#1a1a1a] rounded animate-pulse" />
                 </div>
-                <div className="h-8 w-full bg-[var(--muted)] rounded animate-pulse" />
+                <div className="h-11 w-full bg-[#1a1a1a] rounded-lg animate-pulse" />
               </div>
             </div>
           ))}
@@ -110,6 +116,7 @@ export default function Recommendations() {
         />
       ) : (
         <div className="text-center py-20 text-[var(--muted-foreground)]">
+          <i className="fa-solid fa-wand-magic-sparkles text-4xl mb-4 block opacity-40" />
           <p className="text-lg mb-2">No recommendations yet.</p>
           <p className="text-sm">Hit "Regenerate" to get personalized suggestions!</p>
         </div>
@@ -119,6 +126,8 @@ export default function Recommendations() {
         gameId={explainRec?.id ?? 0}
         gameName={explainRec?.game.name ?? ''}
         gameImage={explainRec?.game.headerImage}
+        gameDeveloper={explainRec?.game.developers?.[0]}
+        matchScore={explainRec?.score}
         open={explainRec !== null}
         onClose={() => setExplainRec(null)}
       />

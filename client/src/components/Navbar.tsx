@@ -3,11 +3,11 @@ import { Link, useLocation } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 
 const navLinks = [
-  { to: '/discover', label: 'Discover' },
-  { to: '/recommendations', label: 'For You' },
-  { to: '/my-lists', label: 'My Lists' },
-  { to: '/backlog', label: 'Backlog' },
+  { to: '/discover', label: 'Discovery' },
+  { to: '/recommendations', label: 'Recommendations' },
+  { to: '/lists', label: 'My Lists' },
   { to: '/history', label: 'History' },
+  { to: '/backlog', label: 'Backlog' },
   { to: '/profile', label: 'Profile' },
 ];
 
@@ -17,23 +17,25 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="border-b border-[var(--border)] bg-[var(--card)] sticky top-0 z-40">
-      <div className="mx-auto max-w-6xl flex items-center justify-between px-4 h-14">
-        <Link to="/" className="text-lg font-bold text-[var(--primary)]">
-          GameDNA
+    <nav className="sticky top-0 z-40 bg-[#242424]/95 backdrop-blur-lg border-b border-[#333]">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 lg:h-20">
+        {/* Left: Logo */}
+        <Link to="/" className="flex items-center gap-0 shrink-0">
+          <span className="text-[var(--primary)] text-2xl lg:text-3xl font-black">Game</span>
+          <span className="text-white text-2xl lg:text-3xl font-black">DNA</span>
         </Link>
 
-        {/* Desktop nav */}
+        {/* Center: Desktop nav links */}
         {user && (
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`text-sm transition-colors ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   location.pathname === link.to
-                    ? 'text-[var(--foreground)] font-medium'
-                    : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                    ? 'bg-[#1a1a1a] text-[var(--primary)]'
+                    : 'text-[var(--muted-foreground)] hover:bg-[#1a1a1a] hover:text-[var(--foreground)]'
                 }`}
               >
                 {link.label}
@@ -42,33 +44,50 @@ export default function Navbar() {
           </div>
         )}
 
+        {/* Right: User pill / Auth */}
         <div className="flex items-center gap-3">
           {loading ? null : user ? (
             <>
-              {user.avatarUrl && (
-                <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full" />
-              )}
-              <span className="text-sm hidden sm:inline">{user.displayName}</span>
-              <button onClick={logout} className="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-                Logout
+              {/* User pill */}
+              <button
+                onClick={logout}
+                className="hidden sm:flex items-center gap-3 bg-[#1a1a1a] rounded-full px-4 py-2 hover:bg-[#222] transition-colors cursor-pointer"
+              >
+                {user.avatarUrl && (
+                  <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full" />
+                )}
+                <span className="text-sm text-white">{user.displayName}</span>
+                <i className="fa-solid fa-chevron-down text-xs text-[var(--muted-foreground)]" />
               </button>
+
+              {/* Mobile: avatar only (tappable to logout) */}
+              <button
+                onClick={logout}
+                className="sm:hidden flex items-center"
+              >
+                {user.avatarUrl && (
+                  <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full" />
+                )}
+              </button>
+
               {/* Mobile hamburger */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden ml-2 p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                className="lg:hidden ml-1 p-2 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
                 aria-label="Menu"
               >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-                  {mobileOpen ? (
-                    <path d="M4 4L16 16M16 4L4 16" />
-                  ) : (
-                    <path d="M3 5H17M3 10H17M3 15H17" />
-                  )}
-                </svg>
+                {mobileOpen ? (
+                  <i className="fa-solid fa-xmark text-xl" />
+                ) : (
+                  <i className="fa-solid fa-bars text-xl" />
+                )}
               </button>
             </>
           ) : (
-            <button onClick={login} className="bg-[var(--primary)] text-[var(--primary-foreground)] px-4 py-1.5 rounded-md text-sm font-medium hover:opacity-90 transition-opacity">
+            <button
+              onClick={login}
+              className="bg-[var(--primary)] text-[var(--primary-foreground)] px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            >
               Sign in with Steam
             </button>
           )}
@@ -77,16 +96,16 @@ export default function Navbar() {
 
       {/* Mobile nav dropdown */}
       {user && mobileOpen && (
-        <div className="md:hidden border-t border-[var(--border)] bg-[var(--card)] px-4 py-2">
+        <div className="lg:hidden border-t border-[#333] bg-[#242424] px-4 py-3">
           {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
               onClick={() => setMobileOpen(false)}
-              className={`block py-2 text-sm ${
+              className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 location.pathname === link.to
-                  ? 'text-[var(--foreground)] font-medium'
-                  : 'text-[var(--muted-foreground)]'
+                  ? 'bg-[#1a1a1a] text-[var(--primary)]'
+                  : 'text-[var(--muted-foreground)] hover:bg-[#1a1a1a] hover:text-[var(--foreground)]'
               }`}
             >
               {link.label}
@@ -94,10 +113,11 @@ export default function Navbar() {
           ))}
         </div>
       )}
+
       {/* Sync progress banner */}
       {user && syncStatus === 'syncing' && syncProgress && (
-        <div className="bg-[var(--card)] border-b border-[var(--border)] px-4 py-2">
-          <div className="mx-auto max-w-6xl">
+        <div className="bg-[#242424] border-b border-[#333] px-4 py-2">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm text-[var(--foreground)]">{syncProgress.detail}</span>
               <span className="text-xs text-[var(--muted-foreground)]">{syncProgress.progress}%</span>

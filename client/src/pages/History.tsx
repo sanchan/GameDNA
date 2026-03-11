@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Navigate, Link } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { api } from '../lib/api';
-import type { Game, SwipeDecision } from '../../../shared/types';
-import BookmarkButton from '../components/BookmarkButton';
+import type { SwipeDecision } from '../../../shared/types';
+import type { Game } from '../../../shared/types';
 
 interface SwipeEntry {
   id: number;
@@ -19,12 +19,6 @@ interface HistoryResponse {
   offset: number;
 }
 
-const decisionConfig: Record<string, { label: string; color: string; bg: string }> = {
-  yes: { label: 'Yes', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
-  maybe: { label: 'Maybe', color: '#eab308', bg: 'rgba(234,179,8,0.12)' },
-  no: { label: 'No', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-};
-
 const PAGE_SIZE = 20;
 
 function formatDate(unix: number): string {
@@ -33,6 +27,18 @@ function formatDate(unix: number): string {
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+function timeAgo(unix: number): string {
+  const seconds = Math.floor(Date.now() / 1000 - unix);
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return formatDate(unix);
 }
 
 export default function History() {
@@ -45,6 +51,8 @@ export default function History() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(0);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState('newest');
+  const [dateRange, setDateRange] = useState('all');
 
   // Debounce search input
   useEffect(() => {
@@ -107,77 +115,180 @@ export default function History() {
     }
   };
 
+  // Compute decision summary counts from current data context
+  const summary = useMemo(() => {
+    const yes = entries.filter((e) => e.decision === 'yes').length;
+    const maybe = entries.filter((e) => e.decision === 'maybe').length;
+    const no = entries.filter((e) => e.decision === 'no').length;
+    const totalSwipes = total;
+    // Approximate this week count from loaded entries
+    const oneWeekAgo = Date.now() / 1000 - 7 * 24 * 60 * 60;
+    const thisWeek = entries.filter((e) => e.swipedAt >= oneWeekAgo).length;
+    return { yes, maybe, no, totalSwipes, thisWeek };
+  }, [entries, total]);
+
   if (authLoading) return null;
   if (!user) return <Navigate to="/" />;
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-[var(--foreground)] mb-6">Swipe History</h1>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      {/* Header */}
+      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">Swipe History</h1>
+      <p className="text-[var(--muted-foreground)] mb-8">
+        Review and manage your past game decisions
+      </p>
 
-      {/* Search + segmented filter */}
-      <div className="flex gap-2 mb-6 items-stretch">
+      {/* Search and Filters */}
+      <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
         {/* Search input */}
-        <div className="flex-1 relative">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]"
-            width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+        <div className="relative mb-4">
+          <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
           <input
             type="text"
             placeholder="Search games..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)]"
+            className="w-full pl-12 pr-4 py-3 bg-[#1a1a1a] border border-[#333] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)]"
           />
         </div>
 
-        {/* Segmented buttons */}
-        <div className="flex rounded-lg border border-[var(--border)] overflow-hidden shrink-0">
-          {[
-            { key: 'all', label: 'All' },
-            { key: 'yes', label: 'Yes' },
-            { key: 'maybe', label: 'Maybe' },
-            { key: 'no', label: 'No' },
-          ].map(({ key, label }, i, arr) => (
-            <button
-              key={key}
-              onClick={() => setFilter(key)}
-              className={`px-3 py-2 text-sm font-medium transition-colors ${
-                i < arr.length - 1 ? 'border-r border-[var(--border)]' : ''
-              } ${
-                filter === key
-                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
-                  : 'bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Filter selects */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]"
+          >
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
+
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]"
+          >
+            <option value="all">All Decisions</option>
+            <option value="yes">Yes</option>
+            <option value="maybe">Maybe</option>
+            <option value="no">No</option>
+          </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="name">Name A-Z</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Decision Summary */}
+      <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
+        <h2 className="text-lg font-bold mb-4">Decision Summary</h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {/* Yes card */}
+          <div className="bg-[#1a1a1a] border-2 border-green-500/30 rounded-xl p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                <i className="fa-solid fa-thumbs-up text-green-500" />
+              </div>
+              <div>
+                <p className="text-sm text-[var(--muted-foreground)]">Yes</p>
+                <p className="text-2xl font-bold text-green-500">{summary.yes}</p>
+              </div>
+            </div>
+            <div className="w-full bg-[#333] rounded-full h-2">
+              <div
+                className="bg-green-500 h-2 rounded-full transition-all"
+                style={{ width: `${entries.length ? (summary.yes / entries.length) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Maybe card */}
+          <div className="bg-[#1a1a1a] border-2 border-yellow-500/30 rounded-xl p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                <i className="fa-solid fa-minus text-yellow-500" />
+              </div>
+              <div>
+                <p className="text-sm text-[var(--muted-foreground)]">Maybe</p>
+                <p className="text-2xl font-bold text-yellow-500">{summary.maybe}</p>
+              </div>
+            </div>
+            <div className="w-full bg-[#333] rounded-full h-2">
+              <div
+                className="bg-yellow-500 h-2 rounded-full transition-all"
+                style={{ width: `${entries.length ? (summary.maybe / entries.length) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+
+          {/* No card */}
+          <div className="bg-[#1a1a1a] border-2 border-red-500/30 rounded-xl p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <i className="fa-solid fa-thumbs-down text-red-500" />
+              </div>
+              <div>
+                <p className="text-sm text-[var(--muted-foreground)]">No</p>
+                <p className="text-2xl font-bold text-red-500">{summary.no}</p>
+              </div>
+            </div>
+            <div className="w-full bg-[#333] rounded-full h-2">
+              <div
+                className="bg-red-500 h-2 rounded-full transition-all"
+                style={{ width: `${entries.length ? (summary.no / entries.length) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom stats row */}
+        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#333]">
+          <div className="text-center">
+            <p className="text-2xl font-bold">{summary.totalSwipes}</p>
+            <p className="text-sm text-[var(--muted-foreground)]">Total Swipes</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold">{summary.thisWeek}</p>
+            <p className="text-sm text-[var(--muted-foreground)]">This Week</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold">
+              {summary.totalSwipes > 0 ? Math.max(1, Math.round(summary.thisWeek / 7)) : 0}
+            </p>
+            <p className="text-sm text-[var(--muted-foreground)]">Avg. Per Day</p>
+          </div>
         </div>
       </div>
 
       {/* Results count */}
       {!loading && (
-        <p className="text-xs text-[var(--muted-foreground)] mb-3">
+        <p className="text-sm text-[var(--muted-foreground)] mb-4">
           {total} {total === 1 ? 'result' : 'results'}
           {debouncedSearch && ` for "${debouncedSearch}"`}
         </p>
       )}
 
+      {/* History list */}
       {loading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-[var(--card)]">
-              <div className="w-24 aspect-video bg-[var(--muted)] rounded animate-pulse shrink-0" />
+            <div key={i} className="bg-[#242424] border border-[#333] rounded-xl p-4 flex items-center gap-4">
+              <div className="w-32 h-20 bg-[#333] rounded-lg animate-pulse shrink-0" />
               <div className="flex-1 flex flex-col gap-2">
-                <div className="h-5 w-1/3 bg-[var(--muted)] rounded animate-pulse" />
-                <div className="h-4 w-1/4 bg-[var(--muted)] rounded animate-pulse" />
+                <div className="h-5 w-1/3 bg-[#333] rounded animate-pulse" />
+                <div className="h-4 w-1/4 bg-[#333] rounded animate-pulse" />
               </div>
             </div>
           ))}
@@ -186,11 +297,13 @@ export default function History() {
         <div className="text-center py-20 text-[var(--muted-foreground)]">
           {debouncedSearch || filter !== 'all' ? (
             <>
+              <i className="fa-solid fa-search text-4xl mb-4 block opacity-30" />
               <p className="text-lg mb-2">No matching swipes found.</p>
               <p className="text-sm">Try a different search or filter.</p>
             </>
           ) : (
             <>
+              <i className="fa-solid fa-clock-rotate-left text-4xl mb-4 block opacity-30" />
               <p className="text-lg mb-2">No swipe history yet.</p>
               <p className="text-sm">
                 Head to{' '}
@@ -204,101 +317,130 @@ export default function History() {
         </div>
       ) : (
         <>
-          <div className="flex flex-col gap-2">
-            {entries.map((entry) => (
-              <div
-                key={entry.id}
-                className="flex items-center gap-4 p-3 rounded-lg bg-[var(--card)] hover:bg-[var(--accent)] transition-colors"
-              >
-                <Link to={`/game/${entry.game.id}`} className="shrink-0">
-                  {entry.game.headerImage ? (
-                    <img
-                      src={entry.game.headerImage}
-                      alt={entry.game.name}
-                      className="w-24 aspect-video object-cover rounded"
-                    />
-                  ) : (
-                    <div className="w-24 aspect-video bg-[var(--muted)] rounded" />
-                  )}
-                </Link>
+          <div className="flex flex-col gap-3">
+            {entries.map((entry) => {
+              const otherDecisions = (['yes', 'maybe', 'no'] as SwipeDecision[]).filter(
+                (d) => d !== entry.decision,
+              );
 
-                <div className="flex-1 min-w-0">
-                  <Link to={`/game/${entry.game.id}`} className="hover:underline">
-                    <p className="font-semibold text-[var(--card-foreground)] truncate">
-                      {entry.game.name}
-                    </p>
-                  </Link>
-                  <div className="flex items-center gap-3 mt-1">
-                    {entry.game.genres.length > 0 && (
-                      <span className="text-xs text-[var(--muted-foreground)] truncate">
-                        {entry.game.genres.slice(0, 3).join(', ')}
-                      </span>
-                    )}
-                    <span className="text-xs text-[var(--muted-foreground)]">
-                      {formatDate(entry.swipedAt ?? 0)}
-                    </span>
+              return (
+                <div
+                  key={entry.id}
+                  className="bg-[#242424] border border-[#333] rounded-xl p-4 hover:border-[var(--primary)] transition-all"
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Thumbnail */}
+                    <Link to={`/game/${entry.game.id}`} className="shrink-0">
+                      {entry.game.headerImage ? (
+                        <img
+                          src={entry.game.headerImage}
+                          alt={entry.game.name}
+                          className="w-32 h-20 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-32 h-20 bg-[#333] rounded-lg flex items-center justify-center">
+                          <i className="fa-solid fa-gamepad text-[var(--muted-foreground)]" />
+                        </div>
+                      )}
+                    </Link>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <Link to={`/game/${entry.game.id}`} className="hover:underline">
+                        <h3 className="font-bold text-lg truncate">{entry.game.name}</h3>
+                      </Link>
+
+                      {entry.game.genres.length > 0 && (
+                        <p className="text-sm text-[var(--muted-foreground)] truncate mt-0.5">
+                          {entry.game.genres.slice(0, 3).join(', ')}
+                        </p>
+                      )}
+
+                      <p className="text-xs text-[var(--muted-foreground)] mt-1 flex items-center gap-1">
+                        <i className="fa-solid fa-clock text-[10px]" />
+                        Swiped {timeAgo(entry.swipedAt)}
+                      </p>
+
+                      {/* Change decision buttons */}
+                      <div className="flex flex-wrap items-center gap-2 mt-3">
+                        {otherDecisions.map((d) => {
+                          const config: Record<string, { label: string; icon: string; hoverBg: string; hoverText: string }> = {
+                            yes: { label: 'Change to Yes', icon: 'fa-thumbs-up', hoverBg: 'hover:bg-green-500/20', hoverText: 'hover:text-green-500' },
+                            maybe: { label: 'Change to Maybe', icon: 'fa-minus', hoverBg: 'hover:bg-yellow-500/20', hoverText: 'hover:text-yellow-500' },
+                            no: { label: 'Change to No', icon: 'fa-thumbs-down', hoverBg: 'hover:bg-red-500/20', hoverText: 'hover:text-red-500' },
+                          };
+                          const c = config[d];
+                          return (
+                            <button
+                              key={d}
+                              onClick={() => handleChangeDecision(entry.id, d)}
+                              disabled={updatingId === entry.id}
+                              className={`text-xs px-3 py-1.5 rounded-lg border border-[#333] text-[var(--muted-foreground)] transition-all disabled:opacity-50 ${c.hoverBg} ${c.hoverText}`}
+                            >
+                              <i className={`fa-solid ${c.icon} mr-1`} />
+                              {c.label}
+                            </button>
+                          );
+                        })}
+
+                        <Link
+                          to={`/game/${entry.game.id}`}
+                          className="text-xs px-3 py-1.5 rounded-lg border border-[#333] text-[var(--muted-foreground)] hover:bg-[var(--primary)]/20 hover:text-[var(--primary)] transition-all"
+                        >
+                          <i className="fa-solid fa-eye mr-1" />
+                          View Game
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* Decision badge */}
+                    <div className="shrink-0">
+                      {entry.decision === 'yes' && (
+                        <span className="bg-green-500/20 text-green-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
+                          <i className="fa-solid fa-thumbs-up" />
+                          Yes
+                        </span>
+                      )}
+                      {entry.decision === 'maybe' && (
+                        <span className="bg-yellow-500/20 text-yellow-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
+                          <i className="fa-solid fa-minus" />
+                          Maybe
+                        </span>
+                      )}
+                      {entry.decision === 'no' && (
+                        <span className="bg-red-500/20 text-red-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
+                          <i className="fa-solid fa-thumbs-down" />
+                          No
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                {/* Bookmark + Wishlist */}
-                <BookmarkButton gameId={entry.game.id} />
-                <a
-                  href={`steam://addtowishlist/${entry.game.id}`}
-                  className="shrink-0 p-1.5 rounded-lg hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)] hover:text-[oklch(0.72_0.19_142)]"
-                  title="Add to Steam Wishlist"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
-                </a>
-
-                {/* Decision buttons */}
-                <div className="flex rounded-md overflow-hidden border border-[var(--border)] shrink-0">
-                  {(['yes', 'maybe', 'no'] as SwipeDecision[]).map((d, i, arr) => {
-                    const dc = decisionConfig[d];
-                    const isActive = entry.decision === d;
-                    return (
-                      <button
-                        key={d}
-                        onClick={() => handleChangeDecision(entry.id, d)}
-                        disabled={updatingId === entry.id}
-                        className={`px-2 py-1 text-xs font-medium transition-all disabled:opacity-50 ${
-                          i < arr.length - 1 ? 'border-r border-[var(--border)]' : ''
-                        }`}
-                        style={{
-                          backgroundColor: isActive ? dc.bg : 'transparent',
-                          color: isActive ? dc.color : 'var(--muted-foreground)',
-                        }}
-                        title={dc.label}
-                      >
-                        {dc.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
+            <div className="flex items-center justify-center gap-3 mt-8">
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="px-3 py-1.5 rounded-md text-sm bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)] disabled:opacity-30 disabled:hover:bg-[var(--card)]"
+                className="px-4 py-2 rounded-lg text-sm bg-[#242424] border border-[#333] text-[var(--foreground)] hover:border-[var(--primary)] disabled:opacity-30 disabled:hover:border-[#333] transition-all"
               >
+                <i className="fa-solid fa-chevron-left mr-1" />
                 Prev
               </button>
               <span className="text-sm text-[var(--muted-foreground)]">
-                {page + 1} / {totalPages}
+                Page {page + 1} of {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
-                className="px-3 py-1.5 rounded-md text-sm bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)] disabled:opacity-30 disabled:hover:bg-[var(--card)]"
+                className="px-4 py-2 rounded-lg text-sm bg-[#242424] border border-[#333] text-[var(--foreground)] hover:border-[var(--primary)] disabled:opacity-30 disabled:hover:border-[#333] transition-all"
               >
                 Next
+                <i className="fa-solid fa-chevron-right ml-1" />
               </button>
             </div>
           )}

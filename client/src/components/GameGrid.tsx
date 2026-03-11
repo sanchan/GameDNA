@@ -1,10 +1,5 @@
-import type { Recommendation, Game } from '../../../shared/types';
+import type { Recommendation } from '../../../shared/types';
 import BookmarkButton from './BookmarkButton';
-
-function formatPrice(cents: number | null): string {
-  if (cents === null || cents === 0) return 'Free';
-  return `$${(cents / 100).toFixed(2)}`;
-}
 
 function scoreColor(score: number): string {
   if (score >= 0.7) return 'oklch(0.72 0.19 142)';
@@ -22,53 +17,56 @@ export default function GameGrid({ games, onExplain, onDismiss }: GameGridProps)
   if (games.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {games.map((rec) => (
         <div
           key={rec.id}
-          className="rounded-xl overflow-hidden bg-[var(--card)] text-[var(--card-foreground)] shadow-lg flex flex-col"
+          className="bg-[#242424] border border-[#333] rounded-xl overflow-hidden hover:border-[var(--primary)] transition-all group cursor-pointer flex flex-col"
         >
-          {rec.game.headerImage && (
-            <img
-              src={rec.game.headerImage}
-              alt={rec.game.name}
-              className="w-full aspect-video object-cover"
-            />
-          )}
+          {/* Image section */}
+          <div className="relative h-48 overflow-hidden">
+            {rec.game.headerImage && (
+              <img
+                src={rec.game.headerImage}
+                alt={rec.game.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            )}
+            <span
+              className="absolute top-3 right-3 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold"
+              style={{
+                backgroundColor: `color-mix(in srgb, ${scoreColor(rec.score)} 90%, transparent)`,
+                color: '#fff',
+              }}
+            >
+              {Math.round(rec.score * 100)}% Match
+            </span>
+          </div>
 
-          <div className="p-4 flex flex-col gap-2.5 flex-1">
+          {/* Content */}
+          <div className="p-5 flex flex-col gap-3 flex-1">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-base font-bold leading-tight">{rec.game.name}</h3>
-              <div className="flex items-center gap-0.5 shrink-0">
+              <h3 className="text-xl font-bold mb-2 leading-tight">{rec.game.name}</h3>
+              <div className="flex items-center gap-1 shrink-0">
                 <BookmarkButton gameId={rec.game.id} size={14} />
-                <a
-                  href={`steam://addtowishlist/${rec.game.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="p-1 rounded hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)] hover:text-[oklch(0.72_0.19_142)]"
-                  title="Add to Steam Wishlist"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
-                </a>
-                <span
-                  className="text-xs font-bold px-2 py-0.5 rounded-full"
-                  style={{
-                    color: scoreColor(rec.score),
-                    border: `1px solid ${scoreColor(rec.score)}`,
-                  }}
-                >
-                  {Math.round(rec.score * 100)}%
-                </span>
+                {onDismiss && (
+                  <button
+                    onClick={() => onDismiss(rec.id)}
+                    className="p-1.5 rounded hover:bg-[#1a1a1a] transition-colors text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                    title="Dismiss"
+                  >
+                    <i className="fa-solid fa-xmark text-xs" />
+                  </button>
+                )}
               </div>
             </div>
 
             {rec.game.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1.5">
                 {rec.game.tags.slice(0, 4).map((tag) => (
                   <span
                     key={tag}
-                    className="bg-[var(--secondary)] text-[var(--secondary-foreground)] rounded-full px-2 py-0.5 text-xs"
+                    className="px-2 py-1 bg-[#1a1a1a] text-xs font-medium rounded"
                   >
                     {tag}
                   </span>
@@ -76,33 +74,16 @@ export default function GameGrid({ games, onExplain, onDismiss }: GameGridProps)
               </div>
             )}
 
-            {rec.aiExplanation && (
-              <p className="text-sm text-[var(--muted-foreground)] line-clamp-2">
-                {rec.aiExplanation}
-              </p>
+            {/* Why This Game button */}
+            {onExplain && (
+              <button
+                onClick={() => onExplain(rec.id)}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-[#1a1a1a] hover:bg-[var(--primary)] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all mt-auto"
+              >
+                <i className="fa-solid fa-lightbulb" />
+                <span>Why This Game?</span>
+              </button>
             )}
-
-            <div className="flex items-center justify-between mt-auto pt-2">
-              <span className="text-sm font-medium">{formatPrice(rec.game.priceCents)}</span>
-              <div className="flex items-center gap-2">
-                {onExplain && (
-                  <button
-                    onClick={() => onExplain(rec.id)}
-                    className="text-xs text-[var(--primary)] hover:underline"
-                  >
-                    Why this?
-                  </button>
-                )}
-                {onDismiss && (
-                  <button
-                    onClick={() => onDismiss(rec.id)}
-                    className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                  >
-                    Dismiss
-                  </button>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       ))}

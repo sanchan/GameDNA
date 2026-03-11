@@ -16,17 +16,33 @@ function formatPlaytime(mins: number): string {
   return `${Math.floor(mins / 60)}h`;
 }
 
-function reviewColor(score: number | null): string {
-  if (score === null) return 'var(--muted-foreground)';
-  if (score >= 70) return 'oklch(0.72 0.19 142)';
-  if (score >= 40) return 'oklch(0.75 0.18 85)';
-  return 'oklch(0.65 0.2 25)';
+function formatPrice(cents: number | null): string {
+  if (cents === null || cents === 0) return 'Free';
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function ReviewBadge({ score }: { score: number | null }) {
+  if (score === null) return null;
+  let colorClasses: string;
+  if (score >= 70) {
+    colorClasses = 'bg-green-500/20 text-green-500';
+  } else if (score >= 40) {
+    colorClasses = 'bg-yellow-500/20 text-yellow-500';
+  } else {
+    colorClasses = 'bg-red-500/20 text-red-500';
+  }
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${colorClasses}`}>
+      <i className="fa-solid fa-thumbs-up text-[10px]" />
+      {score}%
+    </span>
+  );
 }
 
 const tabs = [
-  { key: 'library', label: 'Library' },
-  { key: 'bookmarks', label: 'Bookmarks' },
-  { key: 'wishlist', label: 'Wishlist' },
+  { key: 'library', label: 'Library', icon: 'fa-solid fa-book' },
+  { key: 'bookmarks', label: 'Bookmarks', icon: 'fa-regular fa-bookmark' },
+  { key: 'wishlist', label: 'Wishlist', icon: 'fa-regular fa-heart' },
 ] as const;
 
 type TabKey = (typeof tabs)[number]['key'];
@@ -96,55 +112,52 @@ export default function MyLists() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-[var(--foreground)] mb-6">My Lists</h1>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      {/* Header */}
+      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">My Lists</h1>
+      <p className="text-gray-400 mb-8">Manage your library, bookmarks, and wishlist.</p>
 
-      {/* Tab bar + search */}
-      <div className="flex gap-2 mb-6 items-stretch">
-        <div className="flex rounded-lg border border-[var(--border)] overflow-hidden shrink-0">
-          {tabs.map(({ key, label }, i, arr) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                i < arr.length - 1 ? 'border-r border-[var(--border)]' : ''
-              } ${
-                activeTab === key
-                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
-                  : 'bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <div className="flex-1 relative">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]"
-            width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      {/* Tabs */}
+      <div className="bg-[#242424] border border-[#333] rounded-2xl p-2 inline-flex space-x-2 mb-8">
+        {tabs.map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              activeTab === key
+                ? 'bg-[var(--primary)] text-[#1a1a1a]'
+                : 'hover:bg-[#1a1a1a] text-gray-400'
+            }`}
           >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+            <i className={`${icon} mr-2`} />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
+        <div className="relative">
+          <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search your games..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)]"
+            className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-[var(--primary)] transition-colors"
           />
         </div>
       </div>
 
+      {/* Content */}
       {loading ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-[var(--card)]">
-              <div className="w-24 aspect-video bg-[var(--muted)] rounded animate-pulse shrink-0" />
+            <div key={i} className="bg-[#242424] border border-[#333] rounded-xl p-4 flex items-center gap-4">
+              <div className="w-32 h-20 bg-[#1a1a1a] rounded-lg animate-pulse shrink-0" />
               <div className="flex-1 flex flex-col gap-2">
-                <div className="h-5 w-1/3 bg-[var(--muted)] rounded animate-pulse" />
-                <div className="h-4 w-1/4 bg-[var(--muted)] rounded animate-pulse" />
+                <div className="h-5 w-1/3 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="h-4 w-1/4 bg-[#1a1a1a] rounded animate-pulse" />
               </div>
             </div>
           ))}
@@ -160,10 +173,57 @@ export default function MyLists() {
   );
 }
 
+function GameItemCard({ game, children, rightContent }: { game: Game; children?: React.ReactNode; rightContent?: React.ReactNode }) {
+  return (
+    <div className="bg-[#242424] border border-[#333] rounded-xl p-4 hover:border-[var(--primary)] transition-all">
+      <div className="flex items-center gap-4">
+        <Link to={`/game/${game.id}`} className="shrink-0">
+          {game.headerImage ? (
+            <img
+              src={game.headerImage}
+              alt={game.name}
+              className="w-32 h-20 object-cover rounded-lg"
+            />
+          ) : (
+            <div className="w-32 h-20 bg-[#1a1a1a] rounded-lg" />
+          )}
+        </Link>
+        <div className="flex-1 min-w-0">
+          <Link to={`/game/${game.id}`}>
+            <h3 className="text-xl font-bold mb-2 truncate hover:text-[var(--primary)] transition-colors">{game.name}</h3>
+          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            {game.genres.slice(0, 3).map((genre) => (
+              <span key={genre} className="bg-[#1a1a1a] px-3 py-1 rounded-full text-xs font-medium">
+                {genre}
+              </span>
+            ))}
+            <ReviewBadge score={game.reviewScore} />
+          </div>
+        </div>
+        <div className="shrink-0 flex flex-col items-end gap-2">
+          {game.priceCents !== null && (
+            <span className="text-2xl font-black text-[var(--primary)]">
+              {formatPrice(game.priceCents)}
+            </span>
+          )}
+          {children}
+        </div>
+        {rightContent && (
+          <div className="shrink-0 flex items-center gap-2">
+            {rightContent}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function LibraryList({ entries }: { entries: LibraryEntry[] }) {
   if (entries.length === 0) {
     return (
-      <div className="text-center py-20 text-[var(--muted-foreground)]">
+      <div className="text-center py-20 text-gray-400">
+        <i className="fa-solid fa-book text-4xl mb-4 block" />
         <p className="text-lg mb-2">No games found.</p>
       </div>
     );
@@ -171,50 +231,17 @@ function LibraryList({ entries }: { entries: LibraryEntry[] }) {
 
   return (
     <>
-      <p className="text-xs text-[var(--muted-foreground)] mb-3">
+      <p className="text-sm text-gray-400 mb-4">
         {entries.length} {entries.length === 1 ? 'game' : 'games'}
       </p>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         {entries.map((entry) => (
-          <Link
-            key={entry.game.id}
-            to={`/game/${entry.game.id}`}
-            className="flex items-center gap-4 p-3 rounded-lg bg-[var(--card)] hover:bg-[var(--accent)] transition-colors"
-          >
-            {entry.game.headerImage ? (
-              <img
-                src={entry.game.headerImage}
-                alt={entry.game.name}
-                className="w-24 aspect-video object-cover rounded shrink-0"
-              />
-            ) : (
-              <div className="w-24 aspect-video bg-[var(--muted)] rounded shrink-0" />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-[var(--card-foreground)] truncate">{entry.game.name}</p>
-              <div className="flex items-center gap-3 mt-1">
-                <span
-                  className="text-xs px-2 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor: entry.playtimeMins > 0 ? 'oklch(0.75 0.18 85 / 0.15)' : 'var(--muted)',
-                    color: entry.playtimeMins > 0 ? 'oklch(0.75 0.18 85)' : 'var(--muted-foreground)',
-                  }}
-                >
-                  {formatPlaytime(entry.playtimeMins)}
-                </span>
-                {entry.game.reviewScore !== null && (
-                  <span className="text-xs" style={{ color: reviewColor(entry.game.reviewScore) }}>
-                    {entry.game.reviewScore}%
-                  </span>
-                )}
-                {entry.game.genres.length > 0 && (
-                  <span className="text-xs text-[var(--muted-foreground)] truncate">
-                    {entry.game.genres.slice(0, 3).join(', ')}
-                  </span>
-                )}
-              </div>
-            </div>
-          </Link>
+          <GameItemCard key={entry.game.id} game={entry.game}>
+            <span className="text-sm text-gray-400">
+              <i className="fa-regular fa-clock mr-1" />
+              {formatPlaytime(entry.playtimeMins)}
+            </span>
+          </GameItemCard>
         ))}
       </div>
     </>
@@ -224,7 +251,8 @@ function LibraryList({ entries }: { entries: LibraryEntry[] }) {
 function BookmarkList({ games, onRemove }: { games: Game[]; onRemove: (id: number) => void }) {
   if (games.length === 0) {
     return (
-      <div className="text-center py-20 text-[var(--muted-foreground)]">
+      <div className="text-center py-20 text-gray-400">
+        <i className="fa-regular fa-bookmark text-4xl mb-4 block" />
         <p className="text-lg mb-2">No bookmarks yet.</p>
         <p className="text-sm">
           Bookmark games from{' '}
@@ -237,66 +265,34 @@ function BookmarkList({ games, onRemove }: { games: Game[]; onRemove: (id: numbe
 
   return (
     <>
-      <p className="text-xs text-[var(--muted-foreground)] mb-3">
+      <p className="text-sm text-gray-400 mb-4">
         {games.length} {games.length === 1 ? 'game' : 'games'}
       </p>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         {games.map((game) => (
-          <div
+          <GameItemCard
             key={game.id}
-            className="flex items-center gap-4 p-3 rounded-lg bg-[var(--card)] hover:bg-[var(--accent)] transition-colors"
-          >
-            <Link to={`/game/${game.id}`} className="shrink-0">
-              {game.headerImage ? (
-                <img
-                  src={game.headerImage}
-                  alt={game.name}
-                  className="w-24 aspect-video object-cover rounded"
-                />
-              ) : (
-                <div className="w-24 aspect-video bg-[var(--muted)] rounded" />
-              )}
-            </Link>
-            <div className="flex-1 min-w-0">
-              <Link to={`/game/${game.id}`} className="hover:underline">
-                <p className="font-semibold text-[var(--card-foreground)] truncate">{game.name}</p>
-              </Link>
-              <div className="flex items-center gap-3 mt-1">
-                {game.reviewScore !== null && (
-                  <span className="text-xs" style={{ color: reviewColor(game.reviewScore) }}>
-                    {game.reviewScore}%
-                  </span>
-                )}
-                {game.genres.length > 0 && (
-                  <span className="text-xs text-[var(--muted-foreground)] truncate">
-                    {game.genres.slice(0, 3).join(', ')}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <a
-                href={`steam://addtowishlist/${game.id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="p-1.5 rounded-lg hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)] hover:text-[oklch(0.72_0.19_142)]"
-                title="Add to Steam Wishlist"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>
-              </a>
-              <button
-                onClick={() => onRemove(game.id)}
-                className="p-1.5 rounded-lg hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)] hover:text-[var(--destructive-foreground)]"
-                title="Remove bookmark"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-          </div>
+            game={game}
+            rightContent={
+              <>
+                <a
+                  href={`steam://addtowishlist/${game.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold px-4 py-2 transition-all"
+                  title="Add to Steam Wishlist"
+                >
+                  <i className="fa-regular fa-heart" />
+                </a>
+                <button
+                  onClick={() => onRemove(game.id)}
+                  className="bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold px-4 py-2 transition-all"
+                  title="Remove bookmark"
+                >
+                  <i className="fa-solid fa-xmark" />
+                </button>
+              </>
+            }
+          />
         ))}
       </div>
     </>
@@ -306,7 +302,8 @@ function BookmarkList({ games, onRemove }: { games: Game[]; onRemove: (id: numbe
 function GameList({ games, label }: { games: Game[]; label: string }) {
   if (games.length === 0) {
     return (
-      <div className="text-center py-20 text-[var(--muted-foreground)]">
+      <div className="text-center py-20 text-gray-400">
+        <i className="fa-regular fa-heart text-4xl mb-4 block" />
         <p className="text-lg mb-2">No {label} games found.</p>
       </div>
     );
@@ -314,41 +311,12 @@ function GameList({ games, label }: { games: Game[]; label: string }) {
 
   return (
     <>
-      <p className="text-xs text-[var(--muted-foreground)] mb-3">
+      <p className="text-sm text-gray-400 mb-4">
         {games.length} {games.length === 1 ? 'game' : 'games'}
       </p>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         {games.map((game) => (
-          <Link
-            key={game.id}
-            to={`/game/${game.id}`}
-            className="flex items-center gap-4 p-3 rounded-lg bg-[var(--card)] hover:bg-[var(--accent)] transition-colors"
-          >
-            {game.headerImage ? (
-              <img
-                src={game.headerImage}
-                alt={game.name}
-                className="w-24 aspect-video object-cover rounded shrink-0"
-              />
-            ) : (
-              <div className="w-24 aspect-video bg-[var(--muted)] rounded shrink-0" />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-[var(--card-foreground)] truncate">{game.name}</p>
-              <div className="flex items-center gap-3 mt-1">
-                {game.reviewScore !== null && (
-                  <span className="text-xs" style={{ color: reviewColor(game.reviewScore) }}>
-                    {game.reviewScore}%
-                  </span>
-                )}
-                {game.genres.length > 0 && (
-                  <span className="text-xs text-[var(--muted-foreground)] truncate">
-                    {game.genres.slice(0, 3).join(', ')}
-                  </span>
-                )}
-              </div>
-            </div>
-          </Link>
+          <GameItemCard key={game.id} game={game} />
         ))}
       </div>
     </>

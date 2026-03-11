@@ -1,20 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../hooks/use-auth';
 import { api } from '../lib/api';
+import { useBookmarks } from '../hooks/use-bookmarks';
+import MediaGallery from '../components/MediaGallery';
 import type { Game, SwipeDecision } from '../../../shared/types';
-import BookmarkButton from '../components/BookmarkButton';
+
+interface MediaItem {
+  type: 'image' | 'video';
+  thumbnail: string;
+  full: string;
+  videoSrc?: string;
+}
+
+interface MediaResponse {
+  screenshots: Array<{ id: number; thumbnail: string; full: string }>;
+  movies: Array<{ id: number; name: string; thumbnail: string; mp4480: string | null; mp4Max: string | null }>;
+}
 
 function formatPrice(cents: number | null): string {
-  if (cents === null || cents === 0) return 'Free';
+  if (cents === null || cents === 0) return 'Free to Play';
   return `$${(cents / 100).toFixed(2)}`;
 }
 
 function reviewColor(score: number | null): string {
   if (score === null) return 'var(--muted-foreground)';
-  if (score > 70) return 'oklch(0.72 0.19 142)';
-  if (score >= 40) return 'oklch(0.75 0.18 85)';
-  return 'var(--destructive-foreground)';
+  if (score > 70) return '#22c55e';
+  if (score >= 40) return '#eab308';
+  return '#ef4444';
+}
+
+function reviewBgColor(score: number | null): string {
+  if (score === null) return 'rgba(255,255,255,0.1)';
+  if (score > 70) return 'rgba(34,197,94,0.2)';
+  if (score >= 40) return 'rgba(234,179,8,0.2)';
+  return 'rgba(239,68,68,0.2)';
 }
 
 function reviewLabel(score: number | null): string {
@@ -49,14 +70,27 @@ function normalizeGame(raw: any): Game {
   };
 }
 
+function getReleaseYear(releaseDate: string | null): string | null {
+  if (!releaseDate) return null;
+  const match = releaseDate.match(/(\d{4})/);
+  return match ? match[1] : null;
+}
+
 export default function GameDetail() {
   const { appid } = useParams<{ appid: string }>();
   const { user } = useAuth();
+  const { isBookmarked, toggle: toggleBookmark } = useBookmarks();
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [swiped, setSwiped] = useState<SwipeDecision | null>(null);
   const [swiping, setSwiping] = useState(false);
+
+  // Media state
+  const [mediaItems, setMediaItems] = useState<MediaItem[] | null>(null);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
     if (!appid) return;
@@ -67,6 +101,44 @@ export default function GameDetail() {
       .catch((err) => setError(err.message || 'Failed to load game'))
       .finally(() => setLoading(false));
   }, [appid]);
+
+  const loadMedia = useCallback(async () => {
+    if (mediaItems !== null || mediaLoading || !appid) return mediaItems;
+    setMediaLoading(true);
+    try {
+      const data = await api.get<MediaResponse>(`/games/${appid}/media`);
+      const items: MediaItem[] = [];
+      for (const m of data.movies) {
+        items.push({
+          type: 'video',
+          thumbnail: m.thumbnail,
+          full: m.thumbnail,
+          videoSrc: m.mp4480 || m.mp4Max || undefined,
+        });
+      }
+      for (const s of data.screenshots) {
+        items.push({
+          type: 'image',
+          thumbnail: s.thumbnail,
+          full: s.full,
+        });
+      }
+      setMediaItems(items);
+      setMediaLoading(false);
+      return items;
+    } catch {
+      setMediaItems([]);
+      setMediaLoading(false);
+      return [];
+    }
+  }, [appid, mediaItems, mediaLoading]);
+
+  // Load media on mount
+  useEffect(() => {
+    if (game && !mediaItems && !mediaLoading) {
+      loadMedia();
+    }
+  }, [game, mediaItems, mediaLoading, loadMedia]);
 
   const handleSwipe = async (decision: SwipeDecision) => {
     if (!game || swiping) return;
@@ -81,188 +153,452 @@ export default function GameDetail() {
     }
   };
 
+  const openGallery = (index: number) => {
+    setGalleryIndex(index);
+    setGalleryOpen(true);
+  };
+
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8">
-        <div className="w-full aspect-video bg-[var(--muted)] rounded-xl animate-pulse mb-6" />
-        <div className="h-8 w-1/2 bg-[var(--muted)] rounded animate-pulse mb-4" />
-        <div className="h-4 w-full bg-[var(--muted)] rounded animate-pulse mb-2" />
-        <div className="h-4 w-3/4 bg-[var(--muted)] rounded animate-pulse" />
+      <div className="min-h-screen bg-[#1a1a1a]">
+        <div className="relative h-[600px] lg:h-[700px] bg-[#242424] animate-pulse" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20">
+          <div className="bg-[#242424] rounded-2xl p-6 mb-8">
+            <div className="h-10 w-1/3 bg-[#333] rounded animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="h-40 bg-[#242424] rounded-2xl animate-pulse" />
+              <div className="h-60 bg-[#242424] rounded-2xl animate-pulse" />
+            </div>
+            <div className="h-96 bg-[#242424] rounded-2xl animate-pulse" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error || !game) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <p className="text-lg text-[var(--muted-foreground)]">{error || 'Game not found'}</p>
-        <Link to="/" className="text-[var(--primary)] text-sm mt-2 inline-block hover:underline">
-          Go back
-        </Link>
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <i className="fa-solid fa-circle-exclamation text-4xl text-[var(--muted-foreground)] mb-4" />
+          <p className="text-lg text-[var(--muted-foreground)] mb-2">{error || 'Game not found'}</p>
+          <Link to="/" className="text-[var(--primary)] text-sm hover:underline">
+            <i className="fa-solid fa-arrow-left mr-1" /> Go back
+          </Link>
+        </div>
       </div>
     );
   }
 
-  const description = game.shortDesc;
+  const releaseYear = getReleaseYear(game.releaseDate);
+  const developer = game.developers.length > 0 ? game.developers[0] : null;
+  const bookmarked = isBookmarked(game.id);
+  const positiveCount = game.reviewScore !== null && game.reviewCount !== null
+    ? Math.round(game.reviewCount * game.reviewScore / 100)
+    : null;
+  const negativeCount = game.reviewCount !== null && positiveCount !== null
+    ? game.reviewCount - positiveCount
+    : null;
+
+  // Use the first screenshot as the hero background, or fall back to header
+  const heroImage = (mediaItems && mediaItems.length > 0)
+    ? (mediaItems.find(m => m.type === 'image')?.full ?? game.headerImage)
+    : game.headerImage;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      {game.headerImage && (
-        <img
-          src={game.headerImage}
-          alt={game.name}
-          className="w-full rounded-xl mb-6 shadow-lg"
-        />
-      )}
+    <div className="min-h-screen bg-[#1a1a1a]">
+      {/* Hero Section */}
+      <div className="relative h-[600px] lg:h-[700px] overflow-hidden">
+        {/* Background image */}
+        {heroImage && (
+          <img
+            src={heroImage}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
 
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-3xl font-bold text-[var(--foreground)]">{game.name}</h1>
-        <div className="flex items-center gap-0.5 shrink-0">
-          <BookmarkButton gameId={game.id} size={20} />
-          <a
-            href={`steam://addtowishlist/${game.id}`}
-            className="p-2 rounded-lg hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)] hover:text-[oklch(0.72_0.19_142)]"
-            title="Add to Steam Wishlist"
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a]/80 via-transparent to-transparent" />
+
+        {/* Back button */}
+        <div className="absolute top-6 left-6 z-10">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-          </a>
-          <a
-            href={`https://store.steampowered.com/app/${game.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 rounded-lg hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            title="View on Steam"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
-          </a>
+            <i className="fa-solid fa-arrow-left" />
+            <span>Back</span>
+          </Link>
+        </div>
+
+        {/* Hero content */}
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end h-full pb-12 lg:pb-16">
+          <div className="max-w-4xl">
+            {/* Title */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-3 leading-tight">
+              {game.name}
+            </h1>
+
+            {/* Developer + year */}
+            <p className="text-gray-400 text-lg mb-4">
+              {developer && <span>{developer}</span>}
+              {developer && releaseYear && <span className="mx-2">·</span>}
+              {releaseYear && <span>{releaseYear}</span>}
+            </p>
+
+            {/* Badges row */}
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+              {/* Match badge (show if score-like data could exist — using review score as proxy) */}
+              {game.reviewScore !== null && game.reviewScore >= 70 && (
+                <span className="bg-[var(--primary)]/20 text-[var(--primary)] px-3 py-1.5 rounded-full font-bold text-sm inline-flex items-center gap-1.5">
+                  <i className="fa-solid fa-star" />
+                  {game.reviewScore}% Match
+                </span>
+              )}
+
+              {/* Review badge */}
+              {game.reviewScore !== null && (
+                <span
+                  className="px-3 py-1.5 rounded-full font-bold text-sm inline-flex items-center gap-1.5"
+                  style={{ backgroundColor: reviewBgColor(game.reviewScore), color: reviewColor(game.reviewScore) }}
+                >
+                  <i className="fa-solid fa-thumbs-up" />
+                  {reviewLabel(game.reviewScore)}
+                </span>
+              )}
+            </div>
+
+            {/* Genre pills */}
+            {game.genres.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {game.genres.map((genre) => (
+                  <span
+                    key={genre}
+                    className="bg-[#242424]/80 backdrop-blur-sm border border-[#333] px-4 py-2 rounded-lg text-sm font-medium text-white"
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mb-4">
-        <span className="text-xl font-semibold text-[var(--foreground)]">
-          {formatPrice(game.priceCents)}
-        </span>
-        <span style={{ color: reviewColor(game.reviewScore) }} className="text-sm font-medium">
-          {reviewLabel(game.reviewScore)}
-          {game.reviewScore !== null && ` (${game.reviewScore}%)`}
-          {game.reviewCount !== null && (
-            <span className="text-[var(--muted-foreground)] ml-1">
-              - {game.reviewCount.toLocaleString()} reviews
-            </span>
-          )}
-        </span>
-      </div>
-
-      {description && (
-        <p className="text-[var(--muted-foreground)] mb-6 leading-relaxed">{description}</p>
-      )}
-
-      {game.genres.length > 0 && (
-        <div className="mb-4">
-          <h3 className="text-xs uppercase tracking-wider text-[var(--muted-foreground)] mb-2">Genres</h3>
-          <div className="flex flex-wrap gap-1.5">
-            {game.genres.map((genre) => (
-              <span
-                key={genre}
-                className="bg-[var(--secondary)] text-[var(--secondary-foreground)] rounded-full px-3 py-1 text-sm"
+      {/* Main content area */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Action Row */}
+        <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8 shadow-2xl -mt-20 relative z-20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {/* Left: utility buttons */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => toggleBookmark(game.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-colors text-sm font-medium ${
+                  bookmarked
+                    ? 'bg-[var(--primary)]/20 border-[var(--primary)]/40 text-[var(--primary)]'
+                    : 'border-[#444] text-gray-300 hover:bg-[#333] hover:text-white'
+                }`}
               >
-                {genre}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+                <i className={`fa-${bookmarked ? 'solid' : 'regular'} fa-bookmark`} />
+                Bookmark
+              </button>
 
-      {game.tags.length > 0 && (
-        <div className="mb-4">
-          <h3 className="text-xs uppercase tracking-wider text-[var(--muted-foreground)] mb-2">Tags</h3>
-          <div className="flex flex-wrap gap-1.5">
-            {game.tags.slice(0, 12).map((tag) => (
-              <span
-                key={tag}
-                className="bg-[var(--muted)] text-[var(--muted-foreground)] rounded-full px-2.5 py-0.5 text-xs"
+              <a
+                href={`steam://addtowishlist/${game.id}`}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#444] text-gray-300 hover:bg-[#333] hover:text-white transition-colors text-sm font-medium"
               >
-                {tag}
-              </span>
-            ))}
+                <i className="fa-regular fa-heart" />
+                Wishlist
+              </a>
+
+              <a
+                href={`https://store.steampowered.com/app/${game.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#444] text-gray-300 hover:bg-[#333] hover:text-white transition-colors text-sm font-medium"
+              >
+                <i className="fa-brands fa-steam" />
+                Open in Steam
+              </a>
+            </div>
+
+            {/* Right: decision buttons */}
+            {user && !swiped && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleSwipe('no')}
+                  disabled={swiping}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  <i className="fa-solid fa-xmark" />
+                  Not for me
+                </button>
+                <button
+                  onClick={() => handleSwipe('maybe')}
+                  disabled={swiping}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  <i className="fa-solid fa-question" />
+                  Maybe
+                </button>
+                <button
+                  onClick={() => handleSwipe('yes')}
+                  disabled={swiping}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  <i className="fa-solid fa-check" />
+                  Interested
+                </button>
+              </div>
+            )}
+
+            {swiped && (
+              <p className="text-sm text-gray-400">
+                You marked this as <span className="font-semibold text-white">{swiped}</span>.
+              </p>
+            )}
           </div>
         </div>
-      )}
 
-      <div className="grid grid-cols-2 gap-4 mt-6 mb-6">
-        {game.developers.length > 0 && (
-          <div>
-            <h3 className="text-xs uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Developers</h3>
-            <p className="text-sm text-[var(--foreground)]">{game.developers.join(', ')}</p>
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-16">
+          {/* Left column */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Media Gallery Thumbnails */}
+            {mediaItems && mediaItems.length > 0 && (
+              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+                <h2 className="text-lg font-bold text-white mb-4">
+                  <i className="fa-solid fa-images mr-2 text-gray-400" />
+                  Media
+                </h2>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {mediaItems.slice(0, 8).map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={() => openGallery(i)}
+                      className="relative aspect-video rounded-lg overflow-hidden group cursor-pointer"
+                    >
+                      <img
+                        src={item.thumbnail}
+                        alt=""
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                        {item.type === 'video' && (
+                          <div className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center">
+                            <i className="fa-solid fa-play text-white text-xs" />
+                          </div>
+                        )}
+                      </div>
+                      {i === 7 && mediaItems.length > 8 && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                          <span className="text-white font-bold">+{mediaItems.length - 8}</span>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Price Section */}
+            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+              <h2 className="text-lg font-bold text-white mb-4">
+                <i className="fa-solid fa-tag mr-2 text-gray-400" />
+                Price
+              </h2>
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl font-black text-white">
+                  {formatPrice(game.priceCents)}
+                </span>
+                {game.priceCents !== null && game.priceCents === 0 && (
+                  <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-bold">
+                    FREE
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Review Summary */}
+            {game.reviewScore !== null && (
+              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+                <h2 className="text-lg font-bold text-white mb-4">
+                  <i className="fa-solid fa-chart-bar mr-2 text-gray-400" />
+                  Review Summary
+                </h2>
+                <div className="flex items-start gap-6">
+                  {/* Score box */}
+                  <div
+                    className="shrink-0 w-20 h-20 rounded-xl flex flex-col items-center justify-center"
+                    style={{ backgroundColor: reviewBgColor(game.reviewScore) }}
+                  >
+                    <span className="text-2xl font-black" style={{ color: reviewColor(game.reviewScore) }}>
+                      {game.reviewScore}%
+                    </span>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold mb-1">{reviewLabel(game.reviewScore)}</p>
+                    {game.reviewCount !== null && (
+                      <p className="text-sm text-gray-400 mb-3">
+                        Based on {game.reviewCount.toLocaleString()} reviews
+                      </p>
+                    )}
+
+                    {/* Progress bars */}
+                    {positiveCount !== null && negativeCount !== null && game.reviewCount !== null && game.reviewCount > 0 && (
+                      <div className="space-y-2">
+                        <div>
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="text-green-400">
+                              <i className="fa-solid fa-thumbs-up mr-1" />
+                              Positive
+                            </span>
+                            <span className="text-gray-400">{positiveCount.toLocaleString()}</span>
+                          </div>
+                          <div className="h-2 bg-[#333] rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-green-500 rounded-full"
+                              style={{ width: `${game.reviewScore}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="text-red-400">
+                              <i className="fa-solid fa-thumbs-down mr-1" />
+                              Negative
+                            </span>
+                            <span className="text-gray-400">{negativeCount.toLocaleString()}</span>
+                          </div>
+                          <div className="h-2 bg-[#333] rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-red-500 rounded-full"
+                              style={{ width: `${100 - (game.reviewScore ?? 0)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* About This Game */}
+            {game.shortDesc && (
+              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+                <h2 className="text-lg font-bold text-white mb-4">
+                  <i className="fa-solid fa-info-circle mr-2 text-gray-400" />
+                  About This Game
+                </h2>
+                <p className="text-gray-300 leading-relaxed">{game.shortDesc}</p>
+              </div>
+            )}
           </div>
-        )}
-        {game.publishers.length > 0 && (
-          <div>
-            <h3 className="text-xs uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Publishers</h3>
-            <p className="text-sm text-[var(--foreground)]">{game.publishers.join(', ')}</p>
+
+          {/* Right sidebar */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 bg-[#242424] border border-[#333] rounded-2xl p-6 space-y-6">
+              <h2 className="text-lg font-bold text-white">
+                <i className="fa-solid fa-gamepad mr-2 text-gray-400" />
+                Game Information
+              </h2>
+
+              {/* Release Date */}
+              {game.releaseDate && (
+                <div>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">Release Date</h3>
+                  <p className="text-sm text-white">{game.releaseDate}</p>
+                </div>
+              )}
+
+              {/* Genres */}
+              {game.genres.length > 0 && (
+                <div>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">Genres</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {game.genres.map((genre) => (
+                      <span key={genre} className="bg-[#333] text-gray-300 px-2.5 py-1 rounded-md text-xs font-medium">
+                        {genre}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Platforms */}
+              <div>
+                <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">Platforms</h3>
+                <div className="flex items-center gap-3 text-lg">
+                  {game.platforms.windows && (
+                    <span className="text-gray-300" title="Windows">
+                      <i className="fa-brands fa-windows" />
+                    </span>
+                  )}
+                  {game.platforms.mac && (
+                    <span className="text-gray-300" title="macOS">
+                      <i className="fa-brands fa-apple" />
+                    </span>
+                  )}
+                  {game.platforms.linux && (
+                    <span className="text-gray-300" title="Linux">
+                      <i className="fa-brands fa-linux" />
+                    </span>
+                  )}
+                  {!game.platforms.windows && !game.platforms.mac && !game.platforms.linux && (
+                    <span className="text-gray-500 text-sm">Unknown</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Tags */}
+              {game.tags.length > 0 && (
+                <div>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">Tags</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {game.tags.slice(0, 12).map((tag) => (
+                      <span key={tag} className="bg-[#333] text-gray-400 px-2 py-0.5 rounded text-xs">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Developer */}
+              {game.developers.length > 0 && (
+                <div>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">Developer</h3>
+                  <p className="text-sm text-white">{game.developers.join(', ')}</p>
+                </div>
+              )}
+
+              {/* Publisher */}
+              {game.publishers.length > 0 && (
+                <div>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">Publisher</h3>
+                  <p className="text-sm text-white">{game.publishers.join(', ')}</p>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-        {game.releaseDate && (
-          <div>
-            <h3 className="text-xs uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Release Date</h3>
-            <p className="text-sm text-[var(--foreground)]">{game.releaseDate}</p>
-          </div>
-        )}
-        <div>
-          <h3 className="text-xs uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Platforms</h3>
-          <p className="text-sm text-[var(--foreground)]">
-            {[
-              game.platforms.windows && 'Win',
-              game.platforms.mac && 'Mac',
-              game.platforms.linux && 'Linux',
-            ]
-              .filter(Boolean)
-              .join(' / ') || 'Unknown'}
-          </p>
         </div>
       </div>
 
-      {user && !swiped && (
-        <div className="flex items-center gap-4 pt-4 border-t border-[var(--border)]">
-          <span className="text-sm text-[var(--muted-foreground)]">Interested?</span>
-          <button
-            onClick={() => handleSwipe('no')}
-            disabled={swiping}
-            className="px-4 py-2 rounded-md text-sm font-medium border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-50"
-          >
-            Not for me
-          </button>
-          <button
-            onClick={() => handleSwipe('maybe')}
-            disabled={swiping}
-            className="px-4 py-2 rounded-md text-sm font-medium border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-50"
-            style={{ color: 'oklch(0.75 0.18 85)', borderColor: 'oklch(0.75 0.18 85)' }}
-          >
-            Maybe
-          </button>
-          <button
-            onClick={() => handleSwipe('yes')}
-            disabled={swiping}
-            className="px-4 py-2 rounded-md text-sm font-medium border hover:opacity-90 disabled:opacity-50"
-            style={{ color: 'oklch(0.72 0.19 142)', borderColor: 'oklch(0.72 0.19 142)' }}
-          >
-            Interested
-          </button>
-        </div>
-      )}
-
-      {swiped && (
-        <div className="pt-4 border-t border-[var(--border)]">
-          <p className="text-sm text-[var(--muted-foreground)]">
-            You marked this as <span className="font-semibold text-[var(--foreground)]">{swiped}</span>.
-          </p>
-        </div>
+      {/* Media Gallery Modal */}
+      {galleryOpen && mediaItems && mediaItems.length > 0 && createPortal(
+        <MediaGallery
+          items={mediaItems}
+          initialIndex={galleryIndex}
+          onClose={() => setGalleryOpen(false)}
+        />,
+        document.body,
       )}
     </div>
   );
