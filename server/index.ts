@@ -9,6 +9,7 @@ import gameRoutes from './routes/games';
 import discoveryRoutes from './routes/discovery';
 import backlogRoutes from './routes/backlog';
 import recommendationRoutes from './routes/recommendations';
+import historyRoutes from './routes/history';
 
 const app = new Hono();
 
@@ -38,6 +39,9 @@ app.route('/api/backlog', backlogRoutes);
 
 // Recommendation routes
 app.route('/api/recommendations', recommendationRoutes);
+
+// History routes
+app.route('/api/history', historyRoutes);
 
 // In production, serve static files
 if (process.env.NODE_ENV === 'production') {

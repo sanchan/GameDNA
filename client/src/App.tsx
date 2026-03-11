@@ -9,6 +9,7 @@ import Backlog from './pages/Backlog';
 import GameDetail from './pages/GameDetail';
 import Profile from './pages/Profile';
 import Recommendations from './pages/Recommendations';
+import History from './pages/History';
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
                   <Route path="/game/:appid" element={<GameDetail />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/recommendations" element={<Recommendations />} />
+                  <Route path="/history" element={<History />} />
                 </Routes>
               </main>
             </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { useProfile, useGamingDNA } from '../hooks/use-profile';
@@ -12,6 +12,9 @@ export default function Profile() {
   const prevSyncStatus = useRef(syncStatus);
   const [showAllTags, setShowAllTags] = useState(false);
   const [togglingTag, setTogglingTag] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Refetch profile data when sync transitions to 'synced'
   useEffect(() => {
@@ -59,6 +62,38 @@ export default function Profile() {
       setTogglingTag(null);
     }
   };
+
+  const handleExport = useCallback(async () => {
+    try {
+      const data = await api.get<unknown>('/user/export');
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gamedna-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleImport = useCallback(async (file: File) => {
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const result = await api.post<{ importedTags: number; importedSwipes: number }>('/user/import', data);
+      setImportResult(`Imported ${result.importedTags} ignored tags, ${result.importedSwipes} swipes`);
+      refetchDna();
+    } catch (e) {
+      setImportResult('Import failed — invalid file format');
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }, [refetchDna]);
 
   const activeTags = dna?.allTags.filter((t) => !t.ignored) ?? [];
   const ignoredTags = dna?.allTags.filter((t) => t.ignored) ?? [];
@@ -250,6 +285,54 @@ export default function Profile() {
             </div>
           </div>
         )}
+
+        {/* Export / Import */}
+        <div className="w-full max-w-lg rounded-xl bg-[var(--card)] p-4 border border-[var(--border)]">
+          <h2 className="text-lg font-semibold text-[var(--foreground)] mb-3">
+            Data
+          </h2>
+          <p className="text-xs text-[var(--muted-foreground)] mb-3">
+            Export your tags, ignored tags, and swipe history as JSON. Import to restore from a backup.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-[var(--muted)] text-[var(--foreground)] hover:opacity-80 transition-opacity"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-[var(--muted)] text-[var(--foreground)] hover:opacity-80 transition-opacity disabled:opacity-50"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              {importing ? 'Importing...' : 'Import'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImport(file);
+              }}
+            />
+          </div>
+          {importResult && (
+            <p className="text-sm mt-3 text-[var(--muted-foreground)]">{importResult}</p>
+          )}
+        </div>
       </div>
     </div>
   );

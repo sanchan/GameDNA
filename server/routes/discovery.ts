@@ -5,6 +5,8 @@ import { getSession } from '../lib/session';
 import { db } from '../db';
 import { games, swipe_history, user_games, taste_profiles } from '../db/schema';
 import { recalculateTasteProfile } from '../services/taste-profile';
+import { fetchMoreGameIds } from '../services/steam-api';
+import { ensureGamesCached } from '../services/game-cache';
 import type { Game } from '../../shared/types';
 
 const discovery = new Hono();
@@ -203,6 +205,62 @@ discovery.post('/swipe', async (c) => {
   recalculateTasteProfile(userId).catch(() => {});
 
   return c.json({ success: true });
+});
+
+// POST /api/discovery/load-more — fetch more games from Steam into the catalog
+discovery.post('/load-more', async (c) => {
+  const session = requireAuth(c);
+  if (!session) return c.json({ error: 'Unauthorized' }, 401);
+
+  const { userId } = session;
+
+  // Gather all game IDs we already have in the DB
+  const existingRows = db
+    .select({ id: games.id })
+    .from(games)
+    .all();
+  const existingIds = new Set(existingRows.map((r) => r.id));
+
+  // Also exclude owned and swiped games
+  const ownedRows = db
+    .select({ gameId: user_games.game_id })
+    .from(user_games)
+    .where(eq(user_games.user_id, userId))
+    .all();
+  const swipedRows = db
+    .select({ gameId: swipe_history.game_id })
+    .from(swipe_history)
+    .where(eq(swipe_history.user_id, userId))
+    .all();
+
+  const exclude = new Set([
+    ...existingIds,
+    ...ownedRows.map((r) => r.gameId!),
+    ...swipedRows.map((r) => r.gameId),
+  ]);
+
+  console.log(`[discovery] Loading more games. Excluding ${exclude.size} known IDs`);
+
+  const newIds = await fetchMoreGameIds(exclude);
+  console.log(`[discovery] Found ${newIds.length} new game IDs from Steam`);
+
+  if (newIds.length === 0) {
+    return c.json({ added: 0 });
+  }
+
+  // Cache details for these new games (limit to 30 to avoid rate limits)
+  const toCache = newIds.slice(0, 30);
+  let cached = 0;
+  try {
+    await ensureGamesCached(toCache, (done) => {
+      cached = done;
+    });
+  } catch (e) {
+    console.error('[discovery] Error caching new games:', e);
+  }
+
+  console.log(`[discovery] Cached ${cached} new games`);
+  return c.json({ added: cached });
 });
 
 export default discovery;
