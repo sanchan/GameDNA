@@ -6,7 +6,7 @@ import { users, user_games, games, swipe_history, taste_profiles } from '../db/s
 import { getOwnedGames, getWishlist, getPopularGameIds } from '../services/steam-api';
 import { ensureGamesCached } from '../services/game-cache';
 import { recalculateTasteProfile } from '../services/taste-profile';
-import { getSyncStatus, startSync, updateSync, isSyncRecent } from '../services/sync-manager';
+import { getSyncStatus, startSync, updateSync } from '../services/sync-manager';
 import type { GamingDNA } from '../../shared/types';
 
 type AuthEnv = {
@@ -21,12 +21,6 @@ user.use('*', requireAuth);
 
 user.post('/sync', async (c) => {
   const userId = c.get('userId');
-
-  // If sync recently completed, return the cached result
-  if (isSyncRecent(userId)) {
-    const state = getSyncStatus(userId)!;
-    return c.json({ status: 'already_synced', gamesCount: state.gamesCount, wishlistCount: state.wishlistCount });
-  }
 
   // If sync is already in progress, return status
   const existing = getSyncStatus(userId);
