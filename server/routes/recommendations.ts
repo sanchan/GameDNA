@@ -4,7 +4,7 @@ import { getCookie } from 'hono/cookie';
 import { eq, and, desc } from 'drizzle-orm';
 import { getSession } from '../lib/session';
 import { db } from '../db';
-import { games, recommendations } from '../db/schema';
+import { games, recommendations, swipe_history } from '../db/schema';
 import { generateRecommendations, explainRecommendation } from '../services/recommendation';
 import type { Game, Recommendation } from '../../shared/types';
 
@@ -112,10 +112,33 @@ recommendationRoutes.post('/:id/dismiss', async (c) => {
 
   const recId = Number(c.req.param('id'));
 
+  // Get the game_id before dismissing
+  const rec = db.select({ game_id: recommendations.game_id })
+    .from(recommendations)
+    .where(and(eq(recommendations.id, recId), eq(recommendations.user_id, session.userId)))
+    .get();
+
   db.update(recommendations)
     .set({ dismissed: 1 })
     .where(and(eq(recommendations.id, recId), eq(recommendations.user_id, session.userId)))
     .run();
+
+  // Also record as a "no" swipe so discovery won't show it again
+  if (rec) {
+    const nowUnix = Math.floor(Date.now() / 1000);
+    db.insert(swipe_history)
+      .values({
+        user_id: session.userId,
+        game_id: rec.game_id,
+        decision: 'no',
+        swiped_at: nowUnix,
+      })
+      .onConflictDoUpdate({
+        target: [swipe_history.user_id, swipe_history.game_id],
+        set: { decision: 'no', swiped_at: nowUnix },
+      })
+      .run();
+  }
 
   return c.json({ success: true });
 });
