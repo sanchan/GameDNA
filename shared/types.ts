@@ -17,6 +17,7 @@ export interface Game {
   tags: string[];
   releaseDate: string | null;
   priceCents: number | null;
+  priceCurrency: string | null;
   reviewScore: number | null;
   reviewCount: number | null;
   developers: string[];

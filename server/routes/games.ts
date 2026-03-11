@@ -1,9 +1,20 @@
 import { Hono } from 'hono';
+import { getCookie } from 'hono/cookie';
 import { eq, and, like, gte, lte, sql } from 'drizzle-orm';
+import { getSession } from '../lib/session';
 import { db } from '../db';
-import { games } from '../db/schema';
+import { games, users } from '../db/schema';
 import { getCachedGame, cacheGame } from '../services/game-cache';
 import { storeApiLimiter } from '../services/steam-api';
+
+function getUserCountryCode(c: any): string | undefined {
+  const token = getCookie(c, 'session');
+  if (!token) return undefined;
+  const session = getSession(token);
+  if (!session) return undefined;
+  const userRow = db.select({ country_code: users.country_code }).from(users).where(eq(users.id, session.userId)).get();
+  return userRow?.country_code ?? undefined;
+}
 
 const gamesRouter = new Hono();
 
@@ -71,11 +82,14 @@ gamesRouter.get('/:appid', async (c) => {
     return c.json({ error: 'Invalid appid' }, 400);
   }
 
+  const cc = getUserCountryCode(c);
+
   // Try cache first
   let game = await getCachedGame(appid);
-  if (!game) {
-    // Fetch and cache
-    game = await cacheGame(appid);
+
+  // Re-fetch if no currency info (legacy cache) or not cached
+  if (!game || (game.price_cents && !game.price_currency)) {
+    game = await cacheGame(appid, cc) ?? game;
   }
 
   if (!game) {

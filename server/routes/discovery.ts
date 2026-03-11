@@ -3,7 +3,7 @@ import { getCookie } from 'hono/cookie';
 import { eq, and, notInArray, desc, gte, lte, like, sql } from 'drizzle-orm';
 import { getSession } from '../lib/session';
 import { db } from '../db';
-import { games, swipe_history, user_games, taste_profiles } from '../db/schema';
+import { games, swipe_history, user_games, taste_profiles, users } from '../db/schema';
 import { recalculateTasteProfile } from '../services/taste-profile';
 import { fetchMoreGameIds } from '../services/steam-api';
 import { ensureGamesCached } from '../services/game-cache';
@@ -27,6 +27,7 @@ function dbGameToGame(row: typeof games.$inferSelect): Game {
     tags: row.tags ? JSON.parse(row.tags) : [],
     releaseDate: row.release_date,
     priceCents: row.price_cents,
+    priceCurrency: row.price_currency,
     reviewScore: row.review_score,
     reviewCount: row.review_count,
     developers: row.developers ? JSON.parse(row.developers) : [],
@@ -214,6 +215,10 @@ discovery.post('/load-more', async (c) => {
 
   const { userId } = session;
 
+  // Get user's country code for regional pricing
+  const userRow = db.select({ country_code: users.country_code }).from(users).where(eq(users.id, userId)).get();
+  const cc = userRow?.country_code ?? undefined;
+
   // Gather all game IDs we already have in the DB
   const existingRows = db
     .select({ id: games.id })
@@ -254,7 +259,7 @@ discovery.post('/load-more', async (c) => {
   try {
     await ensureGamesCached(toCache, (done) => {
       cached = done;
-    });
+    }, cc);
   } catch (e) {
     console.error('[discovery] Error caching new games:', e);
   }

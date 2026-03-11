@@ -53,6 +53,7 @@ export interface GameDetails {
   tags: string[];
   release_date: string;
   price_cents: number | null;
+  price_currency: string | null;
   metacritic_score: number | null;
   review_count: number | null;
   developers: string[];
@@ -65,6 +66,7 @@ export interface PlayerSummary {
   personaname: string;
   avatarfull: string;
   profileurl: string;
+  loccountrycode?: string;
 }
 
 export async function getOwnedGames(steamId: string): Promise<OwnedGame[]> {
@@ -127,13 +129,16 @@ export async function getWishlist(steamId: string): Promise<number[]> {
 
 export async function getAppDetails(
   appid: number,
+  cc?: string,
 ): Promise<GameDetails | null> {
   try {
     await storeApiLimiter.acquire();
 
+    const ccParam = cc ? `&cc=${cc}` : '';
+
     // Fetch app details and review summary in parallel (both are store API)
     const [detailsRes, reviewsRes] = await Promise.all([
-      fetch(`https://store.steampowered.com/api/appdetails?appids=${appid}`),
+      fetch(`https://store.steampowered.com/api/appdetails?appids=${appid}${ccParam}`),
       fetch(`https://store.steampowered.com/appreviews/${appid}?json=1&purchase_type=all&num_per_page=0`),
     ]);
 
@@ -181,7 +186,7 @@ export async function getAppDetails(
     ];
 
     const priceOverview = d.price_overview as
-      | { final?: number }
+      | { final?: number; currency?: string }
       | undefined;
     const recommendations = d.recommendations as
       | { total?: number }
@@ -202,6 +207,7 @@ export async function getAppDetails(
       tags,
       release_date: releaseDate?.date ?? '',
       price_cents: priceOverview?.final ?? null,
+      price_currency: priceOverview?.currency ?? null,
       metacritic_score: reviewScore,
       review_count: reviewCount ?? recommendations?.total ?? null,
       developers: (d.developers as string[]) ?? [],
@@ -406,6 +412,7 @@ export async function getPlayerSummary(
           personaname: string;
           avatarfull: string;
           profileurl: string;
+          loccountrycode?: string;
         }>;
       };
     };
@@ -418,6 +425,7 @@ export async function getPlayerSummary(
       personaname: player.personaname,
       avatarfull: player.avatarfull,
       profileurl: player.profileurl,
+      loccountrycode: player.loccountrycode,
     };
   } catch {
     return null;

@@ -19,9 +19,15 @@ interface MediaResponse {
   movies: Array<{ id: number; name: string; thumbnail: string; mp4480: string | null; mp4Max: string | null }>;
 }
 
-function formatPrice(cents: number | null): string {
+function formatPrice(cents: number | null, currency?: string | null): string {
   if (cents === null || cents === 0) return 'Free to Play';
-  return `$${(cents / 100).toFixed(2)}`;
+  const amount = cents / 100;
+  if (currency) {
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+    } catch { /* fall through */ }
+  }
+  return `$${amount.toFixed(2)}`;
 }
 
 function reviewColor(score: number | null): string {
@@ -62,6 +68,7 @@ function normalizeGame(raw: any): Game {
     tags: raw.tags ? (typeof raw.tags === 'string' ? JSON.parse(raw.tags) : raw.tags) : [],
     releaseDate: raw.release_date ?? null,
     priceCents: raw.price_cents ?? null,
+    priceCurrency: raw.price_currency ?? null,
     reviewScore: raw.review_score ?? null,
     reviewCount: raw.review_count ?? null,
     developers: raw.developers ? (typeof raw.developers === 'string' ? JSON.parse(raw.developers) : raw.developers) : [],
@@ -414,7 +421,7 @@ export default function GameDetail() {
               </h2>
               <div className="flex items-baseline gap-3">
                 <span className="text-3xl font-black text-white">
-                  {formatPrice(game.priceCents)}
+                  {formatPrice(game.priceCents, game.priceCurrency)}
                 </span>
                 {game.priceCents !== null && game.priceCents === 0 && (
                   <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-bold">

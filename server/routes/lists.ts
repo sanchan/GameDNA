@@ -25,6 +25,7 @@ function dbGameToGame(row: typeof games.$inferSelect): Game {
     tags: row.tags ? JSON.parse(row.tags) : [],
     releaseDate: row.release_date,
     priceCents: row.price_cents,
+    priceCurrency: row.price_currency,
     reviewScore: row.review_score,
     reviewCount: row.review_count,
     developers: row.developers ? JSON.parse(row.developers) : [],
