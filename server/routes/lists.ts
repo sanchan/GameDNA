@@ -53,6 +53,7 @@ lists.get('/library', async (c) => {
     rows.map((r) => ({
       game: dbGameToGame(r.game),
       playtimeMins: r.userGame.playtime_mins ?? 0,
+      lastPlayed: r.userGame.last_played ?? null,
     })),
   );
 });

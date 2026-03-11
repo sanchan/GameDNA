@@ -29,7 +29,7 @@ export default function App() {
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/recommendations" element={<Recommendations />} />
                   <Route path="/history" element={<History />} />
-                  <Route path="/my-lists" element={<MyLists />} />
+                  <Route path="/lists" element={<MyLists />} />
                 </Routes>
               </main>
             </div>

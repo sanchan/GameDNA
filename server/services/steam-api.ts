@@ -95,36 +95,24 @@ export async function getOwnedGames(steamId: string): Promise<OwnedGame[]> {
 }
 
 export async function getWishlist(steamId: string): Promise<number[]> {
-  const appids: number[] = [];
-  let page = 0;
-
   try {
-    while (true) {
-      await storeApiLimiter.acquire();
-      const url = `https://store.steampowered.com/wishlist/profiles/${steamId}/wishlistdata/?p=${page}`;
-      const res = await fetch(url);
+    const url = `https://api.steampowered.com/IWishlistService/GetWishlist/v1/?steamid=${steamId}&key=${STEAM_API_KEY}`;
+    const res = await fetch(url);
 
-      if (res.status === 403) {
-        // Wishlist is private
-        return [];
-      }
-      if (!res.ok) break;
-
-      const data = (await res.json()) as Record<string, unknown>;
-      const keys = Object.keys(data);
-      if (keys.length === 0) break;
-
-      for (const key of keys) {
-        const id = parseInt(key, 10);
-        if (!isNaN(id)) appids.push(id);
-      }
-      page++;
+    if (!res.ok) {
+      console.error(`[steam-api] GetWishlist HTTP ${res.status}`);
+      return [];
     }
-  } catch {
-    // Return whatever we collected so far
-  }
 
-  return appids;
+    const data = (await res.json()) as {
+      response: { items?: Array<{ appid: number }> };
+    };
+
+    return (data.response.items ?? []).map((item) => item.appid);
+  } catch (e) {
+    console.error('[steam-api] GetWishlist error:', e);
+    return [];
+  }
 }
 
 export async function getAppDetails(

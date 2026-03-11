@@ -166,6 +166,22 @@ async function runSyncInBackground(userId: number, steamId: string, cc?: string)
       }, cc);
     }
 
+    // Cache wishlist game details
+    const wishlistOnly = wishlistAppids.filter((id) => !ownedSet.has(id));
+    if (wishlistOnly.length > 0) {
+      updateSync(userId, {
+        progress: 64,
+        detail: `Fetching wishlist game details... (0/${wishlistOnly.length})`,
+      });
+      await ensureGamesCached(wishlistOnly, (cached, total) => {
+        const progress = 64 + Math.round((cached / total) * 4);
+        updateSync(userId, {
+          progress,
+          detail: `Fetching wishlist game details... (${cached}/${total})`,
+        });
+      }, cc);
+    }
+
     await recalculateTasteProfile(userId).catch((e) => {
       console.error('[sync] taste profile error:', e);
     });
