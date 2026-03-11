@@ -123,17 +123,17 @@ gamesRouter.get('/:appid/media', async (c) => {
         id: number;
         name: string;
         thumbnail: string;
-        webm?: { '480': string; max: string };
-        mp4?: { '480': string; max: string };
+        webm?: { '480'?: string; max?: string };
+        mp4?: { '480'?: string; max?: string };
       }>) ?? []
     ).map((m) => ({
       id: m.id,
       name: m.name,
       thumbnail: m.thumbnail,
-      webm480: m.webm?.['480'] ?? null,
-      webmMax: m.webm?.max ?? null,
-      mp4480: m.mp4?.['480'] ?? null,
-      mp4Max: m.mp4?.max ?? null,
+      // Steam API may return webm/mp4 objects (old format) or only streaming URLs (new format).
+      // Fall back to legacy direct MP4 URLs which still work.
+      mp4480: m.mp4?.['480'] ?? `https://steamcdn-a.akamaihd.net/steam/apps/${m.id}/movie480.mp4`,
+      mp4Max: m.mp4?.max ?? `https://steamcdn-a.akamaihd.net/steam/apps/${m.id}/movie_max.mp4`,
     }));
 
     // Cache for 1 hour
