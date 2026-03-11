@@ -1,5 +1,7 @@
+import { useState, useCallback } from 'react';
 import type { Game } from '../../../shared/types';
 import BookmarkButton from './BookmarkButton';
+import { api } from '../lib/api';
 
 function formatPrice(cents: number | null): string {
   if (cents === null || cents === 0) return 'Free';
@@ -22,9 +24,29 @@ function reviewLabel(score: number | null, count: number | null): string {
 
 function reviewColor(score: number | null): string {
   if (score === null) return 'var(--muted-foreground)';
-  if (score >= 70) return 'oklch(0.72 0.19 142)'; // green
-  if (score >= 40) return 'oklch(0.75 0.18 85)'; // yellow/blue like Steam "Mixed"
-  return 'oklch(0.65 0.2 25)'; // red
+  if (score >= 70) return 'oklch(0.72 0.19 142)';
+  if (score >= 40) return 'oklch(0.75 0.18 85)';
+  return 'oklch(0.65 0.2 25)';
+}
+
+interface MediaItem {
+  type: 'image' | 'video';
+  thumbnail: string;
+  full: string;
+  videoSrc?: string;
+}
+
+interface MediaResponse {
+  screenshots: Array<{ id: number; thumbnail: string; full: string }>;
+  movies: Array<{
+    id: number;
+    name: string;
+    thumbnail: string;
+    webm480: string | null;
+    webmMax: string | null;
+    mp4480: string | null;
+    mp4Max: string | null;
+  }>;
 }
 
 interface GameCardProps {
@@ -35,17 +57,140 @@ interface GameCardProps {
 export default function GameCard({ game, className = '' }: GameCardProps) {
   const steamUrl = `https://store.steampowered.com/app/${game.id}`;
 
+  // Carousel state — index 0 = header image (always available)
+  const [mediaItems, setMediaItems] = useState<MediaItem[] | null>(null);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const loadMedia = useCallback(async () => {
+    if (mediaItems !== null || mediaLoading) return mediaItems;
+    setMediaLoading(true);
+    try {
+      const data = await api.get<MediaResponse>(`/games/${game.id}/media`);
+      const items: MediaItem[] = [];
+
+      // Videos first, then screenshots
+      for (const m of data.movies) {
+        items.push({
+          type: 'video',
+          thumbnail: m.thumbnail,
+          full: m.thumbnail,
+          videoSrc: m.mp4480 || m.webm480 || m.mp4Max || m.webmMax || undefined,
+        });
+      }
+      for (const s of data.screenshots) {
+        items.push({
+          type: 'image',
+          thumbnail: s.thumbnail,
+          full: s.full,
+        });
+      }
+
+      setMediaItems(items);
+      setMediaLoading(false);
+      return items;
+    } catch {
+      setMediaItems([]);
+      setMediaLoading(false);
+      return [];
+    }
+  }, [game.id, mediaItems, mediaLoading]);
+
+  const handlePrev = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const items = mediaItems ?? (await loadMedia());
+    if (!items || items.length === 0) return;
+    const total = items.length + 1; // +1 for header
+    setCurrentIndex((prev) => (prev - 1 + total) % total);
+  };
+
+  const handleNext = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const items = mediaItems ?? (await loadMedia());
+    if (!items || items.length === 0) return;
+    const total = items.length + 1;
+    setCurrentIndex((prev) => (prev + 1) % total);
+  };
+
+  // Determine what to show
+  const showHeader = currentIndex === 0;
+  const currentMedia = !showHeader && mediaItems ? mediaItems[currentIndex - 1] : null;
+  const totalSlides = mediaItems ? mediaItems.length + 1 : null;
+
   return (
     <div
       className={`max-w-sm w-full rounded-xl overflow-hidden bg-[var(--card)] text-[var(--card-foreground)] shadow-lg ${className}`}
     >
-      {game.headerImage && (
-        <img
-          src={game.headerImage}
-          alt={game.name}
-          className="w-full aspect-video object-cover"
-        />
-      )}
+      {/* Image/Video carousel area */}
+      <div className="relative w-full aspect-video bg-[var(--muted)] group">
+        {showHeader ? (
+          game.headerImage && (
+            <img
+              src={game.headerImage}
+              alt={game.name}
+              className="w-full h-full object-cover"
+            />
+          )
+        ) : currentMedia?.type === 'video' && currentMedia.videoSrc ? (
+          <video
+            src={currentMedia.videoSrc}
+            poster={currentMedia.thumbnail}
+            controls
+            autoPlay
+            muted
+            className="w-full h-full object-cover"
+          />
+        ) : currentMedia ? (
+          <img
+            src={currentMedia.full}
+            alt={game.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : null}
+
+        {/* Loading overlay */}
+        {mediaLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+          </div>
+        )}
+
+        {/* Nav arrows — always visible on hover */}
+        <button
+          onClick={handlePrev}
+          className="absolute left-1 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+          title="Previous"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <button
+          onClick={handleNext}
+          className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+          title="Next"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+
+        {/* Slide indicator */}
+        {totalSlides !== null && totalSlides > 1 && (
+          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {currentMedia?.type === 'video' ? (
+              <span className="bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
+                Video {currentIndex} / {totalSlides - 1}
+              </span>
+            ) : (
+              <span className="bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
+                {currentIndex + 1} / {totalSlides}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="p-4 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">

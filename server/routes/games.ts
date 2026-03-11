@@ -3,6 +3,7 @@ import { eq, and, like, gte, lte, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { games } from '../db/schema';
 import { getCachedGame, cacheGame } from '../services/game-cache';
+import { storeApiLimiter } from '../services/steam-api';
 
 const gamesRouter = new Hono();
 
@@ -82,6 +83,65 @@ gamesRouter.get('/:appid', async (c) => {
   }
 
   return c.json(game);
+});
+
+// GET /api/games/:appid/media — fetch screenshots + movies from Steam on-demand
+gamesRouter.get('/:appid/media', async (c) => {
+  const appid = parseInt(c.req.param('appid'), 10);
+  if (isNaN(appid)) {
+    return c.json({ error: 'Invalid appid' }, 400);
+  }
+
+  try {
+    await storeApiLimiter.acquire();
+    const res = await fetch(
+      `https://store.steampowered.com/api/appdetails?appids=${appid}`,
+    );
+    if (!res.ok) return c.json({ screenshots: [], movies: [] });
+
+    const data = (await res.json()) as Record<
+      string,
+      { success: boolean; data?: Record<string, unknown> }
+    >;
+    const entry = data[String(appid)];
+    if (!entry?.success || !entry.data) {
+      return c.json({ screenshots: [], movies: [] });
+    }
+
+    const d = entry.data;
+
+    const screenshots = (
+      (d.screenshots as Array<{ id: number; path_thumbnail: string; path_full: string }>) ?? []
+    ).map((s) => ({
+      id: s.id,
+      thumbnail: s.path_thumbnail,
+      full: s.path_full,
+    }));
+
+    const movies = (
+      (d.movies as Array<{
+        id: number;
+        name: string;
+        thumbnail: string;
+        webm?: { '480': string; max: string };
+        mp4?: { '480': string; max: string };
+      }>) ?? []
+    ).map((m) => ({
+      id: m.id,
+      name: m.name,
+      thumbnail: m.thumbnail,
+      webm480: m.webm?.['480'] ?? null,
+      webmMax: m.webm?.max ?? null,
+      mp4480: m.mp4?.['480'] ?? null,
+      mp4Max: m.mp4?.max ?? null,
+    }));
+
+    // Cache for 1 hour
+    c.header('Cache-Control', 'public, max-age=3600');
+    return c.json({ screenshots, movies });
+  } catch {
+    return c.json({ screenshots: [], movies: [] });
+  }
 });
 
 export default gamesRouter;
