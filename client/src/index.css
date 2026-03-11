@@ -32,6 +32,21 @@
   border-color: var(--border);
 }
 
+button,
+a,
+select,
+label,
+[role="button"],
+[onclick],
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"],
+summary {
+  cursor: pointer;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);

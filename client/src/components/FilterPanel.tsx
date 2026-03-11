@@ -97,8 +97,25 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
     'w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)] transition-colors';
 
   return (
-    <div className={`bg-[#242424] border-r border-[#333] overflow-y-auto ${className}`}>
-      <div className="p-6">
+    <div
+      className={`bg-[#242424] border-r border-[#333] transition-[width] duration-300 ease-in-out overflow-hidden ${
+        collapsed ? 'w-12' : 'w-80'
+      } ${className?.replace(/w-80\b/, '') ?? ''}`}
+      style={{ minWidth: collapsed ? '3rem' : '20rem' }}
+    >
+      {collapsed ? (
+        <div className="flex flex-col items-center pt-6 gap-4">
+          <button
+            onClick={() => setCollapsed(false)}
+            className="text-gray-400 hover:text-white transition-colors p-2 cursor-pointer"
+            title={t('filterPanel.expandFilters')}
+          >
+            <i className="fa-solid fa-chevron-right" />
+          </button>
+          <i className="fa-solid fa-filter text-[var(--primary)] text-sm" />
+        </div>
+      ) : (
+      <div className="p-6 w-80">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold flex items-center space-x-2">
@@ -106,16 +123,15 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
             <span>{t('common.filters')}</span>
           </h2>
           <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="text-gray-400 hover:text-white transition-colors"
-            title={collapsed ? t('filterPanel.expandFilters') : t('filterPanel.collapseFilters')}
+            onClick={() => setCollapsed(true)}
+            className="text-gray-400 hover:text-white transition-colors cursor-pointer"
+            title={t('filterPanel.collapseFilters')}
           >
             <i className="fa-solid fa-chevron-left" />
           </button>
         </div>
 
-        {!collapsed && (
-          <div className="flex flex-col gap-0">
+        <div className="flex flex-col gap-0">
             {/* Price Range */}
             <div className="mb-6">
               <label className="block text-sm font-semibold mb-3">{t('filterPanel.priceRange')}</label>
@@ -241,8 +257,8 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
               <div className="text-2xl font-bold text-[var(--primary)]">{activeCount}</div>
             </div>
           </div>
-        )}
       </div>
+      )}
     </div>
   );
 }
