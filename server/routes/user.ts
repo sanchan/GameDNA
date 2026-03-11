@@ -3,8 +3,9 @@ import { eq, and, sql } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 import { db } from '../db';
 import { users, user_games, games, swipe_history, taste_profiles } from '../db/schema';
-import { getOwnedGames, getWishlist } from '../services/steam-api';
+import { getOwnedGames, getWishlist, getPopularGameIds } from '../services/steam-api';
 import { ensureGamesCached } from '../services/game-cache';
+import { recalculateTasteProfile } from '../services/taste-profile';
 import type { GamingDNA } from '../../shared/types';
 
 type AuthEnv = {
@@ -27,12 +28,14 @@ user.post('/sync', async (c) => {
   }
 
   const steamId = userRow.steam_id;
+  console.log(`[sync] Starting sync for user ${userId} (steam: ${steamId})`);
 
   // Fetch owned games and wishlist in parallel
   const [ownedGames, wishlistAppids] = await Promise.all([
     getOwnedGames(steamId),
     getWishlist(steamId),
   ]);
+  console.log(`[sync] Fetched ${ownedGames.length} owned games, ${wishlistAppids.length} wishlist items`);
 
   // Collect all appids that need caching
   const ownedAppids = ownedGames.map((g) => g.appid);
@@ -88,6 +91,23 @@ user.post('/sync', async (c) => {
         },
       })
       .run();
+  }
+
+  // Recalculate taste profile based on library data
+  await recalculateTasteProfile(userId).catch((e) => {
+    console.error('[sync] taste profile error:', e);
+  });
+
+  // Seed popular games for discovery (wait for completion so client gets games)
+  try {
+    const popularIds = await getPopularGameIds();
+    const ownedAndWishlist = new Set(allAppids);
+    const discoveryIds = popularIds.filter((id) => !ownedAndWishlist.has(id));
+    console.log(`[sync] Seeding ${discoveryIds.length} popular games for discovery`);
+    await ensureGamesCached(discoveryIds);
+    console.log('[sync] Popular games seeding complete');
+  } catch (e) {
+    console.error('[sync] Popular games seeding error:', e);
   }
 
   return c.json({

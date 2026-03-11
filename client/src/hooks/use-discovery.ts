@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import { useAuth } from './use-auth';
 import type { Game, SwipeDecision, DiscoveryFilters } from '../../../shared/types';
 
 function buildQueryString(filters: DiscoveryFilters): string {
@@ -15,14 +16,26 @@ function buildQueryString(filters: DiscoveryFilters): string {
 
 export function useDiscovery() {
   const queryClient = useQueryClient();
+  const { syncStatus } = useAuth();
   const [filters, setFilters] = useState<DiscoveryFilters>({});
   const [queue, setQueue] = useState<Game[]>([]);
   const [animatingOut, setAnimatingOut] = useState<'left' | 'right' | 'down' | null>(null);
+  const prevSyncStatus = useRef(syncStatus);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['discovery-queue', filters],
     queryFn: () => api.get<Game[]>(`/discovery/queue${buildQueryString(filters)}`),
+    staleTime: 0, // Always refetch on mount - discovery needs fresh data
   });
+
+  // Refetch queue when sync transitions to 'synced'
+  useEffect(() => {
+    if (prevSyncStatus.current === 'syncing' && syncStatus === 'synced') {
+      setQueue([]);
+      refetch();
+    }
+    prevSyncStatus.current = syncStatus;
+  }, [syncStatus, refetch]);
 
   // Sync fetched data into local queue
   useEffect(() => {
@@ -33,14 +46,14 @@ export function useDiscovery() {
         return [...prev, ...newGames];
       });
     }
-  }, [data]);
+  }, [data, dataUpdatedAt]);
 
   // Auto-fetch more when queue runs low
   useEffect(() => {
     if (queue.length < 3 && !isLoading) {
-      queryClient.invalidateQueries({ queryKey: ['discovery-queue', filters] });
+      refetch();
     }
-  }, [queue.length, isLoading, filters, queryClient]);
+  }, [queue.length, isLoading, refetch]);
 
   const swipeMutation = useMutation({
     mutationFn: (params: { gameId: number; decision: SwipeDecision }) =>

@@ -1,107 +1,52 @@
----
+# CLAUDE.md
 
-Default to using Bun instead of Node.js.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Bun automatically loads .env, so don't use dotenv.
+## Project Overview
 
-## APIs
+GameDNA (steam-search) — a Steam game discovery web app with Tinder-style swipe interface, taste profiling, and AI-powered recommendations via local Ollama (Llama 3.1 8B). Written in Spanish planning docs but English code.
 
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
-- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
+## Commands
 
-## Testing
-
-Use `bun test` to run tests.
-
-```ts#index.test.ts
-import { test, expect } from "bun:test";
-
-test("hello world", () => {
-  expect(1).toBe(1);
-});
+```bash
+bun install              # Install dependencies
+bun run dev              # Start both server (port 3000) and client (port 5173)
+bun run dev:server       # Server only (bun --watch server/index.ts)
+bun run dev:client       # Client only (vite dev server)
+bun run build            # Build client for production
+bun run db:generate      # Generate Drizzle migrations
+bun run db:migrate       # Push schema to DB (drizzle-kit push)
 ```
 
-## Frontend
+Requires `STEAM_API_KEY` and optionally Ollama running locally. See `.env.example` for all env vars.
 
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
+## Architecture
 
-Server:
+Single-package monorepo with three directories:
 
-```ts#index.ts
-import index from "./index.html"
+- **`server/`** — Hono HTTP server running on Bun. Entry: `server/index.ts`
+- **`client/`** — Vite + React 19 + Tailwind CSS v4 SPA. Entry: `client/src/main.tsx`
+- **`shared/`** — Shared TypeScript types (`shared/types.ts`)
 
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/users/:id": {
-      GET: (req) => {
-        return new Response(JSON.stringify({ id: req.params.id }));
-      },
-    },
-  },
-  // optional websocket support
-  websocket: {
-    open: (ws) => {
-      ws.send("Hello, world!");
-    },
-    message: (ws, message) => {
-      ws.send(message);
-    },
-    close: (ws) => {
-      // handle close
-    }
-  },
-  development: {
-    hmr: true,
-    console: true,
-  }
-})
-```
+### Server Structure
 
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
+- `server/db/` — SQLite via Drizzle ORM + `bun:sqlite`. Tables auto-created on startup (no migration runner needed in dev). Schema in `schema.ts`, connection in `index.ts`.
+- `server/routes/` — Hono route modules: auth, user, games, discovery, backlog, recommendations. All mounted under `/api/`.
+- `server/services/` — Business logic: `steam-api.ts` (Steam Web API client with rate limiting), `game-cache.ts` (SQLite game metadata cache), `taste-profile.ts` (statistical taste scoring), `recommendation.ts` (3-layer recommendation pipeline), `ollama.ts` (Ollama client with graceful degradation).
+- `server/middleware/auth.ts` — Session validation middleware.
+- `server/lib/` — `steam-openid.ts` (OpenID 2.0 flow), `session.ts` (cookie-based sessions).
 
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
-```
+### Client Structure
 
-With the following `frontend.tsx`:
+- `client/src/lib/api.ts` — Fetch wrapper for API calls.
+- `client/src/hooks/` — `use-auth.ts`, `use-discovery.ts`, `use-profile.ts` (TanStack Query hooks).
+- `client/src/pages/` — Landing, Discovery (swipe UI), Profile (radar chart), Recommendations, Backlog, GameDetail.
+- `client/src/components/` — GameCard, SwipeControls, FilterPanel, RadarChart (recharts), WhyThisGame, GameGrid, Navbar, Toast, ErrorBoundary.
 
-```tsx#frontend.tsx
-import React from "react";
+### Key Patterns
 
-// import .css files directly and it works
-import './index.css';
-
-import { createRoot } from "react-dom/client";
-
-const root = createRoot(document.body);
-
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
-
-root.render(<Frontend />);
-```
-
-Then, run index.ts
-
-```sh
-bun --hot ./index.ts
-```
-
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.md`.
+- In dev: Vite (5173) proxies `/api/*` to Hono (3000). In prod: Hono serves `client/dist/` static files.
+- DB is SQLite at `./data/gamedna.db` with WAL mode and foreign keys enabled.
+- Auth uses Steam OpenID 2.0 with HTTP-only cookie sessions.
+- Recommendation pipeline: Layer 1 (statistical taste profile) → Layer 2 (SQL pre-filter, top 50) → Layer 3 (Ollama AI scoring, batches of 10). Falls back to Layer 2 only if Ollama is unavailable.
+- Path alias: `@shared/*` maps to `./shared/*` in tsconfig.

@@ -15,6 +15,7 @@ export function useProfile() {
   return useQuery({
     queryKey: ['user-profile'],
     queryFn: () => api.get<ProfileResponse>('/user/profile'),
+    staleTime: 0, // Always refetch - data may change after sync
   });
 }
 
@@ -22,5 +23,6 @@ export function useGamingDNA() {
   return useQuery({
     queryKey: ['gaming-dna'],
     queryFn: () => api.get<GamingDNA>('/user/gaming-dna'),
+    staleTime: 0, // Always refetch - data may change after sync
   });
 }

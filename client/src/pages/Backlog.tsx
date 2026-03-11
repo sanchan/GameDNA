@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Navigate, Link } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { api } from '../lib/api';
@@ -30,13 +30,15 @@ function reviewColor(score: number | null): string {
 }
 
 export default function Backlog() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, syncStatus } = useAuth();
   const [backlog, setBacklog] = useState<BacklogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [prioritized, setPrioritized] = useState<PrioritizedEntry[] | null>(null);
 
-  useEffect(() => {
+  const prevSyncStatus = useRef(syncStatus);
+
+  const fetchBacklog = useCallback(() => {
     if (!user) return;
     setLoading(true);
     api.get<BacklogEntry[]>('/backlog')
@@ -44,6 +46,18 @@ export default function Backlog() {
       .catch(() => setBacklog([]))
       .finally(() => setLoading(false));
   }, [user]);
+
+  useEffect(() => {
+    fetchBacklog();
+  }, [fetchBacklog]);
+
+  // Refetch when sync transitions to 'synced'
+  useEffect(() => {
+    if (prevSyncStatus.current === 'syncing' && syncStatus === 'synced') {
+      fetchBacklog();
+    }
+    prevSyncStatus.current = syncStatus;
+  }, [syncStatus, fetchBacklog]);
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
@@ -123,8 +137,18 @@ export default function Backlog() {
         </div>
       ) : backlog.length === 0 ? (
         <div className="text-center py-20 text-[var(--muted-foreground)]">
-          <p className="text-lg mb-2">No unplayed games in your library.</p>
-          <p className="text-sm">You must be busy!</p>
+          {syncStatus === 'syncing' ? (
+            <>
+              <p className="text-lg mb-2">Syncing your Steam library...</p>
+              <p className="text-sm">Your backlog will appear once sync is complete.</p>
+              <div className="mt-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)]" />
+            </>
+          ) : (
+            <>
+              <p className="text-lg mb-2">No unplayed games in your library.</p>
+              <p className="text-sm">You must be busy!</p>
+            </>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-2">

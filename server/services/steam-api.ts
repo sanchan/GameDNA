@@ -66,16 +66,26 @@ export interface PlayerSummary {
 }
 
 export async function getOwnedGames(steamId: string): Promise<OwnedGame[]> {
+  if (!STEAM_API_KEY) {
+    console.warn('[steam-api] STEAM_API_KEY is not set - cannot fetch owned games');
+    return [];
+  }
   try {
     await limiter.acquire();
     const url = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&format=json&include_appinfo=1&include_played_free_games=1`;
     const res = await fetch(url);
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.warn(`[steam-api] GetOwnedGames failed: ${res.status} ${res.statusText}`);
+      return [];
+    }
     const data = (await res.json()) as {
       response?: { games?: OwnedGame[] };
     };
-    return data.response?.games ?? [];
-  } catch {
+    const games = data.response?.games ?? [];
+    console.log(`[steam-api] GetOwnedGames: found ${games.length} games for ${steamId}`);
+    return games;
+  } catch (e) {
+    console.error('[steam-api] GetOwnedGames error:', e);
     return [];
   }
 }
@@ -175,6 +185,110 @@ export async function getAppDetails(
   } catch {
     return null;
   }
+}
+
+// Fetch popular/top-selling game appids from Steam for discovery seeding
+export async function getPopularGameIds(): Promise<number[]> {
+  // Curated list of well-known popular games across genres
+  // This ensures discovery always has content even if Steam API fails
+  const curatedIds = [
+    // Action/Adventure
+    1091500, // Cyberpunk 2077
+    1174180, // Red Dead Redemption 2
+    1245620, // Elden Ring
+    292030,  // The Witcher 3
+    374320,  // Dark Souls III
+    1938090, // Call of Duty MW III
+    1551360, // Forza Horizon 5
+    1593500, // God of War
+    1817070, // Marvel's Spider-Man Remastered
+    2050650, // Resident Evil 4 (2023)
+    1222670, // The Outer Worlds
+    1449560, // Lies of P
+    553850,  // Helldivers 2
+    // Strategy
+    1158310, // Crusader Kings III
+    394360,  // Hearts of Iron IV
+    1259420, // Humankind
+    1446780, // Manor Lords
+    1326470, // Sons of the Forest
+    // RPG
+    1086940, // Baldur's Gate 3
+    1151640, // Horizon Zero Dawn
+    990080,  // Hogwarts Legacy
+    1817190, // Marvel's Spider-Man Miles Morales
+    2358720, // Black Myth: Wukong
+    1716740, // Persona 3 Reload
+    // Roguelike/Indie
+    1145360, // Hades
+    2379780, // Balatro
+    1794680, // Vampire Survivors
+    413150,  // Stardew Valley
+    367520,  // Hollow Knight
+    1966720, // Lethal Company
+    105600,  // Terraria
+    1145350, // Hades II (Early Access)
+    // FPS
+    730,     // Counter-Strike 2
+    1172470, // Apex Legends
+    578080,  // PUBG
+    1085660, // Destiny 2
+    359550,  // Tom Clancy's Rainbow Six Siege
+    // Survival/Crafting
+    252490,  // Rust
+    346110,  // ARK: Survival Evolved
+    892970,  // Valheim
+    108600,  // Project Zomboid
+    1063730, // New World
+    // Simulation
+    1332010, // Stray
+    1623730, // Palworld
+    227300,  // Euro Truck Simulator 2
+    255710,  // Cities: Skylines
+    1625450, // Cities: Skylines II
+    // Horror
+    1966720, // Lethal Company
+    739630,  // Phasmophobia
+    753640,  // Outlast
+    // Sports/Racing
+    2195250, // EA Sports FC 24
+    1293830, // Forza Horizon 4
+    // Puzzle/Platformer
+    1426210, // It Takes Two
+    1113560, // Neon White
+    431960,  // Wallpaper Engine
+    // Multiplayer
+    570,     // Dota 2
+    440,     // Team Fortress 2
+    945360,  // Among Us
+    1599340, // Lost Ark
+    236390,  // War Thunder
+  ];
+
+  try {
+    // Try to fetch Steam's featured games for additional variety
+    await limiter.acquire();
+    const res = await fetch('https://store.steampowered.com/api/featured');
+    if (res.ok) {
+      const data = (await res.json()) as {
+        featured_win?: Array<{ id: number }>;
+        featured_mac?: Array<{ id: number }>;
+        featured_linux?: Array<{ id: number }>;
+      };
+      const featuredIds = [
+        ...(data.featured_win ?? []),
+        ...(data.featured_mac ?? []),
+        ...(data.featured_linux ?? []),
+      ].map((g) => g.id);
+
+      // Combine curated + featured, deduplicate
+      return [...new Set([...curatedIds, ...featuredIds])];
+    }
+  } catch {
+    // Fall back to curated list
+  }
+
+  return curatedIds;
 }
 
 export async function getPlayerSummary(
