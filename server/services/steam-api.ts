@@ -130,11 +130,16 @@ export async function getAppDetails(
 ): Promise<GameDetails | null> {
   try {
     await storeApiLimiter.acquire();
-    const url = `https://store.steampowered.com/api/appdetails?appids=${appid}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
 
-    const data = (await res.json()) as Record<
+    // Fetch app details and review summary in parallel (both are store API)
+    const [detailsRes, reviewsRes] = await Promise.all([
+      fetch(`https://store.steampowered.com/api/appdetails?appids=${appid}`),
+      fetch(`https://store.steampowered.com/appreviews/${appid}?json=1&purchase_type=all&num_per_page=0`),
+    ]);
+
+    if (!detailsRes.ok) return null;
+
+    const data = (await detailsRes.json()) as Record<
       string,
       { success: boolean; data?: Record<string, unknown> }
     >;
@@ -142,6 +147,30 @@ export async function getAppDetails(
     if (!entry?.success || !entry.data) return null;
 
     const d = entry.data as Record<string, unknown>;
+
+    // Parse review summary
+    let reviewScore: number | null = null;
+    let reviewCount: number | null = null;
+    try {
+      if (reviewsRes.ok) {
+        const reviewData = (await reviewsRes.json()) as {
+          query_summary?: {
+            total_positive?: number;
+            total_negative?: number;
+            total_reviews?: number;
+          };
+        };
+        const summary = reviewData.query_summary;
+        if (summary && summary.total_reviews && summary.total_reviews > 0) {
+          reviewScore = Math.round(
+            ((summary.total_positive ?? 0) / summary.total_reviews) * 100,
+          );
+          reviewCount = summary.total_reviews;
+        }
+      }
+    } catch {
+      // Fall back to recommendations.total if reviews API fails
+    }
 
     const genresRaw = (d.genres as Array<{ id: string; description: string }>) ?? [];
     const categoriesRaw = (d.categories as Array<{ id: number; description: string }>) ?? [];
@@ -154,7 +183,6 @@ export async function getAppDetails(
     const priceOverview = d.price_overview as
       | { final?: number }
       | undefined;
-    const metacritic = d.metacritic as { score?: number } | undefined;
     const recommendations = d.recommendations as
       | { total?: number }
       | undefined;
@@ -174,8 +202,8 @@ export async function getAppDetails(
       tags,
       release_date: releaseDate?.date ?? '',
       price_cents: priceOverview?.final ?? null,
-      metacritic_score: metacritic?.score ?? null,
-      review_count: recommendations?.total ?? null,
+      metacritic_score: reviewScore,
+      review_count: reviewCount ?? recommendations?.total ?? null,
       developers: (d.developers as string[]) ?? [],
       publishers: (d.publishers as string[]) ?? [],
       platforms: {
