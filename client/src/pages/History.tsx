@@ -3,6 +3,7 @@ import { Navigate, Link } from 'react-router';
 import { useTranslation, Trans } from 'react-i18next';
 import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
+import { useToast } from '../components/Toast';
 import { api } from '../lib/api';
 import type { SwipeDecision } from '../../../shared/types';
 import type { Game } from '../../../shared/types';
@@ -56,6 +57,7 @@ function timeAgo(unix: number): string {
 export default function History() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [entries, setEntries] = useState<SwipeEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export default function History() {
   // Reset page when filter changes
   useEffect(() => {
     setPage(0);
-  }, [filter]);
+  }, [filter, dateRange]);
 
   const fetchHistory = useCallback(async () => {
     if (!user) return;
@@ -90,6 +92,7 @@ export default function History() {
       params.set('offset', String(page * PAGE_SIZE));
       if (filter !== 'all') params.set('decision', filter);
       if (debouncedSearch) params.set('search', debouncedSearch);
+      if (dateRange !== 'all') params.set('dateRange', dateRange);
 
       const data = await api.get<HistoryResponse>(`/history?${params}`);
       setEntries(data.items);
@@ -100,7 +103,7 @@ export default function History() {
     } finally {
       setLoading(false);
     }
-  }, [user, filter, debouncedSearch, page]);
+  }, [user, filter, debouncedSearch, page, dateRange]);
 
   useEffect(() => {
     fetchHistory();
@@ -110,7 +113,6 @@ export default function History() {
     setUpdatingId(entryId);
     try {
       await api.post(`/history/${entryId}`, { decision: newDecision });
-      // If filtering by decision and the new one doesn't match, remove from list
       if (filter !== 'all' && newDecision !== filter) {
         setEntries((prev) => prev.filter((e) => e.id !== entryId));
         setTotal((t) => t - 1);
@@ -121,8 +123,9 @@ export default function History() {
           ),
         );
       }
+      toast(`Changed to ${newDecision}`, 'success');
     } catch {
-      // ignore
+      toast('Failed to update decision', 'error');
     } finally {
       setUpdatingId(null);
     }
@@ -134,10 +137,42 @@ export default function History() {
       await api.delete(`/history/${entryId}`);
       setEntries((prev) => prev.filter((e) => e.id !== entryId));
       setTotal((t) => t - 1);
+      toast('Entry removed', 'success');
     } catch {
-      // ignore
+      toast('Failed to remove entry', 'error');
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.set('limit', '10000');
+      if (filter !== 'all') params.set('decision', filter);
+      if (dateRange !== 'all') params.set('dateRange', dateRange);
+
+      const data = await api.get<HistoryResponse>(`/history?${params}`);
+      const csvRows = [
+        ['Game', 'Decision', 'Date'].join(','),
+        ...data.items.map((e) =>
+          [
+            `"${e.game.name.replace(/"/g, '""')}"`,
+            e.decision,
+            new Date(e.swipedAt * 1000).toISOString(),
+          ].join(',')
+        ),
+      ];
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `swipe-history-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast(`Exported ${data.items.length} entries`, 'success');
+    } catch {
+      toast('Failed to export history', 'error');
     }
   };
 
@@ -329,7 +364,10 @@ export default function History() {
               </p>
             </div>
           </div>
-          <button className="flex items-center gap-2 px-5 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-5 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all cursor-pointer"
+          >
             <i className="fa-solid fa-download" />
             <span>{t('history.exportHistory')}</span>
           </button>

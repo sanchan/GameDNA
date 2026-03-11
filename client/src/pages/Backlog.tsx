@@ -3,6 +3,7 @@ import { Navigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
+import { useToast } from '../components/Toast';
 import { api } from '../lib/api';
 import type { Game } from '../../../shared/types';
 
@@ -54,6 +55,8 @@ type ScoreFilter = 'all' | 'excellent' | 'great' | 'good' | 'fair';
 export default function Backlog() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus } = useAuth();
+  const { toast } = useToast();
+  const [markingPlayedId, setMarkingPlayedId] = useState<number | null>(null);
   const [backlog, setBacklog] = useState<BacklogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -95,10 +98,24 @@ export default function Backlog() {
       const result = await api.post<{ prioritized: PrioritizedEntry[] }>('/backlog/analyze');
       setPrioritized(result.prioritized);
       setLastAnalyzed(new Date());
+      toast(`Analyzed ${result.prioritized.length} games`, 'success');
     } catch {
-      // silently fail
+      toast('AI analysis failed. Is Ollama running?', 'error');
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const handleMarkAsPlayed = async (gameId: number, gameName: string) => {
+    setMarkingPlayedId(gameId);
+    try {
+      await api.post(`/backlog/${gameId}/mark-played`);
+      setBacklog((prev) => prev.filter((e) => e.game.id !== gameId));
+      toast(`Marked "${gameName}" as played`, 'success');
+    } catch {
+      toast('Failed to mark as played', 'error');
+    } finally {
+      setMarkingPlayedId(null);
     }
   };
 
@@ -471,9 +488,11 @@ export default function Backlog() {
                         {t('common.viewDetails')}
                       </Link>
                       <button
-                        className="bg-[#1a1a1a] border border-[#333] hover:border-gray-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+                        onClick={() => handleMarkAsPlayed(entry.game.id, entry.game.name)}
+                        disabled={markingPlayedId === entry.game.id}
+                        className="bg-[#1a1a1a] border border-[#333] hover:border-gray-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                       >
-                        <i className="fa-solid fa-check" />
+                        <i className={`fa-solid ${markingPlayedId === entry.game.id ? 'fa-spinner fa-spin' : 'fa-check'}`} />
                         {t('backlog.markAsPlayed')}
                       </button>
                     </div>

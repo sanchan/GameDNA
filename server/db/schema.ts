@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, primaryKey, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey, uniqueIndex, index } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 export const users = sqliteTable('users', {
@@ -41,6 +41,7 @@ export const user_games = sqliteTable('user_games', {
   synced_at: integer('synced_at'),
 }, (table) => [
   primaryKey({ columns: [table.user_id, table.game_id] }),
+  index('user_games_user_id_idx').on(table.user_id),
 ]);
 
 export const swipe_history = sqliteTable('swipe_history', {
@@ -51,6 +52,7 @@ export const swipe_history = sqliteTable('swipe_history', {
   swiped_at: integer('swiped_at').default(sql`(unixepoch())`),
 }, (table) => [
   uniqueIndex('swipe_user_game_idx').on(table.user_id, table.game_id),
+  index('swipe_history_user_id_idx').on(table.user_id),
 ]);
 
 export const taste_profiles = sqliteTable('taste_profiles', {
@@ -74,6 +76,7 @@ export const recommendations = sqliteTable('recommendations', {
   dismissed: integer('dismissed').default(0),
 }, (table) => [
   uniqueIndex('rec_user_game_idx').on(table.user_id, table.game_id),
+  index('recommendations_user_score_idx').on(table.user_id, table.score),
 ]);
 
 export const bookmarks = sqliteTable('bookmarks', {

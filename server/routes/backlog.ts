@@ -135,6 +135,30 @@ backlog.get('/', async (c) => {
   return c.json(result);
 });
 
+backlog.post('/:gameId/mark-played', async (c) => {
+  const userId = c.get('userId');
+  const gameId = Number(c.req.param('gameId'));
+
+  const existing = db
+    .select()
+    .from(user_games)
+    .where(and(eq(user_games.user_id, userId), eq(user_games.game_id, gameId)))
+    .get();
+
+  if (!existing) {
+    return c.json({ error: 'Game not found in library' }, 404);
+  }
+
+  // Set playtime to 120 mins (the backlog threshold) to move it out of backlog
+  const newPlaytime = Math.max(existing.playtime_mins ?? 0, 120);
+  db.update(user_games)
+    .set({ playtime_mins: newPlaytime })
+    .where(and(eq(user_games.user_id, userId), eq(user_games.game_id, gameId)))
+    .run();
+
+  return c.json({ success: true });
+});
+
 backlog.post('/analyze', async (c) => {
   const userId = c.get('userId');
 

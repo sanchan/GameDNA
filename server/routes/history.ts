@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, and, desc, like, sql } from 'drizzle-orm';
+import { eq, and, desc, like, sql, gte } from 'drizzle-orm';
 import { db } from '../db';
 import { swipe_history, games } from '../db/schema';
 import { requireAuth } from '../middleware/auth';
@@ -42,6 +42,7 @@ history.get('/', async (c) => {
   const offset = parseInt(c.req.query('offset') ?? '0', 10);
   const filterDecision = c.req.query('decision');
   const search = c.req.query('search')?.trim();
+  const dateRange = c.req.query('dateRange');
 
   const conditions: ReturnType<typeof eq>[] = [eq(swipe_history.user_id, userId)];
   if (filterDecision && ['yes', 'no', 'maybe'].includes(filterDecision)) {
@@ -49,6 +50,20 @@ history.get('/', async (c) => {
   }
   if (search) {
     conditions.push(like(games.name, `%${search}%`));
+  }
+  if (dateRange && dateRange !== 'all') {
+    const now = Math.floor(Date.now() / 1000);
+    const ranges: Record<string, number> = {
+      '7days': 7 * 86400,
+      '30days': 30 * 86400,
+      '3months': 90 * 86400,
+      '6months': 180 * 86400,
+      'year': 365 * 86400,
+    };
+    const seconds = ranges[dateRange];
+    if (seconds) {
+      conditions.push(gte(swipe_history.swiped_at, now - seconds));
+    }
   }
 
   const whereClause = and(...conditions);

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useBookmarks } from '../hooks/use-bookmarks';
+import { useToast } from './Toast';
 
 interface BookmarkButtonProps {
   gameId: number;
@@ -10,6 +11,7 @@ interface BookmarkButtonProps {
 export default function BookmarkButton({ gameId, size = 16, className }: BookmarkButtonProps) {
   const { t } = useTranslation();
   const { isBookmarked, toggle } = useBookmarks();
+  const { toast } = useToast();
   const active = isBookmarked(gameId);
 
   return (
@@ -18,6 +20,7 @@ export default function BookmarkButton({ gameId, size = 16, className }: Bookmar
         e.preventDefault();
         e.stopPropagation();
         toggle(gameId);
+        toast(active ? 'Bookmark removed' : 'Bookmarked', 'success');
       }}
       className={className ?? `w-8 h-8 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center transition-all ${
         active
