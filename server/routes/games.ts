@@ -1,0 +1,87 @@
+import { Hono } from 'hono';
+import { eq, and, like, gte, lte, sql } from 'drizzle-orm';
+import { db } from '../db';
+import { games } from '../db/schema';
+import { getCachedGame, cacheGame } from '../services/game-cache';
+
+const gamesRouter = new Hono();
+
+gamesRouter.get('/search', async (c) => {
+  const q = c.req.query('q');
+  const genre = c.req.query('genre');
+  const minScore = c.req.query('minScore');
+  const maxPrice = c.req.query('maxPrice');
+  const page = parseInt(c.req.query('page') ?? '1', 10);
+  const limit = Math.min(parseInt(c.req.query('limit') ?? '20', 10), 100);
+  const offset = (page - 1) * limit;
+
+  const conditions = [];
+
+  if (q) {
+    conditions.push(like(games.name, `%${q}%`));
+  }
+
+  if (genre) {
+    conditions.push(like(games.genres, `%${genre}%`));
+  }
+
+  if (minScore) {
+    conditions.push(gte(games.review_score, parseInt(minScore, 10)));
+  }
+
+  if (maxPrice) {
+    // maxPrice is in dollars, price_cents is in cents
+    conditions.push(lte(games.price_cents, parseInt(maxPrice, 10) * 100));
+  }
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [results, countResult] = await Promise.all([
+    db
+      .select()
+      .from(games)
+      .where(where)
+      .limit(limit)
+      .offset(offset)
+      .all(),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(games)
+      .where(where)
+      .get(),
+  ]);
+
+  const total = countResult?.count ?? 0;
+
+  return c.json({
+    games: results,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
+});
+
+gamesRouter.get('/:appid', async (c) => {
+  const appid = parseInt(c.req.param('appid'), 10);
+  if (isNaN(appid)) {
+    return c.json({ error: 'Invalid appid' }, 400);
+  }
+
+  // Try cache first
+  let game = await getCachedGame(appid);
+  if (!game) {
+    // Fetch and cache
+    game = await cacheGame(appid);
+  }
+
+  if (!game) {
+    return c.json({ error: 'Game not found' }, 404);
+  }
+
+  return c.json(game);
+});
+
+export default gamesRouter;
