@@ -298,7 +298,7 @@ export default function Profile() {
                           >
                             <td className="px-6 py-4 text-sm font-medium text-white">{tag.name}</td>
                             <td className="px-6 py-4 text-sm text-gray-400">{tag.score.toFixed(1)}</td>
-                            <td className="px-6 py-4 text-sm text-gray-400">{tag.count ?? '—'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-400">{tag.count}</td>
                             <td className="px-6 py-4 text-right">
                               <label className="relative inline-flex items-center cursor-pointer">
                                 <input
