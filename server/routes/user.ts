@@ -66,8 +66,22 @@ user.post('/sync', async (c) => {
   const countryCode = userRow.country_code ?? undefined;
   console.log(`[sync] Starting sync for user ${userId} (steam: ${steamId}, categories: ${requested.join(', ')})`);
 
-  // Run sync in background
-  runCategorySync(userId, steamId, countryCode, requested);
+  // Run sync in background with timeout (10 minutes max)
+  const SYNC_TIMEOUT_MS = 10 * 60 * 1000;
+  Promise.race([
+    runCategorySync(userId, steamId, countryCode, requested),
+    new Promise<void>((_, reject) =>
+      setTimeout(() => reject(new Error('Sync timed out')), SYNC_TIMEOUT_MS)
+    ),
+  ]).catch((err) => {
+    console.error(`[sync] Timed out or failed for user ${userId}:`, err);
+    for (const cat of requested) {
+      const state = getSyncStatus(userId);
+      if (state?.categories[cat].status === 'syncing') {
+        markCategoryError(userId, cat, 'Sync timed out after 10 minutes');
+      }
+    }
+  });
 
   return c.json({ status: 'started', categories: requested });
 });

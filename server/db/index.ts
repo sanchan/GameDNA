@@ -61,6 +61,8 @@ sqlite.exec(`
   );
 
   CREATE UNIQUE INDEX IF NOT EXISTS swipe_user_game_idx ON swipe_history (user_id, game_id);
+  CREATE INDEX IF NOT EXISTS swipe_history_user_id_idx ON swipe_history (user_id);
+  CREATE INDEX IF NOT EXISTS user_games_user_id_idx ON user_games (user_id);
 
   CREATE TABLE IF NOT EXISTS taste_profiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -84,6 +86,7 @@ sqlite.exec(`
   );
 
   CREATE UNIQUE INDEX IF NOT EXISTS rec_user_game_idx ON recommendations (user_id, game_id);
+  CREATE INDEX IF NOT EXISTS recommendations_user_score_idx ON recommendations (user_id, score);
 
   CREATE TABLE IF NOT EXISTS bookmarks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

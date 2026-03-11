@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { useAuth } from './use-auth';
+import { useToast } from '../components/Toast';
 import type { Game, SwipeDecision, DiscoveryFilters } from '../../../shared/types';
 
 interface ScoredGame {
@@ -19,9 +20,16 @@ function buildQueryString(filters: DiscoveryFilters): string {
   return qs ? `?${qs}` : '';
 }
 
+const SWIPE_LABELS: Record<SwipeDecision, string> = {
+  yes: 'Added to Liked',
+  no: 'Passed',
+  maybe: 'Saved for later',
+};
+
 export function useDiscovery() {
   const queryClient = useQueryClient();
   const { syncStatus } = useAuth();
+  const { toast } = useToast();
   const [filters, setFilters] = useState<DiscoveryFilters>({});
   const [queue, setQueue] = useState<ScoredGame[]>([]);
   const [swipedCount, setSwipedCount] = useState(0);
@@ -70,9 +78,13 @@ export function useDiscovery() {
   const swipeMutation = useMutation({
     mutationFn: (params: { gameId: number; decision: SwipeDecision }) =>
       api.post<{ success: boolean }>('/discovery/swipe', params),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['gaming-dna'] });
       queryClient.invalidateQueries({ queryKey: ['recent-swipes'] });
+      toast(SWIPE_LABELS[variables.decision], 'success');
+    },
+    onError: () => {
+      toast('Failed to save swipe', 'error');
     },
   });
 
