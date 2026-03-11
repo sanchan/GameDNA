@@ -127,31 +127,34 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
     <div className={`bg-[#242424] border border-[#333] rounded-2xl overflow-hidden hover:border-[var(--primary)] transition-all duration-300 group flex flex-col ${className}`}>
       {/* Image / Gallery section */}
       <div className="relative h-64 overflow-hidden bg-[#1a1a1a]">
-        {showHeader ? (
-          game.headerImage && (
-            <img
-              src={game.headerImage}
-              alt={game.name}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        <div className="w-full h-full cursor-pointer" onClick={handleFullscreen}>
+          {showHeader ? (
+            game.headerImage && (
+              <img
+                src={game.headerImage}
+                alt={game.name}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+            )
+          ) : currentMedia?.type === 'video' && currentMedia.videoSrc ? (
+            <video
+              src={currentMedia.videoSrc}
+              poster={currentMedia.thumbnail}
+              controls
+              autoPlay
+              muted
+              className="w-full h-full object-cover"
+              onClick={(e) => e.stopPropagation()}
             />
-          )
-        ) : currentMedia?.type === 'video' && currentMedia.videoSrc ? (
-          <video
-            src={currentMedia.videoSrc}
-            poster={currentMedia.thumbnail}
-            controls
-            autoPlay
-            muted
-            className="w-full h-full object-cover"
-          />
-        ) : currentMedia ? (
-          <img
-            src={currentMedia.full}
-            alt={game.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : null}
+          ) : currentMedia ? (
+            <img
+              src={currentMedia.full}
+              alt={game.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : null}
+        </div>
 
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#242424] via-transparent to-transparent pointer-events-none" />
@@ -223,13 +226,6 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
           >
             <i className="fa-brands fa-steam text-white/70" />
           </a>
-          <button
-            onClick={handleFullscreen}
-            className="w-9 h-9 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center transition-all"
-            title={t('gameCard.fullscreenGallery')}
-          >
-            <i className="fa-solid fa-expand text-white/70" />
-          </button>
         </div>
 
         {/* Price badge — bottom right of image */}
