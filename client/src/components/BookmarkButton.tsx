@@ -3,9 +3,10 @@ import { useBookmarks } from '../hooks/use-bookmarks';
 interface BookmarkButtonProps {
   gameId: number;
   size?: number;
+  className?: string;
 }
 
-export default function BookmarkButton({ gameId, size = 16 }: BookmarkButtonProps) {
+export default function BookmarkButton({ gameId, size = 16, className }: BookmarkButtonProps) {
   const { isBookmarked, toggle } = useBookmarks();
   const active = isBookmarked(gameId);
 
@@ -16,7 +17,7 @@ export default function BookmarkButton({ gameId, size = 16 }: BookmarkButtonProp
         e.stopPropagation();
         toggle(gameId);
       }}
-      className={`w-8 h-8 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center transition-all ${
+      className={className ?? `w-8 h-8 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center transition-all ${
         active
           ? 'text-[var(--primary)]'
           : 'text-white/70 hover:text-[var(--primary)]'
