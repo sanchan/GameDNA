@@ -1,12 +1,23 @@
+import { useEffect, useRef } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { useProfile, useGamingDNA } from '../hooks/use-profile';
 import RadarChart from '../components/RadarChart';
 
 export default function Profile() {
-  const { user, loading: authLoading } = useAuth();
-  const { data: profile, isLoading: profileLoading } = useProfile();
-  const { data: dna, isLoading: dnaLoading } = useGamingDNA();
+  const { user, loading: authLoading, syncStatus } = useAuth();
+  const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
+  const { data: dna, isLoading: dnaLoading, refetch: refetchDna } = useGamingDNA();
+  const prevSyncStatus = useRef(syncStatus);
+
+  // Refetch profile data when sync transitions to 'synced'
+  useEffect(() => {
+    if (prevSyncStatus.current === 'syncing' && syncStatus === 'synced') {
+      refetchProfile();
+      refetchDna();
+    }
+    prevSyncStatus.current = syncStatus;
+  }, [syncStatus, refetchProfile, refetchDna]);
 
   if (authLoading) return null;
   if (!user) return <Navigate to="/" />;

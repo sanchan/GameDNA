@@ -10,7 +10,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const { user, loading, login, logout } = useAuth();
+  const { user, loading, login, logout, syncStatus } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -90,6 +90,12 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+        </div>
+      )}
+      {/* Sync status banner */}
+      {user && syncStatus === 'syncing' && (
+        <div className="bg-[var(--primary)] text-[var(--primary-foreground)] text-center py-1.5 text-sm">
+          <span className="inline-block animate-pulse">Syncing your Steam library...</span>
         </div>
       )}
     </nav>

@@ -8,7 +8,7 @@ import FilterPanel from '../components/FilterPanel';
 import type { SwipeDecision } from '../../../shared/types';
 
 export default function Discovery() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, syncStatus } = useAuth();
   const { currentGame, swipe, isLoading, filters, setFilters, animatingOut } = useDiscovery();
 
   // Keyboard shortcuts
@@ -68,8 +68,18 @@ export default function Discovery() {
             </div>
           ) : (
             <div className="text-center py-20 text-[var(--muted-foreground)]">
-              <p className="text-lg mb-2">No more games to discover!</p>
-              <p className="text-sm">Adjust your filters or check back later.</p>
+              {syncStatus === 'syncing' ? (
+                <>
+                  <p className="text-lg mb-2">Setting up your discovery queue...</p>
+                  <p className="text-sm">Syncing your Steam library and loading games. This may take a moment.</p>
+                  <div className="mt-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)]" />
+                </>
+              ) : (
+                <>
+                  <p className="text-lg mb-2">No more games to discover!</p>
+                  <p className="text-sm">Adjust your filters or check back later.</p>
+                </>
+              )}
             </div>
           )}
         </div>
