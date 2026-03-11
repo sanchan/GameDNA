@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Detail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>::-webkit-scrollbar { display: none;}</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-orange': 'oklch(0.646 0.222 41.116)',
+                        'dark-bg': '#1a1a1a',
+                        'dark-card': '#242424',
+                        'dark-border': '#333333',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-white font-sans antialiased overflow-x-hidden">
+
+<header id="header" class="sticky top-0 z-50 bg-dark-card/95 backdrop-blur-lg border-b border-dark-border">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 lg:h-20">
+            <div class="flex items-baseline space-x-1">
+                <span class="text-brand-orange text-2xl lg:text-3xl font-black">Game</span>
+                <span class="text-white text-2xl lg:text-3xl font-black">DNA</span>
+            </div>
+
+            <nav id="main-nav" class="hidden lg:flex items-center space-x-1">
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Discovery</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Recommendations</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">My Lists</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">History</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Backlog</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Profile</a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <button class="hidden md:flex items-center justify-center w-10 h-10 bg-dark-bg rounded-full hover:bg-brand-orange transition-all">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="hidden md:flex items-center space-x-3 bg-dark-bg rounded-full px-4 py-2">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="User" class="w-8 h-8 rounded-full">
+                    <span class="text-sm font-medium">Alex Chen</span>
+                    <button class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                </div>
+                <button class="lg:hidden w-10 h-10 flex items-center justify-center">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main id="game-detail-main">
+    <div id="hero-section" class="relative h-[600px] lg:h-[700px] overflow-hidden">
+        <div class="absolute inset-0">
+            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3a26c875c2-98372a76cc4ed92f77d3.png" alt="fantasy open world RPG game, epic medieval landscape, dramatic lighting, hero banner, AAA gaming quality" />
+            <div class="absolute inset-0 bg-gradient-to-t from-dark-bg via-dark-bg/60 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-dark-bg/80 via-transparent to-transparent"></div>
+        </div>
+
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 h-full relative z-10">
+            <div class="flex flex-col justify-end h-full pb-12 lg:pb-16 max-w-4xl">
+                <div id="why-this-badge" class="inline-flex items-center space-x-2 bg-purple-600/20 border border-purple-600/50 text-purple-400 px-4 py-2 rounded-full text-sm font-semibold mb-6 w-fit cursor-pointer hover:bg-purple-600/30 transition-all">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span>Why this game?</span>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </div>
+
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black mb-4">Elden Ring</h1>
+                
+                <div class="flex flex-wrap items-center gap-3 mb-6">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-gray-400 text-lg">FromSoftware</span>
+                        <span class="text-gray-600">•</span>
+                        <span class="text-gray-400 text-lg">2022</span>
+                    </div>
+                    <div class="flex items-center space-x-1 bg-brand-orange/20 text-brand-orange px-3 py-1.5 rounded-full font-bold">
+                        <i class="fa-solid fa-star"></i>
+                        <span>96% Match</span>
+                    </div>
+                    <div class="flex items-center space-x-1 bg-green-500/20 text-green-500 px-3 py-1.5 rounded-full font-bold">
+                        <i class="fa-solid fa-thumbs-up"></i>
+                        <span>93%</span>
+                    </div>
+                </div>
+
+                <p class="text-lg lg:text-xl text-gray-300 leading-relaxed mb-8 max-w-3xl">
+                    Rise, Tarnished, and be guided by grace to brandish the power of the Elden Ring and become an Elden Lord in the Lands Between. An epic open-world adventure featuring FromSoftware's signature challenging gameplay.
+                </p>
+
+                <div class="flex flex-wrap gap-3">
+                    <span class="bg-dark-card/80 backdrop-blur-sm border border-dark-border px-4 py-2 rounded-lg text-sm font-medium">Open World</span>
+                    <span class="bg-dark-card/80 backdrop-blur-sm border border-dark-border px-4 py-2 rounded-lg text-sm font-medium">Action RPG</span>
+                    <span class="bg-dark-card/80 backdrop-blur-sm border border-dark-border px-4 py-2 rounded-lg text-sm font-medium">Souls-like</span>
+                    <span class="bg-dark-card/80 backdrop-blur-sm border border-dark-border px-4 py-2 rounded-lg text-sm font-medium">Fantasy</span>
+                    <span class="bg-dark-card/80 backdrop-blur-sm border border-dark-border px-4 py-2 rounded-lg text-sm font-medium">Dark Fantasy</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20 pb-16">
+        <div id="action-row" class="bg-dark-card border border-dark-border rounded-2xl p-6 mb-8 shadow-2xl">
+            <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                    <button class="flex items-center justify-center space-x-2 px-6 py-3 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg font-semibold transition-all">
+                        <i class="fa-regular fa-bookmark"></i>
+                        <span>Bookmark</span>
+                    </button>
+                    <button class="flex items-center justify-center space-x-2 px-6 py-3 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg font-semibold transition-all">
+                        <i class="fa-regular fa-heart"></i>
+                        <span>Add to Wishlist</span>
+                    </button>
+                    <a href="#" class="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-all">
+                        <i class="fa-brands fa-steam"></i>
+                        <span>Open in Steam</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-3 border-t lg:border-t-0 lg:border-l border-dark-border pt-6 lg:pt-0 lg:pl-6">
+                    <span class="text-sm text-gray-400 font-medium hidden lg:block">Decision:</span>
+                    <button class="flex items-center justify-center space-x-2 px-5 py-3 bg-red-600/20 hover:bg-red-600/30 text-red-500 border border-red-600/50 rounded-lg font-semibold transition-all flex-1 lg:flex-none">
+                        <i class="fa-solid fa-xmark"></i>
+                        <span>Not for me</span>
+                    </button>
+                    <button class="flex items-center justify-center space-x-2 px-5 py-3 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-500 border border-yellow-600/50 rounded-lg font-semibold transition-all flex-1 lg:flex-none">
+                        <i class="fa-solid fa-clock"></i>
+                        <span>Maybe</span>
+                    </button>
+                    <button class="flex items-center justify-center space-x-2 px-5 py-3 bg-brand-orange hover:bg-brand-orange/80 text-dark-bg rounded-lg font-semibold transition-all flex-1 lg:flex-none">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Interested</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                <div id="pricing-section" class="bg-dark-card border border-dark-border rounded-2xl p-8">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                        <div>
+                            <div class="text-sm text-gray-400 mb-2">Current Price</div>
+                            <div class="text-5xl font-black text-brand-orange mb-2">$59.99</div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-sm text-gray-400 line-through">$79.99</span>
+                                <span class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">-25% OFF</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-3 w-full sm:w-auto">
+                            <button class="bg-brand-orange hover:bg-brand-orange/80 text-dark-bg font-bold px-8 py-4 rounded-lg transition-all text-lg">
+                                Buy Now
+                            </button>
+                            <div class="text-xs text-center text-gray-500">
+                                Sale ends in 3 days
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-dark-border">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-brand-orange mb-1">$49.99</div>
+                                <div class="text-xs text-gray-400">Lowest Price</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-500 mb-1">17%</div>
+                                <div class="text-xs text-gray-400">Avg Discount</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-purple-500 mb-1">8</div>
+                                <div class="text-xs text-gray-400">Sale Events</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-blue-500 mb-1">$0.47</div>
+                                <div class="text-xs text-gray-400">Per Hour</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="review-summary" class="bg-dark-card border border-dark-border rounded-2xl p-8">
+                    <h2 class="text-2xl font-bold mb-6">Review Summary</h2>
+                    
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8">
+                        <div class="flex-shrink-0">
+                            <div class="w-32 h-32 bg-gradient-to-br from-green-600 to-green-400 rounded-2xl flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="text-4xl font-black text-white">93</div>
+                                    <div class="text-sm text-white/80 font-semibold">Positive</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 w-full">
+                            <div class="mb-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium">Positive</span>
+                                    <span class="text-sm font-bold text-green-500">93%</span>
+                                </div>
+                                <div class="w-full bg-dark-bg rounded-full h-3 overflow-hidden">
+                                    <div class="bg-green-500 h-full rounded-full" style="width: 93%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium">Mixed</span>
+                                    <span class="text-sm font-bold text-yellow-500">5%</span>
+                                </div>
+                                <div class="w-full bg-dark-bg rounded-full h-3 overflow-hidden">
+                                    <div class="bg-yellow-500 h-full rounded-full" style="width: 5%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium">Negative</span>
+                                    <span class="text-sm font-bold text-red-500">2%</span>
+                                </div>
+                                <div class="w-full bg-dark-bg rounded-full h-3 overflow-hidden">
+                                    <div class="bg-red-500 h-full rounded-full" style="width: 2%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-dark-bg rounded-xl p-4 text-center">
+                            <div class="text-2xl font-bold text-brand-orange mb-1">542K</div>
+                            <div class="text-xs text-gray-400">Total Reviews</div>
+                        </div>
+                        <div class="bg-dark-bg rounded-xl p-4 text-center">
+                            <div class="text-2xl font-bold text-green-500 mb-1">89%</div>
+                            <div class="text-xs text-gray-400">Recent (30d)</div>
+                        </div>
+                        <div class="bg-dark-bg rounded-xl p-4 text-center">
+                            <div class="text-2xl font-bold text-purple-500 mb-1">4.8</div>
+                            <div class="text-xs text-gray-400">Metacritic</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex items-start space-x-3 bg-dark-bg rounded-lg p-4">
+                            <i class="fa-solid fa-quote-left text-brand-orange mt-1"></i>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-300 leading-relaxed mb-2">"An absolute masterpiece. The open world design is revolutionary for the Souls genre."</p>
+                                <div class="flex items-center space-x-2 text-xs text-gray-500">
+                                    <i class="fa-solid fa-thumbs-up text-green-500"></i>
+                                    <span>Helpful (12,453)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 bg-dark-bg rounded-lg p-4">
+                            <i class="fa-solid fa-quote-left text-brand-orange mt-1"></i>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-300 leading-relaxed mb-2">"Challenging but fair. Every victory feels earned. Best game I've played in years."</p>
+                                <div class="flex items-center space-x-2 text-xs text-gray-500">
+                                    <i class="fa-solid fa-thumbs-up text-green-500"></i>
+                                    <span>Helpful (9,821)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="media-gallery" class="bg-dark-card border border-dark-border rounded-2xl p-8">
+                    <h2 class="text-2xl font-bold mb-6">Media Gallery</h2>
+                    
+                    <div id="featured-media" class="relative h-96 lg:h-[500px] rounded-xl overflow-hidden mb-6 cursor-pointer group">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3a26c875c2-98372a76cc4ed92f77d3.png" alt="fantasy RPG game screenshot, epic battle scene, dramatic action, high quality gaming visuals" />
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                            <div class="w-16 h-16 bg-brand-orange/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform scale-75 group-hover:scale-100">
+                                <i class="fa-solid fa-expand text-2xl text-dark-bg"></i>
+                            </div>
+                        </div>
+                        <div class="absolute top-4 right-4 flex items-center space-x-2">
+                            <button class="w-10 h-10 bg-dark-bg/80 backdrop-blur-sm hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <button class="w-10 h-10 bg-dark-bg/80 backdrop-blur-sm hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="absolute bottom-4 left-4 bg-dark-bg/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium">
+                            <i class="fa-solid fa-image mr-2"></i>1 / 24
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                        <div class="aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-brand-orange">
+                            <img class="w-full h-full object-cover hover:scale-110 transition-transform" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3a26c875c2-98372a76cc4ed92f77d3.png" alt="game screenshot thumbnail 1" />
+                        </div>
+                        <div class="aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-brand-orange transition-all">
+                            <img class="w-full h-full object-cover hover:scale-110 transition-transform" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/74aed75155-1e908bc25c7caf8f5dc8.png" alt="game screenshot thumbnail 2" />
+                        </div>
+                        <div class="aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-brand-orange transition-all">
+                            <img class="w-full h-full object-cover hover:scale-110 transition-transform" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/4d4d3bbc66-97cf68d20b6db2ba34f3.png" alt="game screenshot thumbnail 3" />
+                        </div>
+                        <div class="aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-brand-orange transition-all">
+                            <img class="w-full h-full object-cover hover:scale-110 transition-transform" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/c5a2c39014-bd53d153c56a3b5b8e5e.png" alt="game screenshot thumbnail 4" />
+                        </div>
+                        <div class="aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-brand-orange transition-all">
+                            <img class="w-full h-full object-cover hover:scale-110 transition-transform" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/71d420f6a3-89874474795834064c8d.png" alt="game screenshot thumbnail 5" />
+                        </div>
+                        <div class="aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-brand-orange transition-all relative group">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/1eb18c2cd5-664651eb28f6b1f9cf0a.png" alt="game screenshot thumbnail 6" />
+                            <div class="absolute inset-0 bg-dark-bg/80 flex items-center justify-center">
+                                <span class="text-lg font-bold">+18</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex items-center justify-center">
+                        <button class="flex items-center space-x-2 px-6 py-3 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg font-semibold transition-all">
+                            <i class="fa-solid fa-images"></i>
+                            <span>View All Media</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="game-description" class="bg-dark-card border border-dark-border rounded-2xl p-8">
+                    <h2 class="text-2xl font-bold mb-6">About This Game</h2>
+                    <div class="prose prose-invert max-w-none">
+                        <p class="text-gray-300 leading-relaxed mb-4">
+                            THE NEW FANTASY ACTION RPG. Rise, Tarnished, and be guided by grace to brandish the power of the Elden Ring and become an Elden Lord in the Lands Between.
+                        </p>
+                        <p class="text-gray-300 leading-relaxed mb-4">
+                            In the Lands Between ruled by Queen Marika the Eternal, the Elden Ring, the source of the Erdtree, has been shattered. Marika's offspring, demigods all, claimed the shards of the Elden Ring known as the Great Runes, and the mad taint of their newfound strength triggered a war: The Shattering.
+                        </p>
+                        <p class="text-gray-300 leading-relaxed mb-6">
+                            A war that meant abandonment by the Greater Will. And now the guidance of grace will be brought to the Tarnished who were spurned by the grace of gold and exiled from the Lands Between. Ye dead who yet live, your grace long lost, follow the path to the Lands Between beyond the foggy sea to stand before the Elden Ring.
+                        </p>
+
+                        <h3 class="text-xl font-bold mb-4">Key Features</h3>
+                        <ul class="space-y-3 mb-6">
+                            <li class="flex items-start space-x-3">
+                                <i class="fa-solid fa-check text-brand-orange mt-1"></i>
+                                <span class="text-gray-300">A Vast World Full of Excitement - Journey through the breathtaking Lands Between</span>
+                            </li>
+                            <li class="flex items-start space-x-3">
+                                <i class="fa-solid fa-check text-brand-orange mt-1"></i>
+                                <span class="text-gray-300">Create Your Character - Customize your appearance and freely combine weapons, armor, and magic</span>
+                            </li>
+                            <li class="flex items-start space-x-3">
+                                <i class="fa-solid fa-check text-brand-orange mt-1"></i>
+                                <span class="text-gray-300">Epic Drama Born from a Myth - A multilayered story told in fragments</span>
+                            </li>
+                            <li class="flex items-start space-x-3">
+                                <i class="fa-solid fa-check text-brand-orange mt-1"></i>
+                                <span class="text-gray-300">Unique Online Play - Experience seamless cooperative and competitive online multiplayer</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="system-requirements" class="bg-dark-card border border-dark-border rounded-2xl p-8">
+                    <h2 class="text-2xl font-bold mb-6">System Requirements</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div id="minimum-specs" class="bg-dark-bg rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-brand-orange mb-4">Minimum</h3>
+                            <div class="space-y-3 text-sm">
+                                <div>
+                                    <div class="text-gray-400 mb-1">OS</div>
+                                    <div class="text-white font-medium">Windows 10</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 mb-1">Processor</div>
+                                    <div class="text-white font-medium">Intel Core i5-8400 / AMD Ryzen 3 3300X</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 mb-1">Memory</div>
+                                    <div class="text-white font-medium">12 GB RAM</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 mb-1">Graphics</div>
+                                    <div class="text-white font-medium">NVIDIA GTX 1060 / AMD RX 580</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 mb-1">DirectX</div>
+                                    <div class="text-white font-medium">Version 12</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 mb-1">Storage</div>
+                                    <div class="text-white font-medium">60 GB available space</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="recommended-specs" class="bg-dark-bg rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-green-500 mb-4">Recommended</h3>
+                            <div class="space-y-3 text-sm">
+                                <div>
+                                    <div class="text-gray-400 mb-1">OS</div>
+                                    <div class="text-white font-medium">Windows 10/11</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 mb-1">Processor</div>
+                                    <div class="text-white font-medium">Intel Core i7-8700K / AMD Ryzen 5 3600X</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 mb-1">Memory</div>
+                                    <div class="text-white font-medium">16 GB RAM</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 mb-1">Graphics</div>
+                                    <div class="text-white font-medium">NVIDIA RTX 3060 Ti / AMD RX 6700 XT</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 mb-1">DirectX</div>
+                                    <div class="text-white font-medium">Version 12</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 mb-1">Storage</div>
+                                    <div class="text-white font-medium">60 GB SSD</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 space-y-6">
+                <div id="metadata-grid" class="bg-dark-card border border-dark-border rounded-2xl p-6 sticky top-24">
+                    <h3 class="text-lg font-bold mb-6">Game Information</h3>
+                    
+                    <div class="space-y-5">
+                        <div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">Release Date</div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-calendar text-brand-orange"></i>
+                                <span class="font-medium">February 25, 2022</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-dark-border pt-5">
+                            <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Genres</div>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-dark-bg px-3 py-1.5 rounded-full text-sm font-medium">Action</span>
+                                <span class="bg-dark-bg px-3 py-1.5 rounded-full text-sm font-medium">RPG</span>
+                                <span class="bg-dark-bg px-3 py-1.5 rounded-full text-sm font-medium">Open World</span>
+                                <span class="bg-dark-bg px-3 py-1.5 rounded-full text-sm font-medium">Fantasy</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-dark-border pt-5">
+                            <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Platforms</div>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-dark-bg rounded-lg flex items-center justify-center">
+                                    <i class="fa-brands fa-windows text-xl"></i>
+                                </div>
+                                <div class="w-10 h-10 bg-dark-bg rounded-lg flex items-center justify-center">
+                                    <i class="fa-brands fa-playstation text-xl"></i>
+                                </div>
+                                <div class="w-10 h-10 bg-dark-bg rounded-lg flex items-center justify-center">
+                                    <i class="fa-brands fa-xbox text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-dark-border pt-5">
+                            <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Features</div>
+                            <div class="space-y-2">
+                                <div class="flex items-center space-x-2 text-sm">
+                                    <i class="fa-solid fa-user text-brand-orange"></i>
+                                    <span>Single-player</span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-sm">
+                                    <i class="fa-solid fa-users text-brand-orange"></i>
+                                    <span>Online Co-op</span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-sm">
+                                    <i class="fa-solid fa-gamepad text-brand-orange"></i>
+                                    <span>Controller Support</span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-sm">
+                                    <i class="fa-solid fa-cloud text-brand-orange"></i>
+                                    <span>Steam Cloud</span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-sm">
+                                    <i class="fa-solid fa-trophy text-brand-orange"></i>
+                                    <span>Steam Achievements</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-dark-border pt-5">
+                            <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Tags</div>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-dark-bg px-2.5 py-1 rounded-full text-xs">Dark Fantasy</span>
+                                <span class="bg-dark-bg px-2.5 py-1 rounded-full text-xs">Souls-like</span>
+                                <span class="bg-dark-bg px-2.5 py-1 rounded-full text-xs">Difficult</span>
+                                <span class="bg-dark-bg px-2.5 py-1 rounded-full text-xs">Exploration</span>
+                                <span class="bg-dark-bg px-2.5 py-1 rounded-full text-xs">Character Customization</span>
+                                <span class="bg-dark-bg px-2.5 py-1 rounded-full text-xs">Boss Battle</span>
+                                <span class="bg-dark-bg px-2.5 py-1 rounded-full text-xs">Medieval</span>
+                                <span class="bg-dark-bg px-2.5 py-1 rounded-full text-xs">Atmospheric</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-dark-border pt-5">
+                            <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Developer</div>
+                            <div class="font-medium">FromSoftware Inc.</div>
+                        </div>
+
+                        <div class="border-t border-dark-border pt-5">
+                            <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Publisher</div>
+                            <div class="font-medium">Bandai Namco Entertainment</div>
+                        </div>
+
+                        <div class="border-t border-dark-border pt-5">
+                            <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Languages</div>
+                            <div class="text-sm space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span>English</span>
+                                    <div class="flex items-center space-x-1 text-xs text-gray-500">
+                                        <i class="fa-solid fa-check text-green-500"></i>
+                                        <i class="fa-solid fa-check text-green-500"></i>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span>Japanese</span>
+                                    <div class="flex items-center space-x-1 text-xs text-gray-500">
+                                        <i class="fa-solid fa-check text-green-500"></i>
+                                        <i class="fa-solid fa-check text-green-500"></i>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-2">+15 more languages</div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-dark-border pt-5">
+                            <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Content Rating</div>
+                            <div class="flex items-center space-x-2">
+                                <div class="bg-dark-bg px-3 py-1.5 rounded-lg font-bold">M</div>
+                                <div class="text-sm">
+                                    <div class="font-medium">Mature 17+</div>
+                                    <div class="text-xs text-gray-500">Blood, Violence</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="similar-games" class="bg-dark-card border border-dark-border rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-6">Similar Games</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3 p-3 bg-dark-bg rounded-lg hover:bg-dark-bg/50 transition-all cursor-pointer">
+                            <img class="w-16 h-16 rounded-lg object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/4d4d3bbc66-97cf68d20b6db2ba34f3.png" alt="Dark Souls III" />
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium truncate">Dark Souls III</div>
+                                <div class="flex items-center space-x-2 text-xs text-gray-400">
+                                    <span class="text-green-500">89%</span>
+                                    <span>•</span>
+                                    <span>$39.99</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-3 p-3 bg-dark-bg rounded-lg hover:bg-dark-bg/50 transition-all cursor-pointer">
+                            <img class="w-16 h-16 rounded-lg object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/74aed75155-1e908bc25c7caf8f5dc8.png" alt="Bloodborne" />
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium truncate">Bloodborne</div>
+                                <div class="flex items-center space-x-2 text-xs text-gray-400">
+                                    <span class="text-green-500">92%</span>
+                                    <span>•</span>
+                                    <span>$19.99</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-3 p-3 bg-dark-bg rounded-lg hover:bg-dark-bg/50 transition-all cursor-pointer">
+                            <img class="w-16 h-16 rounded-lg object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/c5a2c39014-bd53d153c56a3b5b8e5e.png" alt="Sekiro" />
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium truncate">Sekiro: Shadows Die Twice</div>
+                                <div class="flex items-center space-x-2 text-xs text-gray-400">
+                                    <span class="text-green-500">91%</span>
+                                    <span>•</span>
+                                    <span>$59.99</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="w-full py-2 text-sm text-brand-orange hover:text-brand-orange/80 font-semibold transition-colors">
+                            View All Similar Games
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer id="footer" class="bg-dark-card border-t border-dark-border py-12 lg:py-16 mt-20">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+                <div id="footer-brand">
+                    <div class="flex items-baseline space-x-1 mb-4">
+                        <span class="text-brand-orange text-3xl font-black">Game</span>
+                        <span class="text-white text-3xl font-black">DNA</span>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                        AI-powered game discovery platform that helps you find your next gaming obsession.
+                    </p>
+                    <div class="flex items-center space-x-4">
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-discord"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-reddit"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="footer-product">
+                    <h4 class="font-bold text-lg mb-4">Product</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Features</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">How It Works</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Pricing</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Roadmap</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Changelog</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-company">
+                    <h4 class="font-bold text-lg mb-4">Company</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Press Kit</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-legal">
+                    <h4 class="font-bold text-lg mb-4">Legal</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Cookie Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">GDPR</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Licenses</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-dark-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-gray-500 text-sm text-center md:text-left">
+                    © 2024 GameDNA. All rights reserved. Not affiliated with Valve Corporation.
+                </p>
+                <div class="flex items-center space-x-6 text-sm text-gray-500">
+                    <a href="#" class="hover:text-brand-orange transition-colors">Status</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">API</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">Docs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<div id="why-this-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-dark-card border-b border-dark-border p-6 flex items-center justify-between">
+            <h3 class="text-2xl font-bold">Why Elden Ring?</h3>
+            <button id="close-modal" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div class="bg-gradient-to-br from-purple-600/10 to-brand-orange/10 border border-brand-orange/30 rounded-xl p-6">
+                <div class="flex items-start space-x-4">
+                    <div class="w-12 h-12 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-brain text-brand-orange text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">AI Match Score: 96%</h4>
+                        <p class="text-sm text-gray-400 leading-relaxed">
+                            This game strongly aligns with your gaming preferences based on 47 swipes and your Steam library analysis.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="font-bold mb-3">Top Matching Factors</h4>
+                <div class="space-y-3">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-2 h-2 bg-brand-orange rounded-full mt-2"></div>
+                        <div>
+                            <div class="font-medium">Genre Preference</div>
+                            <div class="text-sm text-gray-400">You've shown strong interest in Action RPGs and Souls-like games</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <div class="w-2 h-2 bg-brand-orange rounded-full mt-2"></div>
+                        <div>
+                            <div class="font-medium">Difficulty Preference</div>
+                            <div class="text-sm text-gray-400">Your play history shows you enjoy challenging gameplay</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <div class="w-2 h-2 bg-brand-orange rounded-full mt-2"></div>
+                        <div>
+                            <div class="font-medium">Open World Interest</div>
+                            <div class="text-sm text-gray-400">You've completed multiple open-world exploration games</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <div class="w-2 h-2 bg-brand-orange rounded-full mt-2"></div>
+                        <div>
+                            <div class="font-medium">Community Alignment</div>
+                            <div class="text-sm text-gray-400">Players with similar tastes rated this 93% positive</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="font-bold mb-3">Similar Games You Enjoyed</h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-dark-bg rounded-lg p-3 text-sm">
+                        <div class="font-medium mb-1">Dark Souls III</div>
+                        <div class="text-xs text-gray-400">127 hours played</div>
+                    </div>
+                    <div class="bg-dark-bg rounded-lg p-3 text-sm">
+                        <div class="font-medium mb-1">Sekiro</div>
+                        <div class="text-xs text-gray-400">89 hours played</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.addEventListener('load', function() {
+    const whyThisBadge = document.getElementById('why-this-badge');
+    const whyThisModal = document.getElementById('why-this-modal');
+    const closeModal = document.getElementById('close-modal');
+
+    if (whyThisBadge && whyThisModal) {
+        whyThisBadge.addEventListener('click', function() {
+            whyThisModal.classList.remove('hidden');
+        });
+    }
+
+    if (closeModal && whyThisModal) {
+        closeModal.addEventListener('click', function() {
+            whyThisModal.classList.add('hidden');
+        });
+
+        whyThisModal.addEventListener('click', function(e) {
+            if (e.target === whyThisModal) {
+                whyThisModal.classList.add('hidden');
+            }
+        });
+    }
+});
+</script>
+
+</body>
+</html>

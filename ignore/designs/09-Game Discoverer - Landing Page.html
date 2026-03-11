@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>::-webkit-scrollbar { display: none;}</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-orange': 'oklch(0.646 0.222 41.116)',
+                        'dark-bg': '#1a1a1a',
+                        'dark-card': '#242424',
+                        'dark-border': '#333333',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-white font-sans antialiased overflow-x-hidden">
+
+<main id="auth-main" class="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-20 left-10 w-96 h-96 bg-brand-orange rounded-full blur-3xl"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-purple-600 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+                
+                <div id="hero-content" class="text-center lg:text-left order-2 lg:order-1">
+                    <div id="logo-section" class="mb-8 lg:mb-12 flex justify-center lg:justify-start">
+                        <div class="inline-flex items-baseline space-x-1">
+                            <span class="text-brand-orange text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight">Game</span>
+                            <span class="text-white text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight">DNA</span>
+                        </div>
+                    </div>
+
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                        Discover Your Next
+                        <span class="text-brand-orange block mt-2">Gaming Obsession</span>
+                    </h1>
+
+                    <p class="text-lg sm:text-xl text-gray-400 mb-8 lg:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                        AI-powered game recommendations that understand your unique taste. Swipe, discover, and build your perfect gaming backlog with insights from your Steam library.
+                    </p>
+
+                    <div id="cta-section" class="mb-8 lg:mb-10">
+                        <button class="group bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#1b2838] text-white font-semibold px-10 py-5 rounded-xl text-lg sm:text-xl transition-all duration-300 shadow-2xl hover:shadow-brand-orange/20 hover:scale-105 inline-flex items-center space-x-4">
+                            <i class="fa-brands fa-steam text-3xl"></i>
+                            <span>Sign in with Steam</span>
+                            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                        </button>
+                    </div>
+
+                    <div id="features-pills" class="flex flex-wrap gap-3 justify-center lg:justify-start mb-10">
+                        <div class="bg-dark-card border border-dark-border px-4 py-2 rounded-full text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-brain text-brand-orange"></i>
+                            <span>AI Recommendations</span>
+                        </div>
+                        <div class="bg-dark-card border border-dark-border px-4 py-2 rounded-full text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-chart-radar text-brand-orange"></i>
+                            <span>Taste Profile</span>
+                        </div>
+                        <div class="bg-dark-card border border-dark-border px-4 py-2 rounded-full text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-history text-brand-orange"></i>
+                            <span>Swipe History</span>
+                        </div>
+                        <div class="bg-dark-card border border-dark-border px-4 py-2 rounded-full text-sm flex items-center space-x-2">
+                            <i class="fa-brands fa-steam text-brand-orange"></i>
+                            <span>Steam Sync</span>
+                        </div>
+                    </div>
+
+                    <div id="stats-section" class="grid grid-cols-3 gap-4 sm:gap-6 max-w-md mx-auto lg:mx-0 mb-10">
+                        <div class="text-center lg:text-left">
+                            <div class="text-3xl sm:text-4xl font-bold text-brand-orange mb-1">50K+</div>
+                            <div class="text-xs sm:text-sm text-gray-500">Games Analyzed</div>
+                        </div>
+                        <div class="text-center lg:text-left">
+                            <div class="text-3xl sm:text-4xl font-bold text-brand-orange mb-1">10K+</div>
+                            <div class="text-xs sm:text-sm text-gray-500">Active Users</div>
+                        </div>
+                        <div class="text-center lg:text-left">
+                            <div class="text-3xl sm:text-4xl font-bold text-brand-orange mb-1">98%</div>
+                            <div class="text-xs sm:text-sm text-gray-500">Match Rate</div>
+                        </div>
+                    </div>
+
+                    <div id="legal-links" class="flex items-center justify-center lg:justify-start space-x-6 text-sm text-gray-500">
+                        <a href="#" class="hover:text-brand-orange transition-colors">Privacy Policy</a>
+                        <span class="text-dark-border">•</span>
+                        <a href="#" class="hover:text-brand-orange transition-colors">Terms of Service</a>
+                    </div>
+                </div>
+
+                <div id="preview-section" class="order-1 lg:order-2 relative">
+                    <div class="relative max-w-lg mx-auto">
+                        <div id="main-card" class="relative z-20 bg-dark-card border border-dark-border rounded-3xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500">
+                            <div class="aspect-[3/4] relative">
+                                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/255defe04b-dc6795cfba4ab788cd83.png" alt="dark fantasy action game cover art with dramatic lighting, cyberpunk warrior character, neon purple and orange accents, gaming aesthetic" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-dark-bg via-transparent to-transparent"></div>
+                                
+                                <div class="absolute top-4 right-4 bg-brand-orange text-dark-bg px-4 py-2 rounded-full font-bold text-sm flex items-center space-x-2">
+                                    <i class="fa-solid fa-star"></i>
+                                    <span>98% Match</span>
+                                </div>
+
+                                <div class="absolute bottom-0 left-0 right-0 p-6">
+                                    <h3 class="text-2xl font-bold mb-2">Cyberpunk Legends</h3>
+                                    <div class="flex flex-wrap gap-2 mb-4">
+                                        <span class="bg-dark-bg/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs">Action</span>
+                                        <span class="bg-dark-bg/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs">RPG</span>
+                                        <span class="bg-dark-bg/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs">Open World</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-4">
+                                            <button class="w-14 h-14 bg-red-500/20 hover:bg-red-500 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110">
+                                                <i class="fa-solid fa-xmark text-2xl"></i>
+                                            </button>
+                                            <button class="w-16 h-16 bg-brand-orange hover:bg-brand-orange/80 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg shadow-brand-orange/50">
+                                                <i class="fa-solid fa-heart text-2xl"></i>
+                                            </button>
+                                            <button class="w-14 h-14 bg-blue-500/20 hover:bg-blue-500 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110">
+                                                <i class="fa-solid fa-info text-2xl"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="card-stack-1" class="absolute top-4 left-4 right-4 h-full bg-dark-card/50 border border-dark-border rounded-3xl z-10 transform translate-y-4 scale-95"></div>
+                        <div id="card-stack-2" class="absolute top-8 left-8 right-8 h-full bg-dark-card/30 border border-dark-border rounded-3xl z-0 transform translate-y-8 scale-90"></div>
+
+                        <div id="ai-insight-badge" class="absolute -bottom-6 -right-6 bg-gradient-to-br from-purple-600 to-brand-orange p-6 rounded-2xl shadow-2xl max-w-xs hidden lg:block">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-sparkles text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold mb-1 text-sm">AI Insight</div>
+                                    <p class="text-xs opacity-90 leading-relaxed">Based on your 200+ hours in similar titles, this matches your taste for immersive storytelling</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="floating-elements" class="hidden lg:block">
+                        <div class="absolute -top-8 -left-8 bg-dark-card border border-dark-border p-4 rounded-xl shadow-xl animate-pulse">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-gradient-to-br from-brand-orange to-yellow-500 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-gamepad text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-400">Your Library</div>
+                                    <div class="font-bold">247 Games</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="absolute -bottom-12 -left-12 bg-dark-card border border-dark-border p-4 rounded-xl shadow-xl">
+                            <div class="text-xs text-gray-400 mb-2">Taste Profile</div>
+                            <div class="flex space-x-1">
+                                <div class="w-2 h-12 bg-brand-orange rounded-full"></div>
+                                <div class="w-2 h-10 bg-brand-orange/70 rounded-full"></div>
+                                <div class="w-2 h-14 bg-brand-orange rounded-full"></div>
+                                <div class="w-2 h-8 bg-brand-orange/50 rounded-full"></div>
+                                <div class="w-2 h-11 bg-brand-orange/80 rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="trust-section" class="absolute bottom-8 left-0 right-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex flex-wrap items-center justify-center gap-8 opacity-40">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-shield-halved text-2xl"></i>
+                        <span class="text-sm font-medium">Secure Steam OAuth</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-lock text-2xl"></i>
+                        <span class="text-sm font-medium">Privacy First</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-server text-2xl"></i>
+                        <span class="text-sm font-medium">No Data Selling</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<section id="how-it-works" class="py-20 lg:py-32 bg-dark-card/30 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-5">
+        <div class="absolute top-0 left-1/4 w-px h-full bg-brand-orange"></div>
+        <div class="absolute top-0 left-1/2 w-px h-full bg-brand-orange"></div>
+        <div class="absolute top-0 left-3/4 w-px h-full bg-brand-orange"></div>
+    </div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-16">
+            <div class="inline-flex items-center space-x-2 bg-brand-orange/10 border border-brand-orange/30 px-4 py-2 rounded-full mb-6">
+                <i class="fa-solid fa-wand-magic-sparkles text-brand-orange"></i>
+                <span class="text-sm font-semibold text-brand-orange">How It Works</span>
+            </div>
+            <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+                Three Steps to Your
+                <span class="text-brand-orange block mt-2">Perfect Game Match</span>
+            </h2>
+            <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                Our AI analyzes millions of data points to understand your gaming DNA and recommend titles you'll love
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
+            <div id="step-1" class="relative group">
+                <div class="absolute -top-4 -left-4 w-16 h-16 bg-brand-orange rounded-full flex items-center justify-center text-2xl font-bold shadow-lg shadow-brand-orange/50 z-10">1</div>
+                <div class="bg-dark-card border border-dark-border rounded-2xl p-8 pt-12 hover:border-brand-orange transition-all duration-300 h-full">
+                    <div class="w-16 h-16 bg-gradient-to-br from-brand-orange to-yellow-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-brands fa-steam text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Connect Steam</h3>
+                    <p class="text-gray-400 leading-relaxed mb-6">
+                        Securely link your Steam account to import your gaming library, playtime, and preferences. We analyze your gaming history to build your unique taste profile.
+                    </p>
+                    <div class="flex items-center space-x-2 text-sm text-brand-orange">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>100% Secure & Private</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-2" class="relative group">
+                <div class="absolute -top-4 -left-4 w-16 h-16 bg-brand-orange rounded-full flex items-center justify-center text-2xl font-bold shadow-lg shadow-brand-orange/50 z-10">2</div>
+                <div class="bg-dark-card border border-dark-border rounded-2xl p-8 pt-12 hover:border-brand-orange transition-all duration-300 h-full">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-brand-orange rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-brain text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">AI Analysis</h3>
+                    <p class="text-gray-400 leading-relaxed mb-6">
+                        Our advanced AI examines your gaming patterns, genres, mechanics, and playstyles to create a comprehensive DNA profile with radar charts and insights.
+                    </p>
+                    <div class="flex items-center space-x-2 text-sm text-brand-orange">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Personalized Insights</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-3" class="relative group">
+                <div class="absolute -top-4 -left-4 w-16 h-16 bg-brand-orange rounded-full flex items-center justify-center text-2xl font-bold shadow-lg shadow-brand-orange/50 z-10">3</div>
+                <div class="bg-dark-card border border-dark-border rounded-2xl p-8 pt-12 hover:border-brand-orange transition-all duration-300 h-full">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-brand-orange rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-heart text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Swipe & Discover</h3>
+                    <p class="text-gray-400 leading-relaxed mb-6">
+                        Browse personalized recommendations with a Tinder-like interface. Swipe right to save, left to pass. Build your wishlist and track your discovery journey.
+                    </p>
+                    <div class="flex items-center space-x-2 text-sm text-brand-orange">
+                        <i class="fa-solid fa-infinity"></i>
+                        <span>Endless Recommendations</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features-showcase" class="py-20 lg:py-32 relative">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24">
+                <div id="feature-1-visual" class="order-2 lg:order-1">
+                    <div class="relative">
+                        <div class="bg-dark-card border border-dark-border rounded-3xl p-8 shadow-2xl">
+                            <div class="flex items-center justify-between mb-6">
+                                <h4 class="text-2xl font-bold">Your Gaming DNA</h4>
+                                <div class="flex items-center space-x-2 text-brand-orange">
+                                    <i class="fa-solid fa-chart-radar"></i>
+                                    <span class="text-sm font-semibold">Live Analysis</span>
+                                </div>
+                            </div>
+                            <div class="aspect-square bg-dark-bg rounded-2xl p-6 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="relative w-64 h-64">
+                                        <svg viewBox="0 0 200 200" class="w-full h-full">
+                                            <defs>
+                                                <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                    <stop offset="0%" style="stop-color:oklch(0.646 0.222 41.116);stop-opacity:0.6" />
+                                                    <stop offset="100%" style="stop-color:oklch(0.646 0.222 41.116);stop-opacity:0.1" />
+                                                </linearGradient>
+                                            </defs>
+                                            <polygon points="100,20 170,65 155,145 45,145 30,65" fill="none" stroke="#333" stroke-width="1"/>
+                                            <polygon points="100,45 150,75 140,130 60,130 50,75" fill="none" stroke="#333" stroke-width="1"/>
+                                            <polygon points="100,70 130,85 125,115 75,115 70,85" fill="none" stroke="#333" stroke-width="1"/>
+                                            <line x1="100" y1="100" x2="100" y2="20" stroke="#333" stroke-width="1"/>
+                                            <line x1="100" y1="100" x2="170" y2="65" stroke="#333" stroke-width="1"/>
+                                            <line x1="100" y1="100" x2="155" y2="145" stroke="#333" stroke-width="1"/>
+                                            <line x1="100" y1="100" x2="45" y2="145" stroke="#333" stroke-width="1"/>
+                                            <line x1="100" y1="100" x2="30" y2="65" stroke="#333" stroke-width="1"/>
+                                            <polygon points="100,30 160,70 148,135 52,135 40,70" fill="url(#radarGradient)" stroke="oklch(0.646 0.222 41.116)" stroke-width="2"/>
+                                            <circle cx="100" cy="30" r="4" fill="oklch(0.646 0.222 41.116)"/>
+                                            <circle cx="160" cy="70" r="4" fill="oklch(0.646 0.222 41.116)"/>
+                                            <circle cx="148" cy="135" r="4" fill="oklch(0.646 0.222 41.116)"/>
+                                            <circle cx="52" cy="135" r="4" fill="oklch(0.646 0.222 41.116)"/>
+                                            <circle cx="40" cy="70" r="4" fill="oklch(0.646 0.222 41.116)"/>
+                                        </svg>
+                                        <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-12 text-center">
+                                            <div class="text-xs text-gray-400">Action</div>
+                                            <div class="text-sm font-bold text-brand-orange">95%</div>
+                                        </div>
+                                        <div class="absolute top-1/4 right-0 translate-x-12 text-center">
+                                            <div class="text-xs text-gray-400">RPG</div>
+                                            <div class="text-sm font-bold text-brand-orange">88%</div>
+                                        </div>
+                                        <div class="absolute bottom-1/4 right-0 translate-x-12 text-center">
+                                            <div class="text-xs text-gray-400">Story</div>
+                                            <div class="text-sm font-bold text-brand-orange">82%</div>
+                                        </div>
+                                        <div class="absolute bottom-1/4 left-0 -translate-x-12 text-center">
+                                            <div class="text-xs text-gray-400">Puzzle</div>
+                                            <div class="text-sm font-bold text-brand-orange">45%</div>
+                                        </div>
+                                        <div class="absolute top-1/4 left-0 -translate-x-12 text-center">
+                                            <div class="text-xs text-gray-400">Strategy</div>
+                                            <div class="text-sm font-bold text-brand-orange">62%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mt-6">
+                                <div class="bg-dark-bg rounded-xl p-4">
+                                    <div class="text-sm text-gray-400 mb-1">Favorite Genre</div>
+                                    <div class="font-bold text-brand-orange">Action RPG</div>
+                                </div>
+                                <div class="bg-dark-bg rounded-xl p-4">
+                                    <div class="text-sm text-gray-400 mb-1">Play Style</div>
+                                    <div class="font-bold text-brand-orange">Completionist</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="feature-1-content" class="order-1 lg:order-2">
+                    <div class="inline-flex items-center space-x-2 bg-brand-orange/10 border border-brand-orange/30 px-4 py-2 rounded-full mb-6">
+                        <i class="fa-solid fa-chart-radar text-brand-orange"></i>
+                        <span class="text-sm font-semibold text-brand-orange">Taste Profile</span>
+                    </div>
+                    <h2 class="text-4xl sm:text-5xl font-bold mb-6">
+                        Visualize Your
+                        <span class="text-brand-orange block mt-2">Gaming Personality</span>
+                    </h2>
+                    <p class="text-xl text-gray-400 mb-8 leading-relaxed">
+                        Our AI creates a comprehensive radar chart of your gaming preferences across genres, mechanics, themes, and playstyles. Watch your DNA evolve as you discover new games.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-check text-brand-orange"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold mb-1">Multi-Dimensional Analysis</div>
+                                <div class="text-gray-400 text-sm">Track preferences across 20+ gaming dimensions and attributes</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-check text-brand-orange"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold mb-1">Real-Time Updates</div>
+                                <div class="text-gray-400 text-sm">Your profile evolves with every swipe and gaming session</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-check text-brand-orange"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold mb-1">Shareable Insights</div>
+                                <div class="text-gray-400 text-sm">Compare your gaming DNA with friends and communities</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24">
+                <div id="feature-2-content">
+                    <div class="inline-flex items-center space-x-2 bg-brand-orange/10 border border-brand-orange/30 px-4 py-2 rounded-full mb-6">
+                        <i class="fa-solid fa-history text-brand-orange"></i>
+                        <span class="text-sm font-semibold text-brand-orange">Swipe History</span>
+                    </div>
+                    <h2 class="text-4xl sm:text-5xl font-bold mb-6">
+                        Never Lose Track of
+                        <span class="text-brand-orange block mt-2">Your Discoveries</span>
+                    </h2>
+                    <p class="text-xl text-gray-400 mb-8 leading-relaxed">
+                        Every swipe is saved and organized. Review your liked games, revisit passed titles, and track your discovery journey with detailed analytics and filters.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-heart text-brand-orange"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold mb-1">Wishlist Management</div>
+                                <div class="text-gray-400 text-sm">Organize liked games with custom tags and priority levels</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-clock-rotate-left text-brand-orange"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold mb-1">Undo & Revisit</div>
+                                <div class="text-gray-400 text-sm">Changed your mind? Easily undo swipes or revisit passed games</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-filter text-brand-orange"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold mb-1">Advanced Filters</div>
+                                <div class="text-gray-400 text-sm">Sort by genre, date, match score, or custom criteria</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div id="feature-2-visual">
+                    <div class="relative">
+                        <div class="bg-dark-card border border-dark-border rounded-3xl p-8 shadow-2xl">
+                            <div class="flex items-center justify-between mb-6">
+                                <h4 class="text-2xl font-bold">Swipe History</h4>
+                                <div class="flex items-center space-x-2">
+                                    <button class="px-3 py-1.5 bg-brand-orange text-dark-bg rounded-lg text-sm font-semibold">Liked</button>
+                                    <button class="px-3 py-1.5 bg-dark-bg rounded-lg text-sm">Passed</button>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="bg-dark-bg rounded-xl p-4 flex items-center space-x-4 hover:border hover:border-brand-orange transition-all cursor-pointer">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-brand-orange rounded-lg flex-shrink-0"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-semibold mb-1 truncate">Elden Ring</div>
+                                        <div class="text-xs text-gray-400">Action RPG • Open World</div>
+                                    </div>
+                                    <div class="flex items-center space-x-2 flex-shrink-0">
+                                        <div class="text-brand-orange font-bold text-sm">96%</div>
+                                        <i class="fa-solid fa-heart text-brand-orange"></i>
+                                    </div>
+                                </div>
+                                <div class="bg-dark-bg rounded-xl p-4 flex items-center space-x-4 hover:border hover:border-brand-orange transition-all cursor-pointer">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex-shrink-0"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-semibold mb-1 truncate">Hades</div>
+                                        <div class="text-xs text-gray-400">Roguelike • Action</div>
+                                    </div>
+                                    <div class="flex items-center space-x-2 flex-shrink-0">
+                                        <div class="text-brand-orange font-bold text-sm">94%</div>
+                                        <i class="fa-solid fa-heart text-brand-orange"></i>
+                                    </div>
+                                </div>
+                                <div class="bg-dark-bg rounded-xl p-4 flex items-center space-x-4 hover:border hover:border-brand-orange transition-all cursor-pointer">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-red-600 to-orange-500 rounded-lg flex-shrink-0"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-semibold mb-1 truncate">DOOM Eternal</div>
+                                        <div class="text-xs text-gray-400">FPS • Action</div>
+                                    </div>
+                                    <div class="flex items-center space-x-2 flex-shrink-0">
+                                        <div class="text-brand-orange font-bold text-sm">92%</div>
+                                        <i class="fa-solid fa-heart text-brand-orange"></i>
+                                    </div>
+                                </div>
+                                <div class="bg-dark-bg rounded-xl p-4 flex items-center space-x-4 hover:border hover:border-brand-orange transition-all cursor-pointer">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-green-600 to-emerald-500 rounded-lg flex-shrink-0"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-semibold mb-1 truncate">Hollow Knight</div>
+                                        <div class="text-xs text-gray-400">Metroidvania • Platformer</div>
+                                    </div>
+                                    <div class="flex items-center space-x-2 flex-shrink-0">
+                                        <div class="text-brand-orange font-bold text-sm">91%</div>
+                                        <i class="fa-solid fa-heart text-brand-orange"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <button class="text-brand-orange hover:text-brand-orange/80 font-semibold text-sm flex items-center justify-center space-x-2 mx-auto">
+                                    <span>View All 47 Games</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                <div id="feature-3-visual" class="order-2 lg:order-1">
+                    <div class="relative">
+                        <div class="bg-dark-card border border-dark-border rounded-3xl p-8 shadow-2xl">
+                            <div class="flex items-center justify-between mb-6">
+                                <h4 class="text-2xl font-bold">Backlog Analyzer</h4>
+                                <div class="flex items-center space-x-2 text-brand-orange">
+                                    <i class="fa-solid fa-sparkles"></i>
+                                    <span class="text-sm font-semibold">AI Powered</span>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-600/20 to-brand-orange/20 rounded-2xl p-6 mb-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div>
+                                        <div class="text-4xl font-bold mb-1">247</div>
+                                        <div class="text-sm text-gray-400">Games in Library</div>
+                                    </div>
+                                    <div class="w-24 h-24 relative">
+                                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                            <circle cx="50" cy="50" r="40" fill="none" stroke="#333" stroke-width="8"/>
+                                            <circle cx="50" cy="50" r="40" fill="none" stroke="oklch(0.646 0.222 41.116)" stroke-width="8" stroke-dasharray="251.2" stroke-dashoffset="62.8" stroke-linecap="round"/>
+                                        </svg>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <div class="text-center">
+                                                <div class="text-xl font-bold">75%</div>
+                                                <div class="text-xs text-gray-400">Played</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <div class="text-2xl font-bold text-green-500 mb-1">185</div>
+                                        <div class="text-xs text-gray-400">Completed</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-2xl font-bold text-yellow-500 mb-1">42</div>
+                                        <div class="text-xs text-gray-400">In Progress</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-2xl font-bold text-red-500 mb-1">20</div>
+                                        <div class="text-xs text-gray-400">Not Started</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="bg-dark-bg rounded-xl p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="font-semibold">Estimated Completion</div>
+                                        <div class="text-brand-orange font-bold">~340 hrs</div>
+                                    </div>
+                                    <div class="w-full bg-dark-card rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-brand-orange to-yellow-500 h-2 rounded-full" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-dark-bg rounded-xl p-4">
+                                    <div class="text-sm text-gray-400 mb-2">AI Recommendation</div>
+                                    <p class="text-sm leading-relaxed">Based on your playtime patterns, we recommend focusing on your RPG backlog during weekends for optimal engagement.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="feature-3-content" class="order-1 lg:order-2">
+                    <div class="inline-flex items-center space-x-2 bg-brand-orange/10 border border-brand-orange/30 px-4 py-2 rounded-full mb-6">
+                        <i class="fa-solid fa-list-check text-brand-orange"></i>
+                        <span class="text-sm font-semibold text-brand-orange">Backlog Intelligence</span>
+                    </div>
+                    <h2 class="text-4xl sm:text-5xl font-bold mb-6">
+                        Master Your Gaming
+                        <span class="text-brand-orange block mt-2">Backlog with AI</span>
+                    </h2>
+                    <p class="text-xl text-gray-400 mb-8 leading-relaxed">
+                        Get intelligent insights into your Steam library. Our AI analyzes playtime, completion rates, and gaming patterns to help you prioritize what to play next.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-chart-pie text-brand-orange"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold mb-1">Completion Analytics</div>
+                                <div class="text-gray-400 text-sm">Track your gaming progress with detailed statistics and trends</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-lightbulb text-brand-orange"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold mb-1">Smart Suggestions</div>
+                                <div class="text-gray-400 text-sm">AI recommends which backlog games to tackle based on your mood and time</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-sync text-brand-orange"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold mb-1">Auto-Sync Library</div>
+                                <div class="text-gray-400 text-sm">Automatically updates with your latest Steam purchases and playtime</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="social-proof" class="py-20 lg:py-32 bg-dark-card/30 relative">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <div class="inline-flex items-center space-x-2 bg-brand-orange/10 border border-brand-orange/30 px-4 py-2 rounded-full mb-6">
+                <i class="fa-solid fa-users text-brand-orange"></i>
+                <span class="text-sm font-semibold text-brand-orange">Community Love</span>
+            </div>
+            <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+                What Gamers Are
+                <span class="text-brand-orange block mt-2">Saying About Us</span>
+            </h2>
+            <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                Join thousands of gamers who've discovered their next favorite games
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto">
+            <div id="testimonial-1" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex items-center space-x-1 mb-4">
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                </div>
+                <p class="text-gray-300 mb-6 leading-relaxed">
+                    "This is exactly what I needed! The AI recommendations are spot-on. Found 10 amazing indie games I would have never discovered otherwise."
+                </p>
+                <div class="flex items-center space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="User" class="w-12 h-12 rounded-full">
+                    <div>
+                        <div class="font-semibold">Alex Chen</div>
+                        <div class="text-sm text-gray-400">@alexplays247</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="testimonial-2" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex items-center space-x-1 mb-4">
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                </div>
+                <p class="text-gray-300 mb-6 leading-relaxed">
+                    "The radar chart of my gaming DNA is fascinating! It's like a personality test but for games. Super accurate and fun to explore."
+                </p>
+                <div class="flex items-center space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" alt="User" class="w-12 h-12 rounded-full">
+                    <div>
+                        <div class="font-semibold">Sarah Mitchell</div>
+                        <div class="text-sm text-gray-400">@sarahgamer</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="testimonial-3" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex items-center space-x-1 mb-4">
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                </div>
+                <p class="text-gray-300 mb-6 leading-relaxed">
+                    "Finally, a way to tackle my 300+ game backlog! The AI insights help me decide what to play based on my mood and available time."
+                </p>
+                <div class="flex items-center space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-8.jpg" alt="User" class="w-12 h-12 rounded-full">
+                    <div>
+                        <div class="font-semibold">Marcus Johnson</div>
+                        <div class="text-sm text-gray-400">@marcusj</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="testimonial-4" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex items-center space-x-1 mb-4">
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                </div>
+                <p class="text-gray-300 mb-6 leading-relaxed">
+                    "The swipe interface is addictive! I've spent hours discovering new games. It's like Tinder but I actually enjoy using it 😂"
+                </p>
+                <div class="flex items-center space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-6.jpg" alt="User" class="w-12 h-12 rounded-full">
+                    <div>
+                        <div class="font-semibold">Emma Rodriguez</div>
+                        <div class="text-sm text-gray-400">@emmar_games</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="testimonial-5" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex items-center space-x-1 mb-4">
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                </div>
+                <p class="text-gray-300 mb-6 leading-relaxed">
+                    "As someone with 500+ games on Steam, this tool is a lifesaver. The match percentages are incredibly accurate!"
+                </p>
+                <div class="flex items-center space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" alt="User" class="w-12 h-12 rounded-full">
+                    <div>
+                        <div class="font-semibold">David Park</div>
+                        <div class="text-sm text-gray-400">@davidp_gaming</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="testimonial-6" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex items-center space-x-1 mb-4">
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                    <i class="fa-solid fa-star text-brand-orange"></i>
+                </div>
+                <p class="text-gray-300 mb-6 leading-relaxed">
+                    "Love the privacy-first approach. My Steam data stays secure and the recommendations just keep getting better over time."
+                </p>
+                <div class="flex items-center space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg" alt="User" class="w-12 h-12 rounded-full">
+                    <div>
+                        <div class="font-semibold">Lisa Thompson</div>
+                        <div class="text-sm text-gray-400">@lisaplays</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="faq-section" class="py-20 lg:py-32 relative">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-16">
+                <div class="inline-flex items-center space-x-2 bg-brand-orange/10 border border-brand-orange/30 px-4 py-2 rounded-full mb-6">
+                    <i class="fa-solid fa-circle-question text-brand-orange"></i>
+                    <span class="text-sm font-semibold text-brand-orange">FAQ</span>
+                </div>
+                <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+                    Frequently Asked
+                    <span class="text-brand-orange block mt-2">Questions</span>
+                </h2>
+            </div>
+
+            <div class="space-y-4">
+                <div id="faq-1" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-3">Is GameDNA free to use?</h3>
+                            <p class="text-gray-400 leading-relaxed">
+                                Yes! GameDNA is completely free. We believe everyone should have access to personalized game recommendations. No hidden fees, no premium tiers, just pure gaming discovery.
+                            </p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-brand-orange text-xl ml-4 flex-shrink-0"></i>
+                    </div>
+                </div>
+
+                <div id="faq-2" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-3">How does the AI recommendation system work?</h3>
+                            <p class="text-gray-400 leading-relaxed">
+                                Our AI analyzes your Steam library, playtime patterns, genre preferences, and gaming behavior across 20+ dimensions. It compares this data with millions of other gamers and game attributes to find your perfect matches with industry-leading accuracy.
+                            </p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-brand-orange text-xl ml-4 flex-shrink-0"></i>
+                    </div>
+                </div>
+
+                <div id="faq-3" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-3">Is my Steam data secure?</h3>
+                            <p class="text-gray-400 leading-relaxed">
+                                Absolutely. We use Steam's official OAuth authentication and never store your password. Your data is encrypted, never sold to third parties, and you can delete your account anytime. Privacy is our top priority.
+                            </p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-brand-orange text-xl ml-4 flex-shrink-0"></i>
+                    </div>
+                </div>
+
+                <div id="faq-4" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-3">Can I use GameDNA without Steam?</h3>
+                            <p class="text-gray-400 leading-relaxed">
+                                Currently, GameDNA requires a Steam account for the best experience. However, we're working on supporting other platforms like Epic Games, GOG, and Xbox Game Pass in future updates.
+                            </p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-brand-orange text-xl ml-4 flex-shrink-0"></i>
+                    </div>
+                </div>
+
+                <div id="faq-5" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-3">How accurate are the match percentages?</h3>
+                            <p class="text-gray-400 leading-relaxed">
+                                Our AI has a 98% satisfaction rate based on user feedback. The more you use GameDNA and swipe on games, the better it understands your preferences and improves match accuracy over time.
+                            </p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-brand-orange text-xl ml-4 flex-shrink-0"></i>
+                    </div>
+                </div>
+
+                <div id="faq-6" class="bg-dark-card border border-dark-border rounded-2xl p-6 hover:border-brand-orange transition-all">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-3">Can I share my Gaming DNA with friends?</h3>
+                            <p class="text-gray-400 leading-relaxed">
+                                Yes! You can share your radar chart and gaming profile with friends. Compare your gaming DNA, see compatibility scores, and discover games you both might enjoy. Social features are coming soon!
+                            </p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-brand-orange text-xl ml-4 flex-shrink-0"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="final-cta" class="py-20 lg:py-32 bg-gradient-to-br from-brand-orange/10 via-purple-600/10 to-dark-bg relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-0 left-0 w-full h-full" style="background-image: radial-gradient(circle at 2px 2px, oklch(0.646 0.222 41.116) 1px, transparent 0); background-size: 40px 40px;"></div>
+    </div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl sm:text-5xl lg:text-7xl font-black mb-6 leading-tight">
+                Ready to Discover Your
+                <span class="text-brand-orange block mt-2">Next Gaming Adventure?</span>
+            </h2>
+            <p class="text-xl sm:text-2xl text-gray-400 mb-12 leading-relaxed">
+                Join 10,000+ gamers who've already found their perfect matches
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+                <button class="group bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#1b2838] text-white font-semibold px-12 py-6 rounded-xl text-xl transition-all duration-300 shadow-2xl hover:shadow-brand-orange/20 hover:scale-105 inline-flex items-center space-x-4 w-full sm:w-auto justify-center">
+                    <i class="fa-brands fa-steam text-4xl"></i>
+                    <span>Sign in with Steam</span>
+                    <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                </button>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-check text-brand-orange"></i>
+                    <span>Free Forever</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-check text-brand-orange"></i>
+                    <span>No Credit Card</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-check text-brand-orange"></i>
+                    <span>Setup in 30 Seconds</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer id="footer" class="bg-dark-card border-t border-dark-border py-12 lg:py-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+                <div id="footer-brand">
+                    <div class="flex items-baseline space-x-1 mb-4">
+                        <span class="text-brand-orange text-3xl font-black">Game</span>
+                        <span class="text-white text-3xl font-black">DNA</span>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                        AI-powered game discovery platform that helps you find your next gaming obsession.
+                    </p>
+                    <div class="flex items-center space-x-4">
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-discord"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-reddit"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="footer-product">
+                    <h4 class="font-bold text-lg mb-4">Product</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Features</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">How It Works</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Pricing</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Roadmap</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Changelog</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-company">
+                    <h4 class="font-bold text-lg mb-4">Company</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Press Kit</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-legal">
+                    <h4 class="font-bold text-lg mb-4">Legal</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Cookie Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">GDPR</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Licenses</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-dark-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-gray-500 text-sm text-center md:text-left">
+                    © 2024 GameDNA. All rights reserved. Not affiliated with Valve Corporation.
+                </p>
+                <div class="flex items-center space-x-6 text-sm text-gray-500">
+                    <a href="#" class="hover:text-brand-orange transition-colors">Status</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">API</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">Docs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Lists</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>::-webkit-scrollbar { display: none;}</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-orange': 'oklch(0.646 0.222 41.116)',
+                        'dark-bg': '#1a1a1a',
+                        'dark-card': '#242424',
+                        'dark-border': '#333333',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-white font-sans antialiased overflow-x-hidden">
+
+<header id="header" class="sticky top-0 z-50 bg-dark-card/95 backdrop-blur-lg border-b border-dark-border">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 lg:h-20">
+            <div class="flex items-baseline space-x-1">
+                <span class="text-brand-orange text-2xl lg:text-3xl font-black">Game</span>
+                <span class="text-white text-2xl lg:text-3xl font-black">DNA</span>
+            </div>
+
+            <nav id="main-nav" class="hidden lg:flex items-center space-x-1">
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Discovery</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Recommendations</a>
+                <a href="#" class="px-4 py-2 rounded-lg bg-dark-bg text-brand-orange transition-all">My Lists</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">History</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Backlog</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Profile</a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <button class="hidden md:flex items-center justify-center w-10 h-10 bg-dark-bg rounded-full hover:bg-brand-orange transition-all">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="hidden md:flex items-center space-x-3 bg-dark-bg rounded-full px-4 py-2">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="User" class="w-8 h-8 rounded-full">
+                    <span class="text-sm font-medium">Alex Chen</span>
+                    <button class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                </div>
+                <button class="lg:hidden w-10 h-10 flex items-center justify-center">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main id="my-lists-main">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <div id="page-header" class="mb-8">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">My Lists</h1>
+            <p class="text-gray-400 text-lg max-w-3xl">Organize and manage your gaming collections. Keep track of games you want to play, bookmarks, and wishlist items.</p>
+        </div>
+
+        <div id="tabs-container" class="mb-8">
+            <div class="bg-dark-card border border-dark-border rounded-2xl p-2 inline-flex space-x-2">
+                <button id="tab-library" class="px-6 py-3 rounded-lg bg-brand-orange text-dark-bg font-semibold transition-all">
+                    <i class="fa-solid fa-book mr-2"></i>Library
+                </button>
+                <button id="tab-bookmarks" class="px-6 py-3 rounded-lg hover:bg-dark-bg text-gray-400 font-semibold transition-all">
+                    <i class="fa-regular fa-bookmark mr-2"></i>Bookmarks
+                </button>
+                <button id="tab-wishlist" class="px-6 py-3 rounded-lg hover:bg-dark-bg text-gray-400 font-semibold transition-all">
+                    <i class="fa-regular fa-heart mr-2"></i>Wishlist
+                </button>
+            </div>
+        </div>
+
+        <div id="search-and-filters" class="bg-dark-card border border-dark-border rounded-2xl p-6 mb-8">
+            <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+                <div class="flex-1 relative">
+                    <i class="fa-solid fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" placeholder="Search games in your lists..." class="w-full bg-dark-bg border border-dark-border rounded-lg pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange transition-all">
+                </div>
+                <div class="flex items-center gap-3">
+                    <select class="bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange transition-all">
+                        <option>All Genres</option>
+                        <option>Action</option>
+                        <option>RPG</option>
+                        <option>Strategy</option>
+                        <option>Indie</option>
+                        <option>Simulation</option>
+                    </select>
+                    <select class="bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange transition-all">
+                        <option>Sort: Recent</option>
+                        <option>Sort: Name A-Z</option>
+                        <option>Sort: Name Z-A</option>
+                        <option>Sort: Price Low-High</option>
+                        <option>Sort: Price High-Low</option>
+                        <option>Sort: Rating</option>
+                    </select>
+                    <button class="w-12 h-12 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                        <i class="fa-solid fa-filter"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="library-tab-content" class="space-y-6">
+            <div id="stats-row" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-dark-card border border-dark-border rounded-xl p-5 text-center">
+                    <div class="text-3xl font-black text-brand-orange mb-1">247</div>
+                    <div class="text-sm text-gray-400">Total Games</div>
+                </div>
+                <div class="bg-dark-card border border-dark-border rounded-xl p-5 text-center">
+                    <div class="text-3xl font-black text-green-500 mb-1">89</div>
+                    <div class="text-sm text-gray-400">Completed</div>
+                </div>
+                <div class="bg-dark-card border border-dark-border rounded-xl p-5 text-center">
+                    <div class="text-3xl font-black text-yellow-500 mb-1">42</div>
+                    <div class="text-sm text-gray-400">In Progress</div>
+                </div>
+                <div class="bg-dark-card border border-dark-border rounded-xl p-5 text-center">
+                    <div class="text-3xl font-black text-purple-500 mb-1">1,847h</div>
+                    <div class="text-sm text-gray-400">Total Playtime</div>
+                </div>
+            </div>
+
+            <div id="game-list-library" class="space-y-4">
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3a26c875c2-98372a76cc4ed92f77d3.png" alt="fantasy RPG game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">Elden Ring</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Open World</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action RPG</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Souls-like</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <div class="flex items-center space-x-1 bg-green-500/20 text-green-500 px-3 py-1.5 rounded-full font-bold text-sm">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                        <span>93%</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-brand-orange">$59.99</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <div class="text-sm text-gray-400">
+                                    <i class="fa-solid fa-clock mr-1"></i>127 hours played
+                                </div>
+                                <span class="text-gray-600">•</span>
+                                <div class="text-sm text-gray-400">Last played: 2 days ago</div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-trash"></i>
+                                    <span>Remove</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/74aed75155-1e908bc25c7caf8f5dc8.png" alt="cyberpunk action game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">Cyberpunk 2077</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">RPG</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Cyberpunk</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Open World</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <div class="flex items-center space-x-1 bg-yellow-500/20 text-yellow-500 px-3 py-1.5 rounded-full font-bold text-sm">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                        <span>78%</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-brand-orange">$29.99</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <div class="text-sm text-gray-400">
+                                    <i class="fa-solid fa-clock mr-1"></i>89 hours played
+                                </div>
+                                <span class="text-gray-600">•</span>
+                                <div class="text-sm text-gray-400">Last played: 1 week ago</div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-trash"></i>
+                                    <span>Remove</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/4d4d3bbc66-97cf68d20b6db2ba34f3.png" alt="dark fantasy action game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">Dark Souls III</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Souls-like</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Dark Fantasy</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <div class="flex items-center space-x-1 bg-green-500/20 text-green-500 px-3 py-1.5 rounded-full font-bold text-sm">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                        <span>89%</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-brand-orange">$39.99</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <div class="text-sm text-gray-400">
+                                    <i class="fa-solid fa-clock mr-1"></i>156 hours played
+                                </div>
+                                <span class="text-gray-600">•</span>
+                                <div class="text-sm text-gray-400">Last played: 3 weeks ago</div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-trash"></i>
+                                    <span>Remove</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/c5a2c39014-bd53d153c56a3b5b8e5e.png" alt="samurai action game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">Sekiro: Shadows Die Twice</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Ninja</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Souls-like</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <div class="flex items-center space-x-1 bg-green-500/20 text-green-500 px-3 py-1.5 rounded-full font-bold text-sm">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                        <span>91%</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-brand-orange">$59.99</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <div class="text-sm text-gray-400">
+                                    <i class="fa-solid fa-clock mr-1"></i>73 hours played
+                                </div>
+                                <span class="text-gray-600">•</span>
+                                <div class="text-sm text-gray-400">Last played: 1 month ago</div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-trash"></i>
+                                    <span>Remove</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/71d420f6a3-89874474795834064c8d.png" alt="space exploration game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">Starfield</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">RPG</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Sci-Fi</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Space</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <div class="flex items-center space-x-1 bg-yellow-500/20 text-yellow-500 px-3 py-1.5 rounded-full font-bold text-sm">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                        <span>72%</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-brand-orange">$69.99</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <div class="text-sm text-gray-400">
+                                    <i class="fa-solid fa-clock mr-1"></i>45 hours played
+                                </div>
+                                <span class="text-gray-600">•</span>
+                                <div class="text-sm text-gray-400">Last played: 5 days ago</div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-trash"></i>
+                                    <span>Remove</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/1eb18c2cd5-664651eb28f6b1f9cf0a.png" alt="horror survival game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">Resident Evil Village</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Horror</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Survival</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <div class="flex items-center space-x-1 bg-green-500/20 text-green-500 px-3 py-1.5 rounded-full font-bold text-sm">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                        <span>86%</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-brand-orange">$39.99</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <div class="text-sm text-gray-400">
+                                    <i class="fa-solid fa-clock mr-1"></i>28 hours played
+                                </div>
+                                <span class="text-gray-600">•</span>
+                                <div class="text-sm text-gray-400">Last played: 2 months ago</div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-trash"></i>
+                                    <span>Remove</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pagination" class="flex items-center justify-center gap-2 pt-8">
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button class="w-10 h-10 bg-brand-orange text-dark-bg font-bold rounded-lg flex items-center justify-center">1</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">2</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">3</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">4</button>
+                <span class="text-gray-500">...</span>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">12</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="bookmarks-tab-content" class="hidden space-y-6">
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6 text-center">
+                <div class="w-20 h-20 bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-regular fa-bookmark text-4xl text-brand-orange"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">34 Bookmarked Games</h3>
+                <p class="text-gray-400 mb-6">Games you've saved for later consideration</p>
+            </div>
+
+            <div id="game-list-bookmarks" class="space-y-4">
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/74aed75155-1e908bc25c7caf8f5dc8.png" alt="indie platformer game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">Hollow Knight</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Metroidvania</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Indie</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Platformer</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <div class="flex items-center space-x-1 bg-green-500/20 text-green-500 px-3 py-1.5 rounded-full font-bold text-sm">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                        <span>97%</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-brand-orange">$14.99</div>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-400 mb-3">Bookmarked 3 days ago</div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-bookmark-slash"></i>
+                                    <span>Remove Bookmark</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/4d4d3bbc66-97cf68d20b6db2ba34f3.png" alt="strategy game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">Baldur's Gate 3</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">RPG</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Strategy</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Turn-Based</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <div class="flex items-center space-x-1 bg-green-500/20 text-green-500 px-3 py-1.5 rounded-full font-bold text-sm">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                        <span>96%</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-brand-orange">$59.99</div>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-400 mb-3">Bookmarked 1 week ago</div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-bookmark-slash"></i>
+                                    <span>Remove Bookmark</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/c5a2c39014-bd53d153c56a3b5b8e5e.png" alt="puzzle adventure game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">The Witness</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Puzzle</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Exploration</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Indie</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <div class="flex items-center space-x-1 bg-green-500/20 text-green-500 px-3 py-1.5 rounded-full font-bold text-sm">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                        <span>87%</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-brand-orange">$19.99</div>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-400 mb-3">Bookmarked 2 weeks ago</div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-bookmark-slash"></i>
+                                    <span>Remove Bookmark</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pagination-bookmarks" class="flex items-center justify-center gap-2 pt-8">
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button class="w-10 h-10 bg-brand-orange text-dark-bg font-bold rounded-lg flex items-center justify-center">1</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">2</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">3</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="wishlist-tab-content" class="hidden space-y-6">
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6 text-center">
+                <div class="w-20 h-20 bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-regular fa-heart text-4xl text-brand-orange"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">52 Wishlist Items</h3>
+                <p class="text-gray-400 mb-6">Games you want to buy when they go on sale</p>
+            </div>
+
+            <div id="game-list-wishlist" class="space-y-4">
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/71d420f6a3-89874474795834064c8d.png" alt="upcoming action game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">Hades II</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Roguelike</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Indie</span>
+                                        <span class="bg-purple-600/20 text-purple-400 px-3 py-1 rounded-full text-xs font-bold border border-purple-600/50">Early Access</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                                    <div class="text-2xl font-black text-brand-orange">$29.99</div>
+                                    <div class="text-xs text-gray-400">Release: TBA 2025</div>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-400 mb-3">Added 1 month ago • Price drop alert enabled</div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-heart-crack"></i>
+                                    <span>Remove from Wishlist</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-red-600 text-white px-4 py-1 text-xs font-bold transform rotate-12 translate-x-8 translate-y-2">
+                        ON SALE
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/1eb18c2cd5-664651eb28f6b1f9cf0a.png" alt="adventure game on sale thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">God of War Ragnarök</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Adventure</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Mythology</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-lg line-through text-gray-500">$59.99</span>
+                                        <div class="text-2xl font-black text-brand-orange">$39.99</div>
+                                    </div>
+                                    <span class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">-33% OFF</span>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-400 mb-3">Added 2 weeks ago • Sale ends in 4 days</div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-heart-crack"></i>
+                                    <span>Remove from Wishlist</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-brand-orange hover:bg-brand-orange/80 text-dark-bg rounded-lg text-sm font-bold transition-all">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                    <span>Buy Now</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all group">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3a26c875c2-98372a76cc4ed92f77d3.png" alt="upcoming RPG game thumbnail" />
+                        </div>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-xl font-bold mb-2 truncate">Dragon's Dogma 2</h3>
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action RPG</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Open World</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Fantasy</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                                    <div class="text-2xl font-black text-brand-orange">$69.99</div>
+                                    <div class="flex items-center space-x-1 bg-green-500/20 text-green-500 px-3 py-1 rounded-full font-bold text-xs">
+                                        <i class="fa-solid fa-thumbs-up"></i>
+                                        <span>84%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-400 mb-3">Added 3 months ago • Historical low: $49.99</div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-heart-crack"></i>
+                                    <span>Remove from Wishlist</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-brands fa-steam"></i>
+                                    <span>Open in Steam</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pagination-wishlist" class="flex items-center justify-center gap-2 pt-8">
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button class="w-10 h-10 bg-brand-orange text-dark-bg font-bold rounded-lg flex items-center justify-center">1</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">2</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">3</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">4</button>
+                <span class="text-gray-500">...</span>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">6</button>
+                <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer id="footer" class="bg-dark-card border-t border-dark-border py-12 lg:py-16 mt-20">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+                <div id="footer-brand">
+                    <div class="flex items-baseline space-x-1 mb-4">
+                        <span class="text-brand-orange text-3xl font-black">Game</span>
+                        <span class="text-white text-3xl font-black">DNA</span>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                        AI-powered game discovery platform that helps you find your next gaming obsession.
+                    </p>
+                    <div class="flex items-center space-x-4">
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-discord"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-reddit"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="footer-product">
+                    <h4 class="font-bold text-lg mb-4">Product</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Features</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">How It Works</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Pricing</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Roadmap</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Changelog</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-company">
+                    <h4 class="font-bold text-lg mb-4">Company</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Press Kit</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-legal">
+                    <h4 class="font-bold text-lg mb-4">Legal</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Cookie Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">GDPR</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Licenses</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-dark-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-gray-500 text-sm text-center md:text-left">
+                    © 2024 GameDNA. All rights reserved. Not affiliated with Valve Corporation.
+                </p>
+                <div class="flex items-center space-x-6 text-sm text-gray-500">
+                    <a href="#" class="hover:text-brand-orange transition-colors">Status</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">API</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">Docs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+window.addEventListener('load', function() {
+    const tabLibrary = document.getElementById('tab-library');
+    const tabBookmarks = document.getElementById('tab-bookmarks');
+    const tabWishlist = document.getElementById('tab-wishlist');
+
+    const libraryContent = document.getElementById('library-tab-content');
+    const bookmarksContent = document.getElementById('bookmarks-tab-content');
+    const wishlistContent = document.getElementById('wishlist-tab-content');
+
+    function switchTab(activeTab, activeContent) {
+        [tabLibrary, tabBookmarks, tabWishlist].forEach(tab => {
+            tab.classList.remove('bg-brand-orange', 'text-dark-bg');
+            tab.classList.add('text-gray-400', 'hover:bg-dark-bg');
+        });
+        
+        [libraryContent, bookmarksContent, wishlistContent].forEach(content => {
+            content.classList.add('hidden');
+        });
+
+        activeTab.classList.add('bg-brand-orange', 'text-dark-bg');
+        activeTab.classList.remove('text-gray-400', 'hover:bg-dark-bg');
+        activeContent.classList.remove('hidden');
+    }
+
+    tabLibrary.addEventListener('click', function() {
+        switchTab(tabLibrary, libraryContent);
+    });
+
+    tabBookmarks.addEventListener('click', function() {
+        switchTab(tabBookmarks, bookmarksContent);
+    });
+
+    tabWishlist.addEventListener('click', function() {
+        switchTab(tabWishlist, wishlistContent);
+    });
+});
+</script>
+
+</body>
+</html>
