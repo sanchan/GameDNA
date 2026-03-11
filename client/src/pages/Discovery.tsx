@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/use-auth';
 import { useDiscovery } from '../hooks/use-discovery';
 import { useGamingDNA } from '../hooks/use-profile';
@@ -25,6 +26,7 @@ interface HistoryResponse {
 }
 
 export default function Discovery() {
+  const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus } = useAuth();
   const { currentGame, currentScore, swipe, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
@@ -91,11 +93,11 @@ export default function Discovery() {
   const decisionBadge = (decision: SwipeDecision) => {
     switch (decision) {
       case 'yes':
-        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">Liked</span>;
+        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">{t('discovery.liked')}</span>;
       case 'no':
-        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">Passed</span>;
+        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">{t('discovery.passed')}</span>;
       case 'maybe':
-        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">Maybe</span>;
+        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">{t('discovery.maybe')}</span>;
     }
   };
 
@@ -130,8 +132,8 @@ export default function Discovery() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl lg:text-4xl font-bold mb-2">Discover Games</h1>
-            <p className="text-gray-400">Swipe through personalized recommendations</p>
+            <h1 className="text-3xl lg:text-4xl font-bold mb-2">{t('discovery.title')}</h1>
+            <p className="text-gray-400">{t('discovery.subtitle')}</p>
           </div>
           {/* Mobile filter button */}
           <button
@@ -139,7 +141,7 @@ export default function Discovery() {
             className="flex items-center gap-2 px-4 py-2 bg-[#242424] border border-[#333] rounded-lg text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors lg:hidden"
           >
             <i className="fa-solid fa-filter" />
-            <span>Filters</span>
+            <span>{t('common.filters')}</span>
             {filterCount > 0 && (
               <span className="px-1.5 py-0.5 text-xs font-medium bg-[var(--primary)] text-[#1a1a1a] rounded-full">
                 {filterCount}
@@ -170,7 +172,7 @@ export default function Discovery() {
               </div>
               {loadingMore && (
                 <div className="p-4 pt-0 text-center">
-                  <p className="text-sm text-[var(--muted-foreground)]">Fetching new games from Steam...</p>
+                  <p className="text-sm text-[var(--muted-foreground)]">{t('discovery.fetchingGames')}</p>
                 </div>
               )}
             </div>
@@ -182,19 +184,19 @@ export default function Discovery() {
             <div className="flex items-center justify-center text-center text-[var(--muted-foreground)] py-20">
               {syncStatus === 'syncing' ? (
                 <div>
-                  <p className="text-lg mb-2">Setting up your discovery queue...</p>
-                  <p className="text-sm">Syncing your Steam library and loading games. This may take a moment.</p>
+                  <p className="text-lg mb-2">{t('discovery.settingUpQueue')}</p>
+                  <p className="text-sm">{t('discovery.syncingLibrary')}</p>
                   <div className="mt-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)]" />
                 </div>
               ) : (
                 <div>
-                  <p className="text-lg mb-2">No more games to discover!</p>
-                  <p className="text-sm mb-4">Want to load more games from Steam?</p>
+                  <p className="text-lg mb-2">{t('discovery.noMoreGames')}</p>
+                  <p className="text-sm mb-4">{t('discovery.loadMorePrompt')}</p>
                   <button
                     onClick={handleLoadMore}
                     className="bg-[var(--primary)] text-[var(--primary-foreground)] px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
                   >
-                    Load More Games
+                    {t('discovery.loadMoreButton')}
                   </button>
                 </div>
               )}
@@ -212,19 +214,19 @@ export default function Discovery() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
               <div className="text-3xl font-bold text-[var(--primary)] mb-2">{swipeStats ? (swipeStats.yes + swipeStats.no + swipeStats.maybe) : swipedCount}</div>
-              <div className="text-sm text-gray-400">Games Swiped</div>
+              <div className="text-sm text-gray-400">{t('discovery.gamesSwiped')}</div>
             </div>
             <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
               <div className="text-3xl font-bold text-green-500 mb-2">{swipeStats?.yes ?? '--'}</div>
-              <div className="text-sm text-gray-400">Liked</div>
+              <div className="text-sm text-gray-400">{t('discovery.liked')}</div>
             </div>
             <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
               <div className="text-3xl font-bold text-yellow-500 mb-2">{swipeStats?.maybe ?? '--'}</div>
-              <div className="text-sm text-gray-400">Maybe Later</div>
+              <div className="text-sm text-gray-400">{t('discovery.maybeLater')}</div>
             </div>
             <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
               <div className="text-3xl font-bold text-red-500 mb-2">{swipeStats?.no ?? '--'}</div>
-              <div className="text-sm text-gray-400">Passed</div>
+              <div className="text-sm text-gray-400">{t('discovery.passed')}</div>
             </div>
           </div>
         </div>
@@ -233,12 +235,12 @@ export default function Discovery() {
         {recentSwipes.length > 0 && (
           <div className="max-w-4xl mx-auto mt-12">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold">Recent Swipes</h3>
+              <h3 className="text-2xl font-bold">{t('discovery.recentSwipes')}</h3>
               <a
                 href="/history"
                 className="text-[var(--primary)] hover:text-[var(--primary)]/80 font-semibold text-sm flex items-center space-x-2"
               >
-                <span>View All</span>
+                <span>{t('discovery.viewAll')}</span>
                 <i className="fa-solid fa-arrow-right" />
               </a>
             </div>
@@ -273,9 +275,9 @@ export default function Discovery() {
               <i className="fa-solid fa-lightbulb text-[var(--primary)] text-xl" />
             </div>
             <div>
-              <h4 className="text-xl font-bold mb-2">Pro Tip</h4>
+              <h4 className="text-xl font-bold mb-2">{t('discovery.proTip')}</h4>
               <p className="text-gray-400 leading-relaxed">
-                The more you swipe, the better our AI understands your preferences!
+                {t('discovery.proTipText')}
               </p>
             </div>
           </div>

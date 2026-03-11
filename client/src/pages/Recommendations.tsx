@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Navigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/use-auth';
 import { api } from '../lib/api';
 import GameGrid from '../components/GameGrid';
@@ -7,6 +8,7 @@ import WhyThisGame from '../components/WhyThisGame';
 import type { Recommendation } from '../../../shared/types';
 
 export default function Recommendations() {
+  const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus } = useAuth();
   const [recs, setRecs] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,9 +92,9 @@ export default function Recommendations() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-8 gap-6">
         <div>
-          <h1 className="text-3xl lg:text-4xl font-bold mb-2">For You</h1>
+          <h1 className="text-3xl lg:text-4xl font-bold mb-2">{t('recommendations.title')}</h1>
           <p className="text-[var(--muted-foreground)]">
-            AI-curated recommendations based on your gaming DNA
+            {t('recommendations.subtitle')}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
@@ -102,18 +104,18 @@ export default function Recommendations() {
             className="flex items-center justify-center space-x-2 px-6 py-3 bg-[var(--primary)] hover:opacity-80 text-[var(--primary-foreground)] rounded-lg font-semibold transition-all disabled:opacity-50"
           >
             <i className="fa-solid fa-rotate-right" />
-            <span>{generating ? 'Generating...' : 'Regenerate'}</span>
+            <span>{generating ? t('recommendations.generating') : t('recommendations.regenerate')}</span>
           </button>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="px-4 py-3 bg-[#242424] border border-[#333] rounded-lg focus:outline-none focus:border-[var(--primary)] transition-colors"
           >
-            <option value="best-match">Best Match</option>
-            <option value="highest-rated">Highest Rated</option>
-            <option value="most-popular">Most Popular</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
+            <option value="best-match">{t('recommendations.sortOptions.bestMatch')}</option>
+            <option value="highest-rated">{t('recommendations.sortOptions.highestRated')}</option>
+            <option value="most-popular">{t('recommendations.sortOptions.mostPopular')}</option>
+            <option value="price-low">{t('recommendations.sortOptions.priceLow')}</option>
+            <option value="price-high">{t('recommendations.sortOptions.priceHigh')}</option>
           </select>
         </div>
       </div>
@@ -126,15 +128,15 @@ export default function Recommendations() {
               <i className="fa-solid fa-brain text-[var(--primary)]" />
             </div>
             <div>
-              <div className="font-semibold">AI Analysis Complete</div>
+              <div className="font-semibold">{t('recommendations.aiAnalysisComplete')}</div>
               <div className="text-sm text-[var(--muted-foreground)]">
-                {recs.length} games found based on your gaming DNA
+                {t('recommendations.gamesFoundByDNA', { count: recs.length })}
               </div>
             </div>
           </div>
           <div className="hidden sm:flex items-center space-x-2 text-sm">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-green-500 font-medium">Active</span>
+            <span className="text-green-500 font-medium">{t('common.active')}</span>
           </div>
         </div>
       )}
@@ -144,7 +146,7 @@ export default function Recommendations() {
           {syncStatus === 'syncing' && (
             <div className="col-span-full text-center py-8 text-[var(--muted-foreground)]">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)] mb-3" />
-              <p className="text-sm">Recommendations will be generated after sync completes...</p>
+              <p className="text-sm">{t('recommendations.syncingRecommendations')}</p>
             </div>
           )}
           {Array.from({ length: 6 }).map((_, i) => (
@@ -182,8 +184,8 @@ export default function Recommendations() {
       ) : (
         <div className="text-center py-20 text-[var(--muted-foreground)]">
           <i className="fa-solid fa-wand-magic-sparkles text-4xl mb-4 block opacity-40" />
-          <p className="text-lg mb-2">No recommendations yet.</p>
-          <p className="text-sm">Hit "Regenerate" to get personalized suggestions!</p>
+          <p className="text-lg mb-2">{t('recommendations.noRecommendations')}</p>
+          <p className="text-sm">{t('recommendations.hitRegenerate')}</p>
         </div>
       )}
 

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
 import { api } from '../lib/api';
 import { useBookmarks } from '../hooks/use-bookmarks';
@@ -20,7 +22,7 @@ interface MediaResponse {
 }
 
 function formatPrice(cents: number | null, currency?: string | null): string {
-  if (cents === null || cents === 0) return 'Free to Play';
+  if (cents === null || cents === 0) return i18n.t('common.freeToPlay');
   const amount = cents / 100;
   if (currency) {
     try {
@@ -45,13 +47,13 @@ function reviewBgColor(score: number | null): string {
 }
 
 function reviewLabel(score: number | null): string {
-  if (score === null) return 'No reviews';
-  if (score >= 95) return 'Overwhelmingly Positive';
-  if (score >= 80) return 'Very Positive';
-  if (score >= 70) return 'Mostly Positive';
-  if (score >= 40) return 'Mixed';
-  if (score >= 20) return 'Mostly Negative';
-  return 'Overwhelmingly Negative';
+  if (score === null) return i18n.t('gameDetail.reviewLabels.noReviews');
+  if (score >= 95) return i18n.t('gameDetail.reviewLabels.overwhelminglyPositive');
+  if (score >= 80) return i18n.t('gameDetail.reviewLabels.veryPositive');
+  if (score >= 70) return i18n.t('gameDetail.reviewLabels.mostlyPositive');
+  if (score >= 40) return i18n.t('gameDetail.reviewLabels.mixed');
+  if (score >= 20) return i18n.t('gameDetail.reviewLabels.mostlyNegative');
+  return i18n.t('gameDetail.reviewLabels.overwhelminglyNegative');
 }
 
 // The games API returns raw DB rows (snake_case), so we need to handle both formats
@@ -84,6 +86,7 @@ function getReleaseYear(releaseDate: string | null): string | null {
 }
 
 export default function GameDetail() {
+  const { t } = useTranslation();
   const { appid } = useParams<{ appid: string }>();
   const { user } = useAuth();
   const { isBookmarked, toggle: toggleBookmark } = useBookmarks();
@@ -190,9 +193,9 @@ export default function GameDetail() {
       <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
         <div className="text-center">
           <i className="fa-solid fa-circle-exclamation text-4xl text-[var(--muted-foreground)] mb-4" />
-          <p className="text-lg text-[var(--muted-foreground)] mb-2">{error || 'Game not found'}</p>
+          <p className="text-lg text-[var(--muted-foreground)] mb-2">{error || t('gameDetail.gameNotFound')}</p>
           <Link to="/" className="text-[var(--primary)] text-sm hover:underline">
-            <i className="fa-solid fa-arrow-left mr-1" /> Go back
+            <i className="fa-solid fa-arrow-left mr-1" /> {t('common.goBack')}
           </Link>
         </div>
       </div>
@@ -238,12 +241,12 @@ export default function GameDetail() {
             className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm"
           >
             <i className="fa-solid fa-arrow-left" />
-            <span>Back</span>
+            <span>{t('common.back')}</span>
           </Link>
         </div>
 
         {/* Hero content */}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end h-full pb-12 lg:pb-16">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end h-full pb-28 lg:pb-32">
           <div className="max-w-4xl">
             {/* Title */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-3 leading-tight">
@@ -263,7 +266,7 @@ export default function GameDetail() {
               {game.reviewScore !== null && game.reviewScore >= 70 && (
                 <span className="bg-[var(--primary)]/20 text-[var(--primary)] px-3 py-1.5 rounded-full font-bold text-sm inline-flex items-center gap-1.5">
                   <i className="fa-solid fa-star" />
-                  {game.reviewScore}% Match
+                  {t('common.match', { score: game.reviewScore })}
                 </span>
               )}
 
@@ -312,7 +315,7 @@ export default function GameDetail() {
                 }`}
               >
                 <i className={`fa-${bookmarked ? 'solid' : 'regular'} fa-bookmark`} />
-                Bookmark
+                {t('common.bookmark')}
               </button>
 
               <a
@@ -320,7 +323,7 @@ export default function GameDetail() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#444] text-gray-300 hover:bg-[#333] hover:text-white transition-colors text-sm font-medium"
               >
                 <i className="fa-regular fa-heart" />
-                Wishlist
+                {t('common.wishlist')}
               </a>
 
               <a
@@ -330,7 +333,7 @@ export default function GameDetail() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#444] text-gray-300 hover:bg-[#333] hover:text-white transition-colors text-sm font-medium"
               >
                 <i className="fa-brands fa-steam" />
-                Open in Steam
+                {t('common.openInSteam')}
               </a>
             </div>
 
@@ -343,7 +346,7 @@ export default function GameDetail() {
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   <i className="fa-solid fa-xmark" />
-                  Not for me
+                  {t('gameDetail.notForMe')}
                 </button>
                 <button
                   onClick={() => handleSwipe('maybe')}
@@ -351,7 +354,7 @@ export default function GameDetail() {
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   <i className="fa-solid fa-question" />
-                  Maybe
+                  {t('gameDetail.maybe')}
                 </button>
                 <button
                   onClick={() => handleSwipe('yes')}
@@ -359,7 +362,7 @@ export default function GameDetail() {
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   <i className="fa-solid fa-check" />
-                  Interested
+                  {t('gameDetail.interested')}
                 </button>
               </div>
             )}
@@ -381,7 +384,7 @@ export default function GameDetail() {
               <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
                 <h2 className="text-lg font-bold text-white mb-4">
                   <i className="fa-solid fa-images mr-2 text-gray-400" />
-                  Media
+                  {t('gameDetail.media')}
                 </h2>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {mediaItems.slice(0, 8).map((item, i) => (
@@ -417,7 +420,7 @@ export default function GameDetail() {
             <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
               <h2 className="text-lg font-bold text-white mb-4">
                 <i className="fa-solid fa-tag mr-2 text-gray-400" />
-                Price
+                {t('gameDetail.price')}
               </h2>
               <div className="flex items-baseline gap-3">
                 <span className="text-3xl font-black text-white">
@@ -425,7 +428,7 @@ export default function GameDetail() {
                 </span>
                 {game.priceCents !== null && game.priceCents === 0 && (
                   <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-bold">
-                    FREE
+                    {t('common.free')}
                   </span>
                 )}
               </div>
@@ -436,7 +439,7 @@ export default function GameDetail() {
               <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
                 <h2 className="text-lg font-bold text-white mb-4">
                   <i className="fa-solid fa-chart-bar mr-2 text-gray-400" />
-                  Review Summary
+                  {t('gameDetail.reviewSummary')}
                 </h2>
                 <div className="flex items-start gap-6">
                   {/* Score box */}
@@ -453,7 +456,7 @@ export default function GameDetail() {
                     <p className="text-white font-semibold mb-1">{reviewLabel(game.reviewScore)}</p>
                     {game.reviewCount !== null && (
                       <p className="text-sm text-gray-400 mb-3">
-                        Based on {game.reviewCount.toLocaleString()} reviews
+                        {t('gameDetail.basedOnReviews', { count: game.reviewCount.toLocaleString() })}
                       </p>
                     )}
 
@@ -464,7 +467,7 @@ export default function GameDetail() {
                           <div className="flex items-center justify-between text-xs mb-1">
                             <span className="text-green-400">
                               <i className="fa-solid fa-thumbs-up mr-1" />
-                              Positive
+                              {t('gameDetail.positive')}
                             </span>
                             <span className="text-gray-400">{positiveCount.toLocaleString()}</span>
                           </div>
@@ -479,7 +482,7 @@ export default function GameDetail() {
                           <div className="flex items-center justify-between text-xs mb-1">
                             <span className="text-red-400">
                               <i className="fa-solid fa-thumbs-down mr-1" />
-                              Negative
+                              {t('gameDetail.negative')}
                             </span>
                             <span className="text-gray-400">{negativeCount.toLocaleString()}</span>
                           </div>
@@ -502,7 +505,7 @@ export default function GameDetail() {
               <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
                 <h2 className="text-lg font-bold text-white mb-4">
                   <i className="fa-solid fa-info-circle mr-2 text-gray-400" />
-                  About This Game
+                  {t('gameDetail.aboutThisGame')}
                 </h2>
                 <p className="text-gray-300 leading-relaxed">{game.shortDesc}</p>
               </div>
@@ -514,13 +517,13 @@ export default function GameDetail() {
             <div className="sticky top-24 bg-[#242424] border border-[#333] rounded-2xl p-6 space-y-6">
               <h2 className="text-lg font-bold text-white">
                 <i className="fa-solid fa-gamepad mr-2 text-gray-400" />
-                Game Information
+                {t('gameDetail.gameInformation')}
               </h2>
 
               {/* Release Date */}
               {game.releaseDate && (
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">Release Date</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">{t('gameDetail.releaseDate')}</h3>
                   <p className="text-sm text-white">{game.releaseDate}</p>
                 </div>
               )}
@@ -528,7 +531,7 @@ export default function GameDetail() {
               {/* Genres */}
               {game.genres.length > 0 && (
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">Genres</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">{t('gameDetail.genres')}</h3>
                   <div className="flex flex-wrap gap-1.5">
                     {game.genres.map((genre) => (
                       <span key={genre} className="bg-[#333] text-gray-300 px-2.5 py-1 rounded-md text-xs font-medium">
@@ -541,7 +544,7 @@ export default function GameDetail() {
 
               {/* Platforms */}
               <div>
-                <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">Platforms</h3>
+                <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">{t('gameDetail.platforms')}</h3>
                 <div className="flex items-center gap-3 text-lg">
                   {game.platforms.windows && (
                     <span className="text-gray-300" title="Windows">
@@ -559,7 +562,7 @@ export default function GameDetail() {
                     </span>
                   )}
                   {!game.platforms.windows && !game.platforms.mac && !game.platforms.linux && (
-                    <span className="text-gray-500 text-sm">Unknown</span>
+                    <span className="text-gray-500 text-sm">{t('common.unknown')}</span>
                   )}
                 </div>
               </div>
@@ -567,7 +570,7 @@ export default function GameDetail() {
               {/* Tags */}
               {game.tags.length > 0 && (
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">Tags</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">{t('gameDetail.tags')}</h3>
                   <div className="flex flex-wrap gap-1.5">
                     {game.tags.slice(0, 12).map((tag) => (
                       <span key={tag} className="bg-[#333] text-gray-400 px-2 py-0.5 rounded text-xs">
@@ -581,7 +584,7 @@ export default function GameDetail() {
               {/* Developer */}
               {game.developers.length > 0 && (
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">Developer</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">{t('gameDetail.developer')}</h3>
                   <p className="text-sm text-white">{game.developers.join(', ')}</p>
                 </div>
               )}
@@ -589,7 +592,7 @@ export default function GameDetail() {
               {/* Publisher */}
               {game.publishers.length > 0 && (
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">Publisher</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">{t('gameDetail.publisher')}</h3>
                   <p className="text-sm text-white">{game.publishers.join(', ')}</p>
                 </div>
               )}

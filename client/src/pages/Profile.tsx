@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Navigate, Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/use-auth';
 import { useProfile, useGamingDNA } from '../hooks/use-profile';
 import { api } from '../lib/api';
 import RadarChart from '../components/RadarChart';
 
 export default function Profile() {
+  const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus, triggerSync } = useAuth();
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { data: dna, isLoading: dnaLoading, refetch: refetchDna } = useGamingDNA();
@@ -141,7 +143,7 @@ export default function Profile() {
                   <i className="fa-brands fa-steam text-[var(--primary)] text-xl" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400">Steam ID</p>
+                  <p className="text-sm text-gray-400">{t('profile.steamId')}</p>
                   <p className="text-sm font-bold">{user.steamId}</p>
                 </div>
               </div>
@@ -153,11 +155,11 @@ export default function Profile() {
                 className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] hover:bg-[var(--primary)]/90 rounded-lg text-sm font-bold transition-all disabled:opacity-50"
               >
                 <i className="fa-solid fa-arrows-rotate" />
-                <span>{syncStatus === 'syncing' ? 'Syncing...' : 'Sync Library'}</span>
+                <span>{syncStatus === 'syncing' ? t('common.syncing') : t('common.syncLibrary')}</span>
               </button>
               <button className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all">
                 <i className="fa-solid fa-share-nodes" />
-                <span>Share Profile</span>
+                <span>{t('profile.shareProfile')}</span>
               </button>
             </div>
           </div>
@@ -173,8 +175,8 @@ export default function Profile() {
             </div>
             <span className="text-4xl font-black text-white">{dna?.totalGames ?? 0}</span>
           </div>
-          <h3 className="text-sm text-gray-400 mb-1">Games Owned</h3>
-          <p className="text-xs text-gray-500">In Steam library</p>
+          <h3 className="text-sm text-gray-400 mb-1">{t('profile.gamesOwned')}</h3>
+          <p className="text-xs text-gray-500">{t('profile.inSteamLibrary')}</p>
         </div>
         <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
@@ -183,8 +185,8 @@ export default function Profile() {
             </div>
             <span className="text-4xl font-black text-white">{dna?.totalPlaytimeHours.toLocaleString() ?? 0}</span>
           </div>
-          <h3 className="text-sm text-gray-400 mb-1">Hours Played</h3>
-          <p className="text-xs text-gray-500">Total playtime</p>
+          <h3 className="text-sm text-gray-400 mb-1">{t('profile.hoursPlayed')}</h3>
+          <p className="text-xs text-gray-500">{t('profile.totalPlaytime')}</p>
         </div>
         <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
@@ -193,8 +195,8 @@ export default function Profile() {
             </div>
             <span className="text-4xl font-black text-white">{totalSwipes}</span>
           </div>
-          <h3 className="text-sm text-gray-400 mb-1">Total Swipes</h3>
-          <p className="text-xs text-gray-500">Discovery activity</p>
+          <h3 className="text-sm text-gray-400 mb-1">{t('profile.totalSwipes')}</h3>
+          <p className="text-xs text-gray-500">{t('profile.discoveryActivity')}</p>
         </div>
       </div>
 
@@ -203,15 +205,15 @@ export default function Profile() {
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 lg:p-8 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">Gaming Preference Profile</h2>
-              <p className="text-gray-400 text-sm">Your unique gaming DNA based on swipe history and play patterns</p>
+              <h2 className="text-2xl font-bold text-white mb-2">{t('profile.gamingPreferenceProfile')}</h2>
+              <p className="text-gray-400 text-sm">{t('profile.gamingPreferenceSubtitle')}</p>
             </div>
             <button
               onClick={() => { refetchDna(); refetchProfile(); }}
               className="flex items-center space-x-2 px-4 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all mt-4 lg:mt-0"
             >
               <i className="fa-solid fa-rotate" />
-              <span>Refresh Profile</span>
+              <span>{t('profile.refreshProfile')}</span>
             </button>
           </div>
           <div className="max-w-lg mx-auto">
@@ -225,15 +227,15 @@ export default function Profile() {
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 lg:p-8 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">Tag Preferences</h2>
-              <p className="text-gray-400 text-sm">Manage which game tags influence your recommendations</p>
+              <h2 className="text-2xl font-bold text-white mb-2">{t('profile.tagPreferences')}</h2>
+              <p className="text-gray-400 text-sm">{t('profile.tagPreferencesSubtitle')}</p>
             </div>
             <button
               onClick={() => setShowAllTags(!showAllTags)}
               className="flex items-center space-x-2 px-4 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all mt-4 lg:mt-0"
             >
               <i className={`fa-solid ${showAllTags ? 'fa-chevron-up' : 'fa-chevron-down'}`} />
-              <span>{showAllTags ? 'Hide All Tags' : 'Show All Tags'}</span>
+              <span>{showAllTags ? t('profile.hideAllTags') : t('profile.showAllTags')}</span>
             </button>
           </div>
 
@@ -254,7 +256,7 @@ export default function Profile() {
                       </div>
                       <div>
                         <h3 className="font-bold text-white">{tag.name}</h3>
-                        <p className="text-xs text-gray-400">Score: {tag.score.toFixed(1)}</p>
+                        <p className="text-xs text-gray-400">{t('profile.score', { value: tag.score.toFixed(1) })}</p>
                       </div>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -276,16 +278,16 @@ export default function Profile() {
           {/* All Tags Table (collapsible) */}
           {showAllTags && (
             <div className="border-t border-[#333] pt-6">
-              <h3 className="text-lg font-bold text-white mb-4">All Tags</h3>
+              <h3 className="text-lg font-bold text-white mb-4">{t('profile.allTags')}</h3>
               <div className="bg-[#1a1a1a] rounded-lg overflow-hidden">
                 <div className="overflow-x-auto max-h-96 overflow-y-auto">
                   <table className="w-full">
                     <thead className="sticky top-0 bg-[#242424]">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-white">Tag Name</th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-white">Score</th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-white">Games</th>
-                        <th className="px-6 py-4 text-right text-sm font-bold text-white">Status</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-white">{t('profile.tableHeaders.tagName')}</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-white">{t('profile.tableHeaders.score')}</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-white">{t('profile.tableHeaders.games')}</th>
+                        <th className="px-6 py-4 text-right text-sm font-bold text-white">{t('profile.tableHeaders.status')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#333]">
@@ -332,8 +334,8 @@ export default function Profile() {
                 <i className="fa-solid fa-brain text-[var(--primary)] text-2xl" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">AI Gaming Profile Summary</h2>
-                <p className="text-gray-400 text-sm">Generated insights based on your gaming DNA and activity patterns</p>
+                <h2 className="text-2xl font-bold text-white mb-2">{t('profile.aiGamingSummary')}</h2>
+                <p className="text-gray-400 text-sm">{t('profile.aiGamingSummarySubtitle')}</p>
               </div>
             </div>
             <button
@@ -341,7 +343,7 @@ export default function Profile() {
               className="flex items-center space-x-2 px-4 py-3 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
             >
               <i className="fa-solid fa-rotate" />
-              <span>Regenerate</span>
+              <span>{t('profile.regenerate')}</span>
             </button>
           </div>
           <div className="bg-[#242424]/50 rounded-xl p-6">
@@ -369,9 +371,9 @@ export default function Profile() {
             <i className="fa-solid fa-arrows-rotate text-blue-500 text-2xl" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-white mb-1">Sync Library</h3>
+            <h3 className="font-bold text-lg text-white mb-1">{t('profile.syncLibraryCard')}</h3>
             <p className="text-sm text-gray-400">
-              {syncStatus === 'syncing' ? 'Syncing...' : 'Update from Steam'}
+              {syncStatus === 'syncing' ? t('common.syncing') : t('profile.updateFromSteam')}
             </p>
           </div>
         </button>
@@ -384,8 +386,8 @@ export default function Profile() {
             <i className="fa-solid fa-download text-green-500 text-2xl" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-white mb-1">Export Data</h3>
-            <p className="text-sm text-gray-400">Download as JSON</p>
+            <h3 className="font-bold text-lg text-white mb-1">{t('profile.exportData')}</h3>
+            <p className="text-sm text-gray-400">{t('profile.downloadAsJSON')}</p>
           </div>
         </button>
 
@@ -398,8 +400,8 @@ export default function Profile() {
             <i className="fa-solid fa-upload text-purple-500 text-2xl" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-white mb-1">{importing ? 'Importing...' : 'Import Data'}</h3>
-            <p className="text-sm text-gray-400">Restore preferences</p>
+            <h3 className="font-bold text-lg text-white mb-1">{importing ? t('profile.importing') : t('profile.importData')}</h3>
+            <p className="text-sm text-gray-400">{t('profile.restorePreferences')}</p>
           </div>
         </button>
       </div>
@@ -421,8 +423,8 @@ export default function Profile() {
               <i className="fa-solid fa-clock-rotate-left text-[var(--primary)] text-2xl" />
             </div>
             <div>
-              <h3 className="font-bold text-xl text-white mb-1">View History</h3>
-              <p className="text-sm text-gray-400">{totalSwipes} total swipes</p>
+              <h3 className="font-bold text-xl text-white mb-1">{t('profile.viewHistory')}</h3>
+              <p className="text-sm text-gray-400">{t('profile.totalSwipesCount', { count: totalSwipes })}</p>
             </div>
           </div>
           <i className="fa-solid fa-arrow-right text-gray-500 group-hover:text-[var(--primary)] transition-colors" />
@@ -437,8 +439,8 @@ export default function Profile() {
               <i className="fa-solid fa-list-check text-[var(--primary)] text-2xl" />
             </div>
             <div>
-              <h3 className="font-bold text-xl text-white mb-1">Manage Backlog</h3>
-              <p className="text-sm text-gray-400">{dna?.totalGames ?? 0} games in library</p>
+              <h3 className="font-bold text-xl text-white mb-1">{t('profile.manageBacklog')}</h3>
+              <p className="text-sm text-gray-400">{t('profile.gamesInLibrary', { count: dna?.totalGames ?? 0 })}</p>
             </div>
           </div>
           <i className="fa-solid fa-arrow-right text-gray-500 group-hover:text-[var(--primary)] transition-colors" />

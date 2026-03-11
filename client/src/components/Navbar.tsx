@@ -1,28 +1,30 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
-
-const navLinks = [
-  { to: '/discover', label: 'Discovery' },
-  { to: '/recommendations', label: 'Recommendations' },
-  { to: '/lists', label: 'My Lists' },
-  { to: '/history', label: 'History' },
-  { to: '/backlog', label: 'Backlog' },
-  { to: '/profile', label: 'Profile' },
-];
+import { useTranslation } from 'react-i18next';
 
 export default function Navbar() {
   const { user, loading, login, logout, syncStatus, syncProgress } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useTranslation();
+
+  const navLinks = [
+    { to: '/discover', label: t('nav.discovery') },
+    { to: '/recommendations', label: t('nav.recommendations') },
+    { to: '/lists', label: t('nav.myLists') },
+    { to: '/history', label: t('nav.history') },
+    { to: '/backlog', label: t('nav.backlog') },
+    { to: '/profile', label: t('nav.profile') },
+  ];
 
   return (
     <nav className="sticky top-0 z-40 bg-[#242424]/95 backdrop-blur-lg border-b border-[#333]">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 lg:h-20">
         {/* Left: Logo */}
         <Link to="/" className="flex items-center gap-0 shrink-0">
-          <span className="text-[var(--primary)] text-2xl lg:text-3xl font-black">Game</span>
-          <span className="text-white text-2xl lg:text-3xl font-black">DNA</span>
+          <span className="text-[var(--primary)] text-2xl lg:text-3xl font-black">{t('brand.game')}</span>
+          <span className="text-white text-2xl lg:text-3xl font-black">{t('brand.dna')}</span>
         </Link>
 
         {/* Center: Desktop nav links */}
@@ -88,7 +90,7 @@ export default function Navbar() {
               onClick={login}
               className="bg-[var(--primary)] text-[var(--primary-foreground)] px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
             >
-              Sign in with Steam
+              {t('common.signInWithSteam')}
             </button>
           )}
         </div>

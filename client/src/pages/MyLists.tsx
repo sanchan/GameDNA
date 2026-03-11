@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Navigate, Link, useSearchParams } from 'react-router';
+import { useTranslation, Trans } from 'react-i18next';
+import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
 import { useBookmarks } from '../hooks/use-bookmarks';
 import { api } from '../lib/api';
@@ -12,10 +14,10 @@ interface LibraryEntry {
 }
 
 function formatPlaytime(mins: number): string {
-  if (mins === 0) return 'Never played';
-  if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} played`;
+  if (mins === 0) return i18n.t('myLists.playtime.neverPlayed');
+  if (mins < 60) return i18n.t('myLists.playtime.minutesPlayed', { count: mins });
   const hours = Math.floor(mins / 60);
-  return `${hours} hour${hours === 1 ? '' : 's'} played`;
+  return i18n.t('myLists.playtime.hoursPlayed', { count: hours });
 }
 
 function formatPlaytimeShort(mins: number): string {
@@ -27,23 +29,23 @@ function formatPlaytimeShort(mins: number): string {
 function formatTimeAgo(timestamp: number): string {
   const now = Math.floor(Date.now() / 1000);
   const diff = now - timestamp;
-  if (diff < 60) return 'just now';
+  if (diff < 60) return i18n.t('myLists.timeAgo.justNow');
   const mins = Math.floor(diff / 60);
-  if (diff < 3600) return `${mins} minute${mins === 1 ? '' : 's'} ago`;
+  if (diff < 3600) return i18n.t('myLists.timeAgo.minutesAgo', { count: mins });
   const hours = Math.floor(diff / 3600);
-  if (diff < 86400) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  if (diff < 86400) return i18n.t('myLists.timeAgo.hoursAgo', { count: hours });
   const days = Math.floor(diff / 86400);
-  if (diff < 604800) return `${days} day${days === 1 ? '' : 's'} ago`;
+  if (diff < 604800) return i18n.t('myLists.timeAgo.daysAgo', { count: days });
   const weeks = Math.floor(diff / 604800);
-  if (diff < 2592000) return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
+  if (diff < 2592000) return i18n.t('myLists.timeAgo.weeksAgo', { count: weeks });
   const months = Math.floor(diff / 2592000);
-  if (diff < 31536000) return `${months} month${months === 1 ? '' : 's'} ago`;
+  if (diff < 31536000) return i18n.t('myLists.timeAgo.monthsAgo', { count: months });
   const years = Math.floor(diff / 31536000);
-  return `${years} year${years === 1 ? '' : 's'} ago`;
+  return i18n.t('myLists.timeAgo.yearsAgo', { count: years });
 }
 
 function formatPrice(cents: number | null, currency?: string | null): string {
-  if (cents === null || cents === 0) return 'Free';
+  if (cents === null || cents === 0) return i18n.t('common.free');
   const amount = cents / 100;
   if (currency) {
     try {
@@ -71,16 +73,11 @@ function ReviewBadge({ score }: { score: number | null }) {
   );
 }
 
-const tabs = [
-  { key: 'library', label: 'Library', icon: 'fa-solid fa-book' },
-  { key: 'bookmarks', label: 'Bookmarks', icon: 'fa-regular fa-bookmark' },
-  { key: 'wishlist', label: 'Wishlist', icon: 'fa-regular fa-heart' },
-] as const;
-
-type TabKey = (typeof tabs)[number]['key'];
+type TabKey = 'library' | 'bookmarks' | 'wishlist';
 type SortKey = 'recent' | 'name-asc' | 'name-desc' | 'price-low' | 'price-high' | 'rating';
 
 export default function MyLists() {
+  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { toggle: toggleBookmark } = useBookmarks();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -180,14 +177,18 @@ export default function MyLists() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">My Lists</h1>
-        <p className="text-gray-400 text-lg max-w-3xl">Organize and manage your gaming collections. Keep track of games you want to play, bookmarks, and wishlist items.</p>
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">{t('myLists.title')}</h1>
+        <p className="text-gray-400 text-lg max-w-3xl">{t('myLists.subtitle')}</p>
       </div>
 
       {/* Tabs */}
       <div className="mb-8">
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-2 inline-flex space-x-2">
-          {tabs.map(({ key, label, icon }) => (
+          {([
+            { key: 'library' as TabKey, label: t('myLists.tabs.library'), icon: 'fa-solid fa-book' },
+            { key: 'bookmarks' as TabKey, label: t('myLists.tabs.bookmarks'), icon: 'fa-regular fa-bookmark' },
+            { key: 'wishlist' as TabKey, label: t('myLists.tabs.wishlist'), icon: 'fa-regular fa-heart' },
+          ]).map(({ key, label, icon }) => (
             <button
               key={key}
               onClick={() => setTab(key)}
@@ -211,7 +212,7 @@ export default function MyLists() {
             <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search games in your lists..."
+              placeholder={t('myLists.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-[var(--primary)] transition-all"
@@ -223,7 +224,7 @@ export default function MyLists() {
               onChange={(e) => setGenreFilter(e.target.value)}
               className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
             >
-              <option value="">All Genres</option>
+              <option value="">{t('common.allGenres')}</option>
               {allGenres.map((g) => (
                 <option key={g} value={g}>{g}</option>
               ))}
@@ -233,12 +234,12 @@ export default function MyLists() {
               onChange={(e) => setSortBy(e.target.value as SortKey)}
               className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
             >
-              <option value="recent">Sort: Recent</option>
-              <option value="name-asc">Sort: Name A-Z</option>
-              <option value="name-desc">Sort: Name Z-A</option>
-              <option value="price-low">Sort: Price Low-High</option>
-              <option value="price-high">Sort: Price High-Low</option>
-              <option value="rating">Sort: Rating</option>
+              <option value="recent">{t('myLists.sortRecent')}</option>
+              <option value="name-asc">{t('myLists.sortNameAsc')}</option>
+              <option value="name-desc">{t('myLists.sortNameDesc')}</option>
+              <option value="price-low">{t('myLists.sortPriceLow')}</option>
+              <option value="price-high">{t('myLists.sortPriceHigh')}</option>
+              <option value="rating">{t('myLists.sortRating')}</option>
             </select>
           </div>
         </div>
@@ -293,6 +294,7 @@ function sortGames<T extends { game?: Game } & Partial<Game>>(items: T[], sortBy
 }
 
 function GameCardActions({ game, extraButtons }: { game: Game; extraButtons?: React.ReactNode }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-2">
       {extraButtons}
@@ -301,20 +303,21 @@ function GameCardActions({ game, extraButtons }: { game: Game; extraButtons?: Re
         className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
       >
         <i className="fa-solid fa-eye" />
-        <span>View Details</span>
+        <span>{t('common.viewDetails')}</span>
       </Link>
       <a
         href={`steam://store/${game.id}`}
         className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold transition-all"
       >
         <i className="fa-brands fa-steam" />
-        <span>Open in Steam</span>
+        <span>{t('common.openInSteam')}</span>
       </a>
     </div>
   );
 }
 
 function LibraryTab({ entries, stats, sortBy }: { entries: LibraryEntry[]; stats: { total: number; totalPlaytimeMins: number; played: number; neverPlayed: number }; sortBy: SortKey }) {
+  const { t } = useTranslation();
   const sorted = sortGames(entries, sortBy, (e) => e.game);
 
   return (
@@ -323,26 +326,26 @@ function LibraryTab({ entries, stats, sortBy }: { entries: LibraryEntry[]; stats
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-[#242424] border border-[#333] rounded-xl p-5 text-center">
           <div className="text-3xl font-black text-[var(--primary)] mb-1">{stats.total.toLocaleString()}</div>
-          <div className="text-sm text-gray-400">Total Games</div>
+          <div className="text-sm text-gray-400">{t('myLists.totalGames')}</div>
         </div>
         <div className="bg-[#242424] border border-[#333] rounded-xl p-5 text-center">
           <div className="text-3xl font-black text-green-500 mb-1">{stats.played.toLocaleString()}</div>
-          <div className="text-sm text-gray-400">Played</div>
+          <div className="text-sm text-gray-400">{t('myLists.played')}</div>
         </div>
         <div className="bg-[#242424] border border-[#333] rounded-xl p-5 text-center">
           <div className="text-3xl font-black text-yellow-500 mb-1">{stats.neverPlayed.toLocaleString()}</div>
-          <div className="text-sm text-gray-400">Never Played</div>
+          <div className="text-sm text-gray-400">{t('myLists.neverPlayed')}</div>
         </div>
         <div className="bg-[#242424] border border-[#333] rounded-xl p-5 text-center">
           <div className="text-3xl font-black text-purple-500 mb-1">{formatPlaytimeShort(stats.totalPlaytimeMins)}</div>
-          <div className="text-sm text-gray-400">Total Playtime</div>
+          <div className="text-sm text-gray-400">{t('myLists.totalPlaytime')}</div>
         </div>
       </div>
 
       {sorted.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <i className="fa-solid fa-book text-4xl mb-4 block" />
-          <p className="text-lg mb-2">No games found.</p>
+          <p className="text-lg mb-2">{t('myLists.noGamesFound')}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -384,7 +387,7 @@ function LibraryTab({ entries, stats, sortBy }: { entries: LibraryEntry[]; stats
                     {entry.lastPlayed && (
                       <>
                         <span className="text-gray-600">&bull;</span>
-                        <div className="text-sm text-gray-400">Last played: {formatTimeAgo(entry.lastPlayed)}</div>
+                        <div className="text-sm text-gray-400">{t('myLists.lastPlayed', { time: formatTimeAgo(entry.lastPlayed) })}</div>
                       </>
                     )}
                   </div>
@@ -400,6 +403,7 @@ function LibraryTab({ entries, stats, sortBy }: { entries: LibraryEntry[]; stats
 }
 
 function BookmarksTab({ games, onRemove, sortBy }: { games: Game[]; onRemove: (id: number) => void; sortBy: SortKey }) {
+  const { t } = useTranslation();
   const sorted = sortGames(games, sortBy, (g) => g);
 
   return (
@@ -409,18 +413,16 @@ function BookmarksTab({ games, onRemove, sortBy }: { games: Game[]; onRemove: (i
         <div className="w-20 h-20 bg-[#1a1a1a] rounded-full flex items-center justify-center mx-auto mb-4">
           <i className="fa-regular fa-bookmark text-4xl text-[var(--primary)]" />
         </div>
-        <h3 className="text-xl font-bold mb-2">{games.length} Bookmarked {games.length === 1 ? 'Game' : 'Games'}</h3>
-        <p className="text-gray-400">Games you've saved for later consideration</p>
+        <h3 className="text-xl font-bold mb-2">{t('myLists.bookmarkedGames', { count: games.length })}</h3>
+        <p className="text-gray-400">{t('myLists.bookmarksSavedLater')}</p>
       </div>
 
       {sorted.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <i className="fa-regular fa-bookmark text-4xl mb-4 block" />
-          <p className="text-lg mb-2">No bookmarks yet.</p>
+          <p className="text-lg mb-2">{t('myLists.noBookmarksYet')}</p>
           <p className="text-sm">
-            Bookmark games from{' '}
-            <Link to="/discover" className="text-[var(--primary)] hover:underline">Discover</Link>
-            {' '}to save them here.
+            <Trans i18nKey="myLists.bookmarkFromDiscover" components={{ link: <Link to="/discover" className="text-[var(--primary)] hover:underline" /> }} />
           </p>
         </div>
       ) : (
@@ -465,7 +467,7 @@ function BookmarksTab({ games, onRemove, sortBy }: { games: Game[]; onRemove: (i
                           className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all"
                         >
                           <i className="fa-solid fa-xmark" />
-                          <span>Remove Bookmark</span>
+                          <span>{t('common.removeBookmark')}</span>
                         </button>
                         <a
                           href={`steam://addtowishlist/${game.id}`}
@@ -473,7 +475,7 @@ function BookmarksTab({ games, onRemove, sortBy }: { games: Game[]; onRemove: (i
                           className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
                         >
                           <i className="fa-regular fa-heart" />
-                          <span>Add to Wishlist</span>
+                          <span>{t('common.addToWishlist')}</span>
                         </a>
                       </>
                     }
@@ -489,6 +491,7 @@ function BookmarksTab({ games, onRemove, sortBy }: { games: Game[]; onRemove: (i
 }
 
 function WishlistTab({ games, sortBy }: { games: Game[]; sortBy: SortKey }) {
+  const { t } = useTranslation();
   const sorted = sortGames(games, sortBy, (g) => g);
 
   return (
@@ -498,14 +501,14 @@ function WishlistTab({ games, sortBy }: { games: Game[]; sortBy: SortKey }) {
         <div className="w-20 h-20 bg-[#1a1a1a] rounded-full flex items-center justify-center mx-auto mb-4">
           <i className="fa-regular fa-heart text-4xl text-[var(--primary)]" />
         </div>
-        <h3 className="text-xl font-bold mb-2">{games.length} Wishlisted {games.length === 1 ? 'Game' : 'Games'}</h3>
-        <p className="text-gray-400">Games from your Steam wishlist</p>
+        <h3 className="text-xl font-bold mb-2">{t('myLists.wishlistedGames', { count: games.length })}</h3>
+        <p className="text-gray-400">{t('myLists.wishlistFromSteam')}</p>
       </div>
 
       {sorted.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <i className="fa-regular fa-heart text-4xl mb-4 block" />
-          <p className="text-lg mb-2">No wishlist games found.</p>
+          <p className="text-lg mb-2">{t('myLists.noWishlistGames')}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -548,7 +551,7 @@ function WishlistTab({ games, sortBy }: { games: Game[]; sortBy: SortKey }) {
                         className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
                       >
                         <i className="fa-solid fa-cart-shopping" />
-                        <span>Buy on Steam</span>
+                        <span>{t('myLists.buyOnSteam')}</span>
                       </a>
                     }
                   />

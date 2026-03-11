@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useBookmarks } from '../hooks/use-bookmarks';
 
 interface BookmarkButtonProps {
@@ -7,6 +8,7 @@ interface BookmarkButtonProps {
 }
 
 export default function BookmarkButton({ gameId, size = 16, className }: BookmarkButtonProps) {
+  const { t } = useTranslation();
   const { isBookmarked, toggle } = useBookmarks();
   const active = isBookmarked(gameId);
 
@@ -22,7 +24,7 @@ export default function BookmarkButton({ gameId, size = 16, className }: Bookmar
           ? 'text-[var(--primary)]'
           : 'text-white/70 hover:text-[var(--primary)]'
       }`}
-      title={active ? 'Remove bookmark' : 'Bookmark'}
+      title={active ? t('common.removeBookmark') : t('common.bookmark')}
     >
       <svg
         width={size}

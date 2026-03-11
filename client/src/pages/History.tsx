@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Navigate, Link } from 'react-router';
+import { useTranslation, Trans } from 'react-i18next';
+import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
 import { api } from '../lib/api';
 import type { SwipeDecision } from '../../../shared/types';
@@ -41,17 +43,18 @@ function formatDateTime(unix: number): string {
 
 function timeAgo(unix: number): string {
   const seconds = Math.floor(Date.now() / 1000 - unix);
-  if (seconds < 60) return 'Just now';
+  if (seconds < 60) return i18n.t('history.timeAgo.justNow');
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return i18n.t('history.timeAgo.minutesAgo', { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return i18n.t('history.timeAgo.hoursAgo', { count: hours });
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return i18n.t('history.timeAgo.daysAgo', { count: days });
   return formatDate(unix);
 }
 
 export default function History() {
+  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const [entries, setEntries] = useState<SwipeEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -158,9 +161,9 @@ export default function History() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       {/* Header */}
-      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">Swipe History</h1>
+      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">{t('history.title')}</h1>
       <p className="text-[var(--muted-foreground)] text-lg max-w-3xl mb-8">
-        Review your past decisions and discover patterns in your gaming preferences. Your swipe history helps us refine recommendations.
+        {t('history.subtitle')}
       </p>
 
       {/* Search and Filters */}
@@ -170,7 +173,7 @@ export default function History() {
           <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
           <input
             type="text"
-            placeholder="Search games in your history..."
+            placeholder={t('history.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-[#1a1a1a] border border-[#333] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)]"
@@ -180,46 +183,46 @@ export default function History() {
         {/* Filter selects */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--muted-foreground)] font-medium">Date Range</label>
+            <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('history.dateRange')}</label>
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
               className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-all"
             >
-              <option value="all">All Time</option>
-              <option value="7days">Last 7 Days</option>
-              <option value="30days">Last 30 Days</option>
-              <option value="3months">Last 3 Months</option>
-              <option value="6months">Last 6 Months</option>
-              <option value="year">Last Year</option>
+              <option value="all">{t('history.dateRangeOptions.allTime')}</option>
+              <option value="7days">{t('history.dateRangeOptions.last7Days')}</option>
+              <option value="30days">{t('history.dateRangeOptions.last30Days')}</option>
+              <option value="3months">{t('history.dateRangeOptions.last3Months')}</option>
+              <option value="6months">{t('history.dateRangeOptions.last6Months')}</option>
+              <option value="year">{t('history.dateRangeOptions.lastYear')}</option>
             </select>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--muted-foreground)] font-medium">Decision Type</label>
+            <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('history.decisionType')}</label>
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-all"
             >
-              <option value="all">All Decisions</option>
-              <option value="yes">Yes (Interested)</option>
-              <option value="maybe">Maybe (Consider Later)</option>
-              <option value="no">No (Not Interested)</option>
+              <option value="all">{t('history.decisionOptions.allDecisions')}</option>
+              <option value="yes">{t('history.decisionOptions.yesInterested')}</option>
+              <option value="maybe">{t('history.decisionOptions.maybeConsider')}</option>
+              <option value="no">{t('history.decisionOptions.noNotInterested')}</option>
             </select>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--muted-foreground)] font-medium">Sort By</label>
+            <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('common.sortBy')}</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-all"
             >
-              <option value="newest">Most Recent</option>
-              <option value="oldest">Oldest First</option>
-              <option value="name">Game Name A-Z</option>
-              <option value="name-desc">Game Name Z-A</option>
+              <option value="newest">{t('history.sortOptions.mostRecent')}</option>
+              <option value="oldest">{t('history.sortOptions.oldestFirst')}</option>
+              <option value="name">{t('history.sortOptions.nameAsc')}</option>
+              <option value="name-desc">{t('history.sortOptions.nameDesc')}</option>
             </select>
           </div>
         </div>
@@ -227,7 +230,7 @@ export default function History() {
 
       {/* Decision Summary */}
       <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
-        <h2 className="text-2xl font-bold mb-6">Decision Summary</h2>
+        <h2 className="text-2xl font-bold mb-6">{t('history.decisionSummary')}</h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Yes card */}
@@ -238,8 +241,8 @@ export default function History() {
                   <i className="fa-solid fa-thumbs-up text-green-500 text-xl" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-green-500">Yes</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">Interested</p>
+                  <h3 className="text-lg font-bold text-green-500">{t('history.yes')}</h3>
+                  <p className="text-sm text-[var(--muted-foreground)]">{t('history.yesInterested')}</p>
                 </div>
               </div>
               <div className="text-4xl font-black text-green-500">{summary.yes}</div>
@@ -251,7 +254,7 @@ export default function History() {
               />
             </div>
             <p className="text-xs text-[var(--muted-foreground)] mt-2">
-              {entries.length ? Math.round((summary.yes / entries.length) * 100) : 0}% of total swipes
+              {t('history.ofTotalSwipes', { percent: entries.length ? Math.round((summary.yes / entries.length) * 100) : 0 })}
             </p>
           </div>
 
@@ -263,8 +266,8 @@ export default function History() {
                   <i className="fa-solid fa-minus text-yellow-500 text-xl" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-yellow-500">Maybe</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">Consider Later</p>
+                  <h3 className="text-lg font-bold text-yellow-500">{t('history.maybe')}</h3>
+                  <p className="text-sm text-[var(--muted-foreground)]">{t('history.maybeConsiderLater')}</p>
                 </div>
               </div>
               <div className="text-4xl font-black text-yellow-500">{summary.maybe}</div>
@@ -276,7 +279,7 @@ export default function History() {
               />
             </div>
             <p className="text-xs text-[var(--muted-foreground)] mt-2">
-              {entries.length ? Math.round((summary.maybe / entries.length) * 100) : 0}% of total swipes
+              {t('history.ofTotalSwipes', { percent: entries.length ? Math.round((summary.maybe / entries.length) * 100) : 0 })}
             </p>
           </div>
 
@@ -288,8 +291,8 @@ export default function History() {
                   <i className="fa-solid fa-thumbs-down text-red-500 text-xl" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-red-500">No</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">Not Interested</p>
+                  <h3 className="text-lg font-bold text-red-500">{t('history.no')}</h3>
+                  <p className="text-sm text-[var(--muted-foreground)]">{t('history.noNotInterested')}</p>
                 </div>
               </div>
               <div className="text-4xl font-black text-red-500">{summary.no}</div>
@@ -301,7 +304,7 @@ export default function History() {
               />
             </div>
             <p className="text-xs text-[var(--muted-foreground)] mt-2">
-              {entries.length ? Math.round((summary.no / entries.length) * 100) : 0}% of total swipes
+              {t('history.ofTotalSwipes', { percent: entries.length ? Math.round((summary.no / entries.length) * 100) : 0 })}
             </p>
           </div>
         </div>
@@ -310,17 +313,17 @@ export default function History() {
         <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-[#333]">
           <div className="flex items-center gap-6">
             <div>
-              <p className="text-sm text-[var(--muted-foreground)]">Total Swipes</p>
+              <p className="text-sm text-[var(--muted-foreground)]">{t('history.totalSwipes')}</p>
               <p className="text-2xl font-black">{summary.totalSwipes}</p>
             </div>
             <div className="h-12 w-px bg-[#333]" />
             <div>
-              <p className="text-sm text-[var(--muted-foreground)]">This Week</p>
+              <p className="text-sm text-[var(--muted-foreground)]">{t('history.thisWeek')}</p>
               <p className="text-2xl font-black text-[var(--primary)]">{summary.thisWeek}</p>
             </div>
             <div className="h-12 w-px bg-[#333]" />
             <div>
-              <p className="text-sm text-[var(--muted-foreground)]">Avg. Per Day</p>
+              <p className="text-sm text-[var(--muted-foreground)]">{t('history.avgPerDay')}</p>
               <p className="text-2xl font-black">
                 {summary.totalSwipes > 0 ? (summary.thisWeek / 7).toFixed(1) : '0'}
               </p>
@@ -328,7 +331,7 @@ export default function History() {
           </div>
           <button className="flex items-center gap-2 px-5 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all">
             <i className="fa-solid fa-download" />
-            <span>Export History</span>
+            <span>{t('history.exportHistory')}</span>
           </button>
         </div>
       </div>
@@ -336,7 +339,7 @@ export default function History() {
       {/* Results count */}
       {!loading && (
         <p className="text-sm text-[var(--muted-foreground)] mb-4">
-          {total} {total === 1 ? 'result' : 'results'}
+          {t('common.results', { count: total })}
           {debouncedSearch && ` for "${debouncedSearch}"`}
         </p>
       )}
@@ -359,19 +362,15 @@ export default function History() {
           {debouncedSearch || filter !== 'all' ? (
             <>
               <i className="fa-solid fa-search text-4xl mb-4 block opacity-30" />
-              <p className="text-lg mb-2">No matching swipes found.</p>
-              <p className="text-sm">Try a different search or filter.</p>
+              <p className="text-lg mb-2">{t('history.noMatchingSwipes')}</p>
+              <p className="text-sm">{t('history.tryDifferentSearch')}</p>
             </>
           ) : (
             <>
               <i className="fa-solid fa-clock-rotate-left text-4xl mb-4 block opacity-30" />
-              <p className="text-lg mb-2">No swipe history yet.</p>
+              <p className="text-lg mb-2">{t('history.noSwipeHistory')}</p>
               <p className="text-sm">
-                Head to{' '}
-                <Link to="/discover" className="text-[var(--primary)] hover:underline">
-                  Discover
-                </Link>{' '}
-                to start swiping!
+                <Trans i18nKey="history.headToDiscover" components={{ link: <Link to="/discover" className="text-[var(--primary)] hover:underline" /> }} />
               </p>
             </>
           )}
@@ -429,19 +428,19 @@ export default function History() {
                           {entry.decision === 'yes' && (
                             <span className="bg-green-500/20 text-green-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
                               <i className="fa-solid fa-thumbs-up" />
-                              Yes
+                              {t('history.yes')}
                             </span>
                           )}
                           {entry.decision === 'maybe' && (
                             <span className="bg-yellow-500/20 text-yellow-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
                               <i className="fa-solid fa-minus" />
-                              Maybe
+                              {t('history.maybe')}
                             </span>
                           )}
                           {entry.decision === 'no' && (
                             <span className="bg-red-500/20 text-red-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
                               <i className="fa-solid fa-thumbs-down" />
-                              No
+                              {t('history.no')}
                             </span>
                           )}
                         </div>
@@ -450,7 +449,7 @@ export default function History() {
                       <div className="flex flex-wrap items-center gap-2 mb-3">
                         <span className="text-sm text-[var(--muted-foreground)]">
                           <i className="fa-solid fa-clock mr-1" />
-                          Swiped {timeAgo(entry.swipedAt)}
+                          {t('history.swiped', { time: timeAgo(entry.swipedAt) })}
                         </span>
                         <span className="text-[#555]">&bull;</span>
                         <span className="text-sm text-[var(--muted-foreground)]">
@@ -462,9 +461,9 @@ export default function History() {
                       <div className="flex flex-wrap items-center gap-2">
                         {otherDecisions.map((d) => {
                           const config: Record<string, { label: string; icon: string; hoverBorder: string; hoverText: string }> = {
-                            yes: { label: 'Change to Yes', icon: 'fa-thumbs-up', hoverBorder: 'hover:border-green-500', hoverText: 'hover:text-green-500' },
-                            maybe: { label: 'Change to Maybe', icon: 'fa-minus', hoverBorder: 'hover:border-yellow-500', hoverText: 'hover:text-yellow-500' },
-                            no: { label: 'Change to No', icon: 'fa-thumbs-down', hoverBorder: 'hover:border-red-500', hoverText: 'hover:text-red-500' },
+                            yes: { label: t('history.changeToYes'), icon: 'fa-thumbs-up', hoverBorder: 'hover:border-green-500', hoverText: 'hover:text-green-500' },
+                            maybe: { label: t('history.changeToMaybe'), icon: 'fa-minus', hoverBorder: 'hover:border-yellow-500', hoverText: 'hover:text-yellow-500' },
+                            no: { label: t('history.changeToNo'), icon: 'fa-thumbs-down', hoverBorder: 'hover:border-red-500', hoverText: 'hover:text-red-500' },
                           };
                           const c = config[d];
                           return (
@@ -485,7 +484,7 @@ export default function History() {
                           className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#333] font-semibold hover:border-[var(--primary)] transition-all"
                         >
                           <i className="fa-solid fa-eye" />
-                          <span>View Game</span>
+                          <span>{t('history.viewGame')}</span>
                         </Link>
 
                         <button
@@ -494,7 +493,7 @@ export default function History() {
                           className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#333] font-semibold hover:border-red-500 hover:text-red-500 transition-all disabled:opacity-50"
                         >
                           <i className="fa-solid fa-trash" />
-                          <span>Remove</span>
+                          <span>{t('common.remove')}</span>
                         </button>
                       </div>
                     </div>
@@ -513,17 +512,17 @@ export default function History() {
                 className="px-4 py-2 rounded-lg text-sm bg-[#242424] border border-[#333] text-[var(--foreground)] hover:border-[var(--primary)] disabled:opacity-30 disabled:hover:border-[#333] transition-all"
               >
                 <i className="fa-solid fa-chevron-left mr-1" />
-                Prev
+                {t('common.prev')}
               </button>
               <span className="text-sm text-[var(--muted-foreground)]">
-                Page {page + 1} of {totalPages}
+                {t('common.pageOf', { current: page + 1, total: totalPages })}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
                 className="px-4 py-2 rounded-lg text-sm bg-[#242424] border border-[#333] text-[var(--foreground)] hover:border-[var(--primary)] disabled:opacity-30 disabled:hover:border-[#333] transition-all"
               >
-                Next
+                {t('common.next')}
                 <i className="fa-solid fa-chevron-right ml-1" />
               </button>
             </div>
