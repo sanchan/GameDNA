@@ -13,6 +13,7 @@ export default function Recommendations() {
   const [generating, setGenerating] = useState(false);
   const [explainRec, setExplainRec] = useState<Recommendation | null>(null);
   const [sortBy, setSortBy] = useState('best-match');
+  const [dismissedIds, setDismissedIds] = useState<Set<number>>(new Set());
   const prevSyncStatus = useRef(syncStatus);
 
   const fetchRecs = useCallback(async () => {
@@ -20,6 +21,7 @@ export default function Recommendations() {
     try {
       const data = await api.get<Recommendation[]>('/recommendations');
       setRecs(data);
+      setDismissedIds(new Set());
     } catch {
       // ignore
     } finally {
@@ -59,7 +61,7 @@ export default function Recommendations() {
   const handleDismiss = async (recId: number) => {
     try {
       await api.post(`/recommendations/${recId}/dismiss`);
-      setRecs((prev) => prev.filter((r) => r.id !== recId));
+      setDismissedIds((prev) => new Set(prev).add(recId));
     } catch {
       // ignore
     }
@@ -175,6 +177,7 @@ export default function Recommendations() {
           games={sortedRecs}
           onExplain={handleExplain}
           onDismiss={handleDismiss}
+          dismissedIds={dismissedIds}
         />
       ) : (
         <div className="text-center py-20 text-[var(--muted-foreground)]">
