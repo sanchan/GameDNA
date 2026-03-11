@@ -11,8 +11,8 @@ const STEAM_API_KEY = process.env.STEAM_API_KEY || '';
 const auth = new Hono();
 
 auth.get('/login', (c) => {
-  const realm = process.env.REALM || 'http://localhost:3000';
-  const returnUrl = `${realm}/api/auth/callback`;
+  const realm = process.env.STEAM_REALM || 'http://localhost:5173';
+  const returnUrl = process.env.STEAM_RETURN_URL || `${realm}/api/auth/callback`;
   const url = getAuthUrl(returnUrl, realm);
   return c.redirect(url);
 });
@@ -98,7 +98,8 @@ auth.get('/callback', async (c) => {
     maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
   });
 
-  return c.redirect('/');
+  const clientUrl = process.env.STEAM_REALM || 'http://localhost:5173';
+  return c.redirect(clientUrl + '/');
 });
 
 auth.post('/logout', async (c) => {
