@@ -4,6 +4,7 @@ export type SyncStep =
   | 'caching-library'
   | 'building-profile'
   | 'seeding-discovery'
+  | 'generating-recommendations'
   | 'complete'
   | 'error';
 

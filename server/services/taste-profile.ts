@@ -1,8 +1,13 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
-import { games, swipe_history, user_games, taste_profiles } from '../db/schema';
+import { games, swipe_history, user_games, taste_profiles, users } from '../db/schema';
+import { getIgnoredTagsSet } from './tag-filter';
 
 export async function recalculateTasteProfile(userId: number): Promise<void> {
+  // Load user's ignored tags
+  const userRow = db.select({ ignored_tags: users.ignored_tags }).from(users).where(eq(users.id, userId)).get();
+  const userIgnoredTags: string[] | undefined = userRow?.ignored_tags ? JSON.parse(userRow.ignored_tags) : undefined;
+  const ignoredSet = getIgnoredTagsSet(userIgnoredTags);
   // Fetch all user_games with game data
   const userGamesRows = db
     .select({
@@ -44,7 +49,9 @@ export async function recalculateTasteProfile(userId: number): Promise<void> {
 
     const tags: string[] = row.tags ? JSON.parse(row.tags) : [];
     for (const t of tags) {
-      tagScoresRaw[t] = (tagScoresRaw[t] ?? 0) + weight;
+      if (!ignoredSet.has(t.toLowerCase())) {
+        tagScoresRaw[t] = (tagScoresRaw[t] ?? 0) + weight;
+      }
     }
   }
 
@@ -58,7 +65,9 @@ export async function recalculateTasteProfile(userId: number): Promise<void> {
 
     const tags: string[] = row.tags ? JSON.parse(row.tags) : [];
     for (const t of tags) {
-      tagScoresRaw[t] = (tagScoresRaw[t] ?? 0) + weight;
+      if (!ignoredSet.has(t.toLowerCase())) {
+        tagScoresRaw[t] = (tagScoresRaw[t] ?? 0) + weight;
+      }
     }
   }
 

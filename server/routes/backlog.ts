@@ -6,7 +6,13 @@ import { requireAuth } from '../middleware/auth';
 import { generateJSON } from '../services/ollama';
 import type { Game } from '../../shared/types';
 
-const backlog = new Hono();
+type AuthEnv = {
+  Variables: {
+    userId: number;
+  };
+};
+
+const backlog = new Hono<AuthEnv>();
 
 function dbGameToGame(row: typeof games.$inferSelect): Game {
   return {
@@ -33,6 +39,36 @@ backlog.get('/', async (c) => {
   const limit = Math.min(parseInt(c.req.query('limit') ?? '50', 10), 100);
   const offset = parseInt(c.req.query('offset') ?? '0', 10);
 
+  // Fetch taste profile for scoring
+  const profile = db
+    .select()
+    .from(taste_profiles)
+    .where(eq(taste_profiles.user_id, userId))
+    .get();
+
+  const genreScores: Record<string, number> = profile?.genre_scores
+    ? JSON.parse(profile.genre_scores)
+    : {};
+  const tagScores: Record<string, number> = profile?.tag_scores
+    ? JSON.parse(profile.tag_scores)
+    : {};
+
+  const topGenres = new Set(
+    Object.entries(genreScores)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([name]) => name.toLowerCase()),
+  );
+  const topTags = new Set(
+    Object.entries(tagScores)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 15)
+      .map(([name]) => name.toLowerCase()),
+  );
+
+  const hasProfile = topGenres.size > 0 || topTags.size > 0;
+
+  // Fetch all backlog games (low playtime)
   const rows = db
     .select({
       game: games,
@@ -47,20 +83,53 @@ backlog.get('/', async (c) => {
         lt(user_games.playtime_mins, 120),
       )
     )
-    .orderBy(
-      // Games with some playtime first, then by review score
-      sql`CASE WHEN ${user_games.playtime_mins} > 0 THEN 0 ELSE 1 END`,
-      desc(games.review_score),
-    )
-    .limit(limit)
-    .offset(offset)
     .all();
 
-  const result = rows.map((row) => ({
-    game: dbGameToGame(row.game),
-    playtimeMins: row.playtime_mins ?? 0,
-    fromWishlist: row.from_wishlist === 1,
-  }));
+  if (!hasProfile) {
+    // No taste profile — fall back to review_score ordering
+    const sorted = rows
+      .sort((a, b) => {
+        // Games with some playtime first
+        const aHasPlaytime = (a.playtime_mins ?? 0) > 0 ? 0 : 1;
+        const bHasPlaytime = (b.playtime_mins ?? 0) > 0 ? 0 : 1;
+        if (aHasPlaytime !== bHasPlaytime) return aHasPlaytime - bHasPlaytime;
+        return (b.game.review_score ?? 0) - (a.game.review_score ?? 0);
+      })
+      .slice(offset, offset + limit);
+
+    return c.json(sorted.map((row) => ({
+      game: dbGameToGame(row.game),
+      playtimeMins: row.playtime_mins ?? 0,
+      fromWishlist: row.from_wishlist === 1,
+    })));
+  }
+
+  // Score each backlog game by taste match
+  const scored = rows.map((row) => {
+    const gameGenres: string[] = row.game.genres ? JSON.parse(row.game.genres) : [];
+    const gameTags: string[] = row.game.tags ? JSON.parse(row.game.tags) : [];
+
+    const genreMatch = gameGenres.filter((g) => topGenres.has(g.toLowerCase())).length / Math.max(topGenres.size, 1);
+    const tagMatch = gameTags.filter((t) => topTags.has(t.toLowerCase())).length / Math.max(topTags.size, 1);
+    const reviewNorm = (row.game.review_score ?? 50) / 100;
+
+    // Wishlist bonus — user explicitly wanted this game
+    const wishlistBonus = row.from_wishlist === 1 ? 0.15 : 0;
+
+    const score = 0.4 * genreMatch + 0.3 * tagMatch + 0.2 * reviewNorm + 0.1 * wishlistBonus;
+
+    return { row, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+
+  const result = scored
+    .slice(offset, offset + limit)
+    .map((s) => ({
+      game: dbGameToGame(s.row.game),
+      playtimeMins: s.row.playtime_mins ?? 0,
+      fromWishlist: s.row.from_wishlist === 1,
+    }));
 
   return c.json(result);
 });

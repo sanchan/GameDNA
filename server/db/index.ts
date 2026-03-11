@@ -20,6 +20,7 @@ sqlite.exec(`
     avatar_url TEXT,
     profile_url TEXT,
     last_login INTEGER,
+    ignored_tags TEXT,
     created_at INTEGER DEFAULT (unixepoch())
   );
 
@@ -90,6 +91,13 @@ sqlite.exec(`
     expires_at INTEGER NOT NULL
   );
 `);
+
+// Migrations for existing databases
+try {
+  sqlite.exec(`ALTER TABLE users ADD COLUMN ignored_tags TEXT`);
+} catch {
+  // Column already exists
+}
 
 export const db = drizzle(sqlite, { schema });
 export { schema };

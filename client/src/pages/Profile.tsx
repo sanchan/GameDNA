@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { useProfile, useGamingDNA } from '../hooks/use-profile';
+import { api } from '../lib/api';
 import RadarChart from '../components/RadarChart';
 
 export default function Profile() {
@@ -9,6 +10,8 @@ export default function Profile() {
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { data: dna, isLoading: dnaLoading, refetch: refetchDna } = useGamingDNA();
   const prevSyncStatus = useRef(syncStatus);
+  const [showAllTags, setShowAllTags] = useState(false);
+  const [togglingTag, setTogglingTag] = useState<string | null>(null);
 
   // Refetch profile data when sync transitions to 'synced'
   useEffect(() => {
@@ -44,6 +47,21 @@ export default function Profile() {
   const totalSwipes = dna
     ? dna.swipeStats.yes + dna.swipeStats.no + dna.swipeStats.maybe
     : 0;
+
+  const handleToggleTag = async (tagName: string, currentlyIgnored: boolean) => {
+    setTogglingTag(tagName);
+    try {
+      await api.post('/user/ignored-tags', { tag: tagName, ignored: !currentlyIgnored });
+      refetchDna();
+    } catch {
+      // ignore
+    } finally {
+      setTogglingTag(null);
+    }
+  };
+
+  const activeTags = dna?.allTags.filter((t) => !t.ignored) ?? [];
+  const ignoredTags = dna?.allTags.filter((t) => t.ignored) ?? [];
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -121,6 +139,69 @@ export default function Profile() {
                 </span>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* All Tags Table */}
+        {dna && dna.allTags.length > 0 && (
+          <div className="w-full max-w-lg">
+            <button
+              onClick={() => setShowAllTags(!showAllTags)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] transition-colors"
+            >
+              <span className="text-sm font-semibold text-[var(--foreground)]">
+                All Tags ({activeTags.length} active, {ignoredTags.length} ignored)
+              </span>
+              <svg
+                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className={`transition-transform ${showAllTags ? 'rotate-180' : ''}`}
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+
+            {showAllTags && (
+              <div className="mt-2 rounded-xl bg-[var(--card)] border border-[var(--border)] overflow-hidden">
+                <div className="max-h-96 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-[var(--card)] border-b border-[var(--border)]">
+                      <tr>
+                        <th className="text-left px-4 py-2 text-[var(--muted-foreground)] font-medium">Tag</th>
+                        <th className="text-right px-4 py-2 text-[var(--muted-foreground)] font-medium w-20">Score</th>
+                        <th className="text-center px-4 py-2 text-[var(--muted-foreground)] font-medium w-20">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dna.allTags.map((tag) => (
+                        <tr
+                          key={tag.name}
+                          className={`border-b border-[var(--border)] last:border-0 ${tag.ignored ? 'opacity-50' : ''}`}
+                        >
+                          <td className="px-4 py-2 text-[var(--foreground)]">{tag.name}</td>
+                          <td className="px-4 py-2 text-right text-[var(--muted-foreground)]">
+                            {tag.score.toFixed(2)}
+                          </td>
+                          <td className="px-4 py-2 text-center">
+                            <button
+                              onClick={() => handleToggleTag(tag.name, tag.ignored)}
+                              disabled={togglingTag === tag.name}
+                              className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors disabled:opacity-50 ${
+                                tag.ignored
+                                  ? 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--destructive)] hover:text-white'
+                                  : 'bg-green-500/15 text-green-500 hover:bg-red-500/15 hover:text-red-500'
+                              }`}
+                            >
+                              {tag.ignored ? 'Ignored' : 'Active'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

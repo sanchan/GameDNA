@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { api } from '../lib/api';
@@ -7,11 +7,12 @@ import WhyThisGame from '../components/WhyThisGame';
 import type { Recommendation } from '../../../shared/types';
 
 export default function Recommendations() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, syncStatus } = useAuth();
   const [recs, setRecs] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [explainRec, setExplainRec] = useState<Recommendation | null>(null);
+  const prevSyncStatus = useRef(syncStatus);
 
   const fetchRecs = useCallback(async () => {
     setLoading(true);
@@ -28,6 +29,14 @@ export default function Recommendations() {
   useEffect(() => {
     if (user) fetchRecs();
   }, [user, fetchRecs]);
+
+  // Refetch when sync transitions to 'synced' (recommendations are auto-generated during sync)
+  useEffect(() => {
+    if (prevSyncStatus.current === 'syncing' && syncStatus === 'synced') {
+      fetchRecs();
+    }
+    prevSyncStatus.current = syncStatus;
+  }, [syncStatus, fetchRecs]);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -64,15 +73,21 @@ export default function Recommendations() {
         <h1 className="text-2xl font-bold">Recommended For You</h1>
         <button
           onClick={handleGenerate}
-          disabled={generating}
+          disabled={generating || syncStatus === 'syncing'}
           className="bg-[var(--primary)] text-[var(--primary-foreground)] px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
         >
-          {generating ? 'Generating...' : 'Generate Recommendations'}
+          {generating ? 'Generating...' : 'Regenerate'}
         </button>
       </div>
 
-      {loading ? (
+      {loading || syncStatus === 'syncing' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {syncStatus === 'syncing' && (
+            <div className="col-span-full text-center py-8 text-[var(--muted-foreground)]">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)] mb-3" />
+              <p className="text-sm">Recommendations will be generated after sync completes...</p>
+            </div>
+          )}
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-xl overflow-hidden bg-[var(--card)] shadow-lg">
               <div className="w-full aspect-video bg-[var(--muted)] animate-pulse" />
@@ -96,7 +111,7 @@ export default function Recommendations() {
       ) : (
         <div className="text-center py-20 text-[var(--muted-foreground)]">
           <p className="text-lg mb-2">No recommendations yet.</p>
-          <p className="text-sm">Hit "Generate Recommendations" to get personalized suggestions!</p>
+          <p className="text-sm">Hit "Regenerate" to get personalized suggestions!</p>
         </div>
       )}
 

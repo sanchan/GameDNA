@@ -6,7 +6,9 @@ import { users, user_games, games, swipe_history, taste_profiles } from '../db/s
 import { getOwnedGames, getWishlist, getPopularGameIds } from '../services/steam-api';
 import { ensureGamesCached } from '../services/game-cache';
 import { recalculateTasteProfile } from '../services/taste-profile';
+import { generateRecommendations } from '../services/recommendation';
 import { getSyncStatus, startSync, updateSync } from '../services/sync-manager';
+import { DEFAULT_IGNORED_TAGS, getIgnoredTagsSet } from '../services/tag-filter';
 import type { GamingDNA } from '../../shared/types';
 
 type AuthEnv = {
@@ -60,26 +62,24 @@ async function runSyncInBackground(userId: number, steamId: string) {
     console.log(`[sync] Fetched ${ownedGames.length} owned games, ${wishlistAppids.length} wishlist items`);
 
     updateSync(userId, {
-      progress: 30,
+      progress: 25,
       detail: `Found ${ownedGames.length} games. Saving to library...`,
       gamesCount: ownedGames.length,
       wishlistCount: wishlistAppids.length,
     });
 
     // Step 2: Insert stub game records for FK constraints (no Steam Store API calls!)
-    // GetOwnedGames already gives us name + appid - insert minimal records
     const now = Math.floor(Date.now() / 1000);
     for (const game of ownedGames) {
       db.insert(games)
         .values({
           id: game.appid,
           name: game.name || `Game ${game.appid}`,
-          cached_at: 0, // marks as "needs full details" - will be fetched on demand
+          cached_at: 0,
         })
         .onConflictDoNothing()
         .run();
     }
-    // Wishlist appids don't have names from the API, insert with placeholder
     for (const appid of wishlistAppids) {
       db.insert(games)
         .values({
@@ -92,7 +92,7 @@ async function runSyncInBackground(userId: number, steamId: string) {
     }
 
     // Step 3: Upsert owned games into user_games
-    updateSync(userId, { step: 'caching-library', progress: 50, detail: 'Saving your game library...' });
+    updateSync(userId, { step: 'caching-library', progress: 40, detail: 'Saving your game library...' });
 
     const wishlistSet = new Set(wishlistAppids);
     for (const game of ownedGames) {
@@ -141,23 +141,23 @@ async function runSyncInBackground(userId: number, steamId: string) {
         .run();
     }
 
-    // Step 4: Build taste profile (uses data already in DB, no API calls)
-    updateSync(userId, { step: 'building-profile', progress: 60, detail: 'Building your taste profile...' });
+    // Step 4: Build taste profile
+    updateSync(userId, { step: 'building-profile', progress: 50, detail: 'Building your taste profile...' });
 
-    // Fetch details for top played games only (for taste profile accuracy)
+    // Fetch details for top played games only
     const topPlayedAppids = ownedGames
-      .filter((g) => g.playtime_forever > 60) // >1 hour played
+      .filter((g) => g.playtime_forever > 60)
       .sort((a, b) => b.playtime_forever - a.playtime_forever)
-      .slice(0, 50) // top 50 most played
+      .slice(0, 50)
       .map((g) => g.appid);
 
     if (topPlayedAppids.length > 0) {
       updateSync(userId, {
-        progress: 65,
+        progress: 55,
         detail: `Fetching details for your top ${topPlayedAppids.length} games...`,
       });
       await ensureGamesCached(topPlayedAppids, (cached, total) => {
-        const progress = 65 + Math.round((cached / total) * 10);
+        const progress = 55 + Math.round((cached / total) * 10);
         updateSync(userId, {
           progress,
           detail: `Fetching game details... (${cached}/${total})`,
@@ -170,7 +170,7 @@ async function runSyncInBackground(userId: number, steamId: string) {
     });
 
     // Step 5: Seed popular games for discovery
-    updateSync(userId, { step: 'seeding-discovery', progress: 80, detail: 'Loading discovery catalog...' });
+    updateSync(userId, { step: 'seeding-discovery', progress: 68, detail: 'Loading discovery catalog...' });
 
     try {
       const popularIds = await getPopularGameIds();
@@ -179,7 +179,7 @@ async function runSyncInBackground(userId: number, steamId: string) {
       console.log(`[sync] Seeding ${discoveryIds.length} popular games for discovery`);
 
       await ensureGamesCached(discoveryIds, (cached, total) => {
-        const seedProgress = 80 + Math.round((cached / total) * 18);
+        const seedProgress = 68 + Math.round((cached / total) * 15);
         updateSync(userId, {
           progress: seedProgress,
           detail: `Loading discovery catalog... (${cached}/${total})`,
@@ -189,6 +189,17 @@ async function runSyncInBackground(userId: number, steamId: string) {
       console.log('[sync] Popular games seeding complete');
     } catch (e) {
       console.error('[sync] Popular games seeding error:', e);
+    }
+
+    // Step 6: Generate recommendations
+    updateSync(userId, { step: 'generating-recommendations', progress: 85, detail: 'Generating personalized recommendations...' });
+
+    try {
+      const recCount = await generateRecommendations(userId);
+      console.log(`[sync] Generated ${recCount} recommendations for user ${userId}`);
+      updateSync(userId, { progress: 98, detail: `Generated ${recCount} recommendations!` });
+    } catch (e) {
+      console.error('[sync] Recommendation generation error:', e);
     }
 
     // Done
@@ -262,6 +273,11 @@ user.get('/profile', async (c) => {
 user.get('/gaming-dna', async (c) => {
   const userId = c.get('userId');
 
+  // Get user's ignored tags
+  const userRow = db.select({ ignored_tags: users.ignored_tags }).from(users).where(eq(users.id, userId)).get();
+  const userIgnoredTags: string[] = userRow?.ignored_tags ? JSON.parse(userRow.ignored_tags) : DEFAULT_IGNORED_TAGS;
+  const ignoredSet = getIgnoredTagsSet(userIgnoredTags);
+
   // Get taste profile
   const tasteProfile = db
     .select()
@@ -282,11 +298,17 @@ user.get('/gaming-dna', async (c) => {
     .slice(0, 8)
     .map(([name, score]) => ({ name, score }));
 
-  // Top 8 tags
+  // Top 8 tags (excluding ignored)
   const topTags = Object.entries(tagScores)
+    .filter(([name]) => !ignoredSet.has(name.toLowerCase()))
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
     .map(([name, score]) => ({ name, score }));
+
+  // All tags sorted by score (including ignored, with flag)
+  const allTags = Object.entries(tagScores)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, score]) => ({ name, score, ignored: ignoredSet.has(name.toLowerCase()) }));
 
   // Total games and playtime
   const gameStats = db
@@ -320,6 +342,7 @@ user.get('/gaming-dna', async (c) => {
   const result: GamingDNA = {
     topGenres,
     topTags,
+    allTags,
     totalGames: gameStats?.totalGames ?? 0,
     totalPlaytimeHours: Math.round((gameStats?.totalPlaytime ?? 0) / 60),
     swipeStats: {
@@ -331,6 +354,46 @@ user.get('/gaming-dna', async (c) => {
   };
 
   return c.json(result);
+});
+
+// Tag management endpoints
+user.get('/ignored-tags', async (c) => {
+  const userId = c.get('userId');
+  const userRow = db.select({ ignored_tags: users.ignored_tags }).from(users).where(eq(users.id, userId)).get();
+  const ignoredTags: string[] = userRow?.ignored_tags ? JSON.parse(userRow.ignored_tags) : DEFAULT_IGNORED_TAGS;
+  return c.json({ ignoredTags, defaults: DEFAULT_IGNORED_TAGS });
+});
+
+user.post('/ignored-tags', async (c) => {
+  const userId = c.get('userId');
+  const body = await c.req.json<{ tag: string; ignored: boolean }>();
+
+  // Get current ignored tags
+  const userRow = db.select({ ignored_tags: users.ignored_tags }).from(users).where(eq(users.id, userId)).get();
+  const currentTags: string[] = userRow?.ignored_tags ? JSON.parse(userRow.ignored_tags) : [...DEFAULT_IGNORED_TAGS];
+
+  let updated: string[];
+  if (body.ignored) {
+    // Add to ignored list
+    if (!currentTags.some((t) => t.toLowerCase() === body.tag.toLowerCase())) {
+      updated = [...currentTags, body.tag];
+    } else {
+      updated = currentTags;
+    }
+  } else {
+    // Remove from ignored list
+    updated = currentTags.filter((t) => t.toLowerCase() !== body.tag.toLowerCase());
+  }
+
+  db.update(users)
+    .set({ ignored_tags: JSON.stringify(updated) })
+    .where(eq(users.id, userId))
+    .run();
+
+  // Recalculate taste profile with new ignored tags
+  recalculateTasteProfile(userId).catch(() => {});
+
+  return c.json({ ignoredTags: updated });
 });
 
 export default user;
