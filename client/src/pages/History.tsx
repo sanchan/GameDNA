@@ -29,6 +29,16 @@ function formatDate(unix: number): string {
   });
 }
 
+function formatDateTime(unix: number): string {
+  return new Date(unix * 1000).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 function timeAgo(unix: number): string {
   const seconds = Math.floor(Date.now() / 1000 - unix);
   if (seconds < 60) return 'Just now';
@@ -115,6 +125,19 @@ export default function History() {
     }
   };
 
+  const handleRemoveEntry = async (entryId: number) => {
+    setUpdatingId(entryId);
+    try {
+      await api.delete(`/history/${entryId}`);
+      setEntries((prev) => prev.filter((e) => e.id !== entryId));
+      setTotal((t) => t - 1);
+    } catch {
+      // ignore
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   // Compute decision summary counts from current data context
   const summary = useMemo(() => {
     const yes = entries.filter((e) => e.decision === 'yes').length;
@@ -136,8 +159,8 @@ export default function History() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       {/* Header */}
       <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">Swipe History</h1>
-      <p className="text-[var(--muted-foreground)] mb-8">
-        Review and manage your past game decisions
+      <p className="text-[var(--muted-foreground)] text-lg max-w-3xl mb-8">
+        Review your past decisions and discover patterns in your gaming preferences. Your swipe history helps us refine recommendations.
       </p>
 
       {/* Search and Filters */}
@@ -147,7 +170,7 @@ export default function History() {
           <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
           <input
             type="text"
-            placeholder="Search games..."
+            placeholder="Search games in your history..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-[#1a1a1a] border border-[#333] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)]"
@@ -156,119 +179,157 @@ export default function History() {
 
         {/* Filter selects */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]"
-          >
-            <option value="all">All Time</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-          </select>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-[var(--muted-foreground)] font-medium">Date Range</label>
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-all"
+            >
+              <option value="all">All Time</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="3months">Last 3 Months</option>
+              <option value="6months">Last 6 Months</option>
+              <option value="year">Last Year</option>
+            </select>
+          </div>
 
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]"
-          >
-            <option value="all">All Decisions</option>
-            <option value="yes">Yes</option>
-            <option value="maybe">Maybe</option>
-            <option value="no">No</option>
-          </select>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-[var(--muted-foreground)] font-medium">Decision Type</label>
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-all"
+            >
+              <option value="all">All Decisions</option>
+              <option value="yes">Yes (Interested)</option>
+              <option value="maybe">Maybe (Consider Later)</option>
+              <option value="no">No (Not Interested)</option>
+            </select>
+          </div>
 
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="name">Name A-Z</option>
-          </select>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-[var(--muted-foreground)] font-medium">Sort By</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-all"
+            >
+              <option value="newest">Most Recent</option>
+              <option value="oldest">Oldest First</option>
+              <option value="name">Game Name A-Z</option>
+              <option value="name-desc">Game Name Z-A</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Decision Summary */}
       <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
-        <h2 className="text-lg font-bold mb-4">Decision Summary</h2>
+        <h2 className="text-2xl font-bold mb-6">Decision Summary</h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Yes card */}
-          <div className="bg-[#1a1a1a] border-2 border-green-500/30 rounded-xl p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                <i className="fa-solid fa-thumbs-up text-green-500" />
+          <div className="bg-[#1a1a1a] border-2 border-green-500/30 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <i className="fa-solid fa-thumbs-up text-green-500 text-xl" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-green-500">Yes</h3>
+                  <p className="text-sm text-[var(--muted-foreground)]">Interested</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-[var(--muted-foreground)]">Yes</p>
-                <p className="text-2xl font-bold text-green-500">{summary.yes}</p>
-              </div>
+              <div className="text-4xl font-black text-green-500">{summary.yes}</div>
             </div>
-            <div className="w-full bg-[#333] rounded-full h-2">
+            <div className="w-full bg-[#242424] rounded-full h-3 overflow-hidden">
               <div
-                className="bg-green-500 h-2 rounded-full transition-all"
+                className="bg-green-500 h-full rounded-full transition-all"
                 style={{ width: `${entries.length ? (summary.yes / entries.length) * 100 : 0}%` }}
               />
             </div>
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">
+              {entries.length ? Math.round((summary.yes / entries.length) * 100) : 0}% of total swipes
+            </p>
           </div>
 
           {/* Maybe card */}
-          <div className="bg-[#1a1a1a] border-2 border-yellow-500/30 rounded-xl p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                <i className="fa-solid fa-minus text-yellow-500" />
+          <div className="bg-[#1a1a1a] border-2 border-yellow-500/30 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                  <i className="fa-solid fa-minus text-yellow-500 text-xl" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-yellow-500">Maybe</h3>
+                  <p className="text-sm text-[var(--muted-foreground)]">Consider Later</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-[var(--muted-foreground)]">Maybe</p>
-                <p className="text-2xl font-bold text-yellow-500">{summary.maybe}</p>
-              </div>
+              <div className="text-4xl font-black text-yellow-500">{summary.maybe}</div>
             </div>
-            <div className="w-full bg-[#333] rounded-full h-2">
+            <div className="w-full bg-[#242424] rounded-full h-3 overflow-hidden">
               <div
-                className="bg-yellow-500 h-2 rounded-full transition-all"
+                className="bg-yellow-500 h-full rounded-full transition-all"
                 style={{ width: `${entries.length ? (summary.maybe / entries.length) * 100 : 0}%` }}
               />
             </div>
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">
+              {entries.length ? Math.round((summary.maybe / entries.length) * 100) : 0}% of total swipes
+            </p>
           </div>
 
           {/* No card */}
-          <div className="bg-[#1a1a1a] border-2 border-red-500/30 rounded-xl p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                <i className="fa-solid fa-thumbs-down text-red-500" />
+          <div className="bg-[#1a1a1a] border-2 border-red-500/30 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <i className="fa-solid fa-thumbs-down text-red-500 text-xl" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-red-500">No</h3>
+                  <p className="text-sm text-[var(--muted-foreground)]">Not Interested</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-[var(--muted-foreground)]">No</p>
-                <p className="text-2xl font-bold text-red-500">{summary.no}</p>
-              </div>
+              <div className="text-4xl font-black text-red-500">{summary.no}</div>
             </div>
-            <div className="w-full bg-[#333] rounded-full h-2">
+            <div className="w-full bg-[#242424] rounded-full h-3 overflow-hidden">
               <div
-                className="bg-red-500 h-2 rounded-full transition-all"
+                className="bg-red-500 h-full rounded-full transition-all"
                 style={{ width: `${entries.length ? (summary.no / entries.length) * 100 : 0}%` }}
               />
             </div>
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">
+              {entries.length ? Math.round((summary.no / entries.length) * 100) : 0}% of total swipes
+            </p>
           </div>
         </div>
 
         {/* Bottom stats row */}
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#333]">
-          <div className="text-center">
-            <p className="text-2xl font-bold">{summary.totalSwipes}</p>
-            <p className="text-sm text-[var(--muted-foreground)]">Total Swipes</p>
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-[#333]">
+          <div className="flex items-center gap-6">
+            <div>
+              <p className="text-sm text-[var(--muted-foreground)]">Total Swipes</p>
+              <p className="text-2xl font-black">{summary.totalSwipes}</p>
+            </div>
+            <div className="h-12 w-px bg-[#333]" />
+            <div>
+              <p className="text-sm text-[var(--muted-foreground)]">This Week</p>
+              <p className="text-2xl font-black text-[var(--primary)]">{summary.thisWeek}</p>
+            </div>
+            <div className="h-12 w-px bg-[#333]" />
+            <div>
+              <p className="text-sm text-[var(--muted-foreground)]">Avg. Per Day</p>
+              <p className="text-2xl font-black">
+                {summary.totalSwipes > 0 ? (summary.thisWeek / 7).toFixed(1) : '0'}
+              </p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold">{summary.thisWeek}</p>
-            <p className="text-sm text-[var(--muted-foreground)]">This Week</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold">
-              {summary.totalSwipes > 0 ? Math.max(1, Math.round(summary.thisWeek / 7)) : 0}
-            </p>
-            <p className="text-sm text-[var(--muted-foreground)]">Avg. Per Day</p>
-          </div>
+          <button className="flex items-center gap-2 px-5 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all">
+            <i className="fa-solid fa-download" />
+            <span>Export History</span>
+          </button>
         </div>
       </div>
 
@@ -328,46 +389,82 @@ export default function History() {
                   key={entry.id}
                   className="bg-[#242424] border border-[#333] rounded-xl p-4 hover:border-[var(--primary)] transition-all"
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     {/* Thumbnail */}
-                    <Link to={`/game/${entry.game.id}`} className="shrink-0">
+                    <Link to={`/game/${entry.game.id}`} className="w-full sm:w-32 h-20 shrink-0 rounded-lg overflow-hidden">
                       {entry.game.headerImage ? (
                         <img
                           src={entry.game.headerImage}
                           alt={entry.game.name}
-                          className="w-32 h-20 object-cover rounded-lg"
+                          className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-32 h-20 bg-[#333] rounded-lg flex items-center justify-center">
+                        <div className="w-full h-full bg-[#333] flex items-center justify-center">
                           <i className="fa-solid fa-gamepad text-[var(--muted-foreground)]" />
                         </div>
                       )}
                     </Link>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <Link to={`/game/${entry.game.id}`} className="hover:underline">
-                        <h3 className="font-bold text-lg truncate">{entry.game.name}</h3>
-                      </Link>
+                    <div className="flex-1 min-w-0 w-full">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <Link to={`/game/${entry.game.id}`} className="hover:underline">
+                            <h3 className="font-bold text-xl truncate mb-2">{entry.game.name}</h3>
+                          </Link>
 
-                      {entry.game.genres.length > 0 && (
-                        <p className="text-sm text-[var(--muted-foreground)] truncate mt-0.5">
-                          {entry.game.genres.slice(0, 3).join(', ')}
-                        </p>
-                      )}
+                          {entry.game.genres.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              {entry.game.genres.slice(0, 3).map((genre) => (
+                                <span key={genre} className="bg-[#1a1a1a] px-3 py-1 rounded-full text-xs font-medium">
+                                  {genre}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
 
-                      <p className="text-xs text-[var(--muted-foreground)] mt-1 flex items-center gap-1">
-                        <i className="fa-solid fa-clock text-[10px]" />
-                        Swiped {timeAgo(entry.swipedAt)}
-                      </p>
+                        {/* Decision badge */}
+                        <div className="shrink-0">
+                          {entry.decision === 'yes' && (
+                            <span className="bg-green-500/20 text-green-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
+                              <i className="fa-solid fa-thumbs-up" />
+                              Yes
+                            </span>
+                          )}
+                          {entry.decision === 'maybe' && (
+                            <span className="bg-yellow-500/20 text-yellow-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
+                              <i className="fa-solid fa-minus" />
+                              Maybe
+                            </span>
+                          )}
+                          {entry.decision === 'no' && (
+                            <span className="bg-red-500/20 text-red-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
+                              <i className="fa-solid fa-thumbs-down" />
+                              No
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                      {/* Change decision buttons */}
-                      <div className="flex flex-wrap items-center gap-2 mt-3">
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <span className="text-sm text-[var(--muted-foreground)]">
+                          <i className="fa-solid fa-clock mr-1" />
+                          Swiped {timeAgo(entry.swipedAt)}
+                        </span>
+                        <span className="text-[#555]">&bull;</span>
+                        <span className="text-sm text-[var(--muted-foreground)]">
+                          {formatDateTime(entry.swipedAt)}
+                        </span>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex flex-wrap items-center gap-2">
                         {otherDecisions.map((d) => {
-                          const config: Record<string, { label: string; icon: string; hoverBg: string; hoverText: string }> = {
-                            yes: { label: 'Change to Yes', icon: 'fa-thumbs-up', hoverBg: 'hover:bg-green-500/20', hoverText: 'hover:text-green-500' },
-                            maybe: { label: 'Change to Maybe', icon: 'fa-minus', hoverBg: 'hover:bg-yellow-500/20', hoverText: 'hover:text-yellow-500' },
-                            no: { label: 'Change to No', icon: 'fa-thumbs-down', hoverBg: 'hover:bg-red-500/20', hoverText: 'hover:text-red-500' },
+                          const config: Record<string, { label: string; icon: string; hoverBorder: string; hoverText: string }> = {
+                            yes: { label: 'Change to Yes', icon: 'fa-thumbs-up', hoverBorder: 'hover:border-green-500', hoverText: 'hover:text-green-500' },
+                            maybe: { label: 'Change to Maybe', icon: 'fa-minus', hoverBorder: 'hover:border-yellow-500', hoverText: 'hover:text-yellow-500' },
+                            no: { label: 'Change to No', icon: 'fa-thumbs-down', hoverBorder: 'hover:border-red-500', hoverText: 'hover:text-red-500' },
                           };
                           const c = config[d];
                           return (
@@ -375,44 +472,31 @@ export default function History() {
                               key={d}
                               onClick={() => handleChangeDecision(entry.id, d)}
                               disabled={updatingId === entry.id}
-                              className={`text-xs px-3 py-1.5 rounded-lg border border-[#333] text-[var(--muted-foreground)] transition-all disabled:opacity-50 ${c.hoverBg} ${c.hoverText}`}
+                              className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#333] font-semibold transition-all disabled:opacity-50 ${c.hoverBorder} ${c.hoverText}`}
                             >
-                              <i className={`fa-solid ${c.icon} mr-1`} />
-                              {c.label}
+                              <i className={`fa-solid ${c.icon}`} />
+                              <span>{c.label}</span>
                             </button>
                           );
                         })}
 
                         <Link
                           to={`/game/${entry.game.id}`}
-                          className="text-xs px-3 py-1.5 rounded-lg border border-[#333] text-[var(--muted-foreground)] hover:bg-[var(--primary)]/20 hover:text-[var(--primary)] transition-all"
+                          className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#333] font-semibold hover:border-[var(--primary)] transition-all"
                         >
-                          <i className="fa-solid fa-eye mr-1" />
-                          View Game
+                          <i className="fa-solid fa-eye" />
+                          <span>View Game</span>
                         </Link>
-                      </div>
-                    </div>
 
-                    {/* Decision badge */}
-                    <div className="shrink-0">
-                      {entry.decision === 'yes' && (
-                        <span className="bg-green-500/20 text-green-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
-                          <i className="fa-solid fa-thumbs-up" />
-                          Yes
-                        </span>
-                      )}
-                      {entry.decision === 'maybe' && (
-                        <span className="bg-yellow-500/20 text-yellow-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
-                          <i className="fa-solid fa-minus" />
-                          Maybe
-                        </span>
-                      )}
-                      {entry.decision === 'no' && (
-                        <span className="bg-red-500/20 text-red-500 px-4 py-2 rounded-full font-bold text-sm inline-flex items-center gap-2">
-                          <i className="fa-solid fa-thumbs-down" />
-                          No
-                        </span>
-                      )}
+                        <button
+                          onClick={() => handleRemoveEntry(entry.id)}
+                          disabled={updatingId === entry.id}
+                          className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#333] font-semibold hover:border-red-500 hover:text-red-500 transition-all disabled:opacity-50"
+                        >
+                          <i className="fa-solid fa-trash" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

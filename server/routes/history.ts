@@ -123,4 +123,29 @@ history.post('/:id', async (c) => {
   return c.json({ success: true });
 });
 
+// DELETE /api/history/:id — remove a swipe entry
+history.delete('/:id', async (c) => {
+  const userId = c.get('userId');
+  const swipeId = Number(c.req.param('id'));
+
+  const existing = db
+    .select()
+    .from(swipe_history)
+    .where(eq(swipe_history.id, swipeId))
+    .get();
+
+  if (!existing || existing.user_id !== userId) {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  db.delete(swipe_history)
+    .where(eq(swipe_history.id, swipeId))
+    .run();
+
+  // Recalculate taste profile
+  recalculateTasteProfile(userId).catch(() => {});
+
+  return c.json({ success: true });
+});
+
 export default history;
