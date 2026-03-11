@@ -6,6 +6,7 @@ import { users, user_games, games, swipe_history, taste_profiles } from '../db/s
 import { getOwnedGames, getWishlist, getPopularGameIds } from '../services/steam-api';
 import { ensureGamesCached } from '../services/game-cache';
 import { recalculateTasteProfile } from '../services/taste-profile';
+import { getSyncStatus, startSync, updateSync, isSyncRecent } from '../services/sync-manager';
 import type { GamingDNA } from '../../shared/types';
 
 type AuthEnv = {
@@ -21,98 +22,211 @@ user.use('*', requireAuth);
 user.post('/sync', async (c) => {
   const userId = c.get('userId');
 
+  // If sync recently completed, return the cached result
+  if (isSyncRecent(userId)) {
+    const state = getSyncStatus(userId)!;
+    return c.json({ status: 'already_synced', gamesCount: state.gamesCount, wishlistCount: state.wishlistCount });
+  }
+
+  // If sync is already in progress, return status
+  const existing = getSyncStatus(userId);
+  if (existing && existing.step !== 'complete' && existing.step !== 'error') {
+    return c.json({ status: 'in_progress' });
+  }
+
   // Get the user's steam_id
   const userRow = db.select().from(users).where(eq(users.id, userId)).get();
   if (!userRow) {
     return c.json({ error: 'User not found' }, 404);
   }
 
+  // Start sync - returns false if already in progress (race condition guard)
+  if (!startSync(userId)) {
+    return c.json({ status: 'in_progress' });
+  }
+
   const steamId = userRow.steam_id;
   console.log(`[sync] Starting sync for user ${userId} (steam: ${steamId})`);
 
-  // Fetch owned games and wishlist in parallel
-  const [ownedGames, wishlistAppids] = await Promise.all([
-    getOwnedGames(steamId),
-    getWishlist(steamId),
-  ]);
-  console.log(`[sync] Fetched ${ownedGames.length} owned games, ${wishlistAppids.length} wishlist items`);
+  // Run sync in background (don't await)
+  runSyncInBackground(userId, steamId);
 
-  // Collect all appids that need caching
-  const ownedAppids = ownedGames.map((g) => g.appid);
-  const allAppids = [...new Set([...ownedAppids, ...wishlistAppids])];
+  return c.json({ status: 'started' });
+});
 
-  // Cache game metadata
-  await ensureGamesCached(allAppids);
+async function runSyncInBackground(userId: number, steamId: string) {
+  try {
+    // Step 1: Fetch library from Steam Web API (1 call each, fast)
+    updateSync(userId, { step: 'fetching-library', progress: 10, detail: 'Fetching your Steam library...' });
 
-  const now = Math.floor(Date.now() / 1000);
-  const wishlistSet = new Set(wishlistAppids);
+    const [ownedGames, wishlistAppids] = await Promise.all([
+      getOwnedGames(steamId),
+      getWishlist(steamId),
+    ]);
+    console.log(`[sync] Fetched ${ownedGames.length} owned games, ${wishlistAppids.length} wishlist items`);
 
-  // Upsert owned games into user_games
-  for (const game of ownedGames) {
-    db.insert(user_games)
-      .values({
-        user_id: userId,
-        game_id: game.appid,
-        playtime_mins: game.playtime_forever,
-        last_played: game.rtime_last_played || null,
-        from_wishlist: wishlistSet.has(game.appid) ? 1 : 0,
-        synced_at: now,
-      })
-      .onConflictDoUpdate({
-        target: [user_games.user_id, user_games.game_id],
-        set: {
+    updateSync(userId, {
+      progress: 30,
+      detail: `Found ${ownedGames.length} games. Saving to library...`,
+      gamesCount: ownedGames.length,
+      wishlistCount: wishlistAppids.length,
+    });
+
+    // Step 2: Insert stub game records for FK constraints (no Steam Store API calls!)
+    // GetOwnedGames already gives us name + appid - insert minimal records
+    const now = Math.floor(Date.now() / 1000);
+    for (const game of ownedGames) {
+      db.insert(games)
+        .values({
+          id: game.appid,
+          name: game.name || `Game ${game.appid}`,
+          cached_at: 0, // marks as "needs full details" - will be fetched on demand
+        })
+        .onConflictDoNothing()
+        .run();
+    }
+    // Wishlist appids don't have names from the API, insert with placeholder
+    for (const appid of wishlistAppids) {
+      db.insert(games)
+        .values({
+          id: appid,
+          name: `Game ${appid}`,
+          cached_at: 0,
+        })
+        .onConflictDoNothing()
+        .run();
+    }
+
+    // Step 3: Upsert owned games into user_games
+    updateSync(userId, { step: 'caching-library', progress: 50, detail: 'Saving your game library...' });
+
+    const wishlistSet = new Set(wishlistAppids);
+    for (const game of ownedGames) {
+      db.insert(user_games)
+        .values({
+          user_id: userId,
+          game_id: game.appid,
           playtime_mins: game.playtime_forever,
           last_played: game.rtime_last_played || null,
           from_wishlist: wishlistSet.has(game.appid) ? 1 : 0,
           synced_at: now,
-        },
-      })
-      .run();
-  }
+        })
+        .onConflictDoUpdate({
+          target: [user_games.user_id, user_games.game_id],
+          set: {
+            playtime_mins: game.playtime_forever,
+            last_played: game.rtime_last_played || null,
+            from_wishlist: wishlistSet.has(game.appid) ? 1 : 0,
+            synced_at: now,
+          },
+        })
+        .run();
+    }
 
-  // Upsert wishlist-only games (not already owned)
-  const ownedSet = new Set(ownedAppids);
-  for (const appid of wishlistAppids) {
-    if (ownedSet.has(appid)) continue;
-    db.insert(user_games)
-      .values({
-        user_id: userId,
-        game_id: appid,
-        playtime_mins: 0,
-        last_played: null,
-        from_wishlist: 1,
-        synced_at: now,
-      })
-      .onConflictDoUpdate({
-        target: [user_games.user_id, user_games.game_id],
-        set: {
+    // Upsert wishlist-only games
+    const ownedAppids = ownedGames.map((g) => g.appid);
+    const ownedSet = new Set(ownedAppids);
+    for (const appid of wishlistAppids) {
+      if (ownedSet.has(appid)) continue;
+      db.insert(user_games)
+        .values({
+          user_id: userId,
+          game_id: appid,
+          playtime_mins: 0,
+          last_played: null,
           from_wishlist: 1,
           synced_at: now,
-        },
-      })
-      .run();
-  }
+        })
+        .onConflictDoUpdate({
+          target: [user_games.user_id, user_games.game_id],
+          set: {
+            from_wishlist: 1,
+            synced_at: now,
+          },
+        })
+        .run();
+    }
 
-  // Recalculate taste profile based on library data
-  await recalculateTasteProfile(userId).catch((e) => {
-    console.error('[sync] taste profile error:', e);
-  });
+    // Step 4: Build taste profile (uses data already in DB, no API calls)
+    updateSync(userId, { step: 'building-profile', progress: 60, detail: 'Building your taste profile...' });
 
-  // Seed popular games for discovery (wait for completion so client gets games)
-  try {
-    const popularIds = await getPopularGameIds();
-    const ownedAndWishlist = new Set(allAppids);
-    const discoveryIds = popularIds.filter((id) => !ownedAndWishlist.has(id));
-    console.log(`[sync] Seeding ${discoveryIds.length} popular games for discovery`);
-    await ensureGamesCached(discoveryIds);
-    console.log('[sync] Popular games seeding complete');
+    // Fetch details for top played games only (for taste profile accuracy)
+    const topPlayedAppids = ownedGames
+      .filter((g) => g.playtime_forever > 60) // >1 hour played
+      .sort((a, b) => b.playtime_forever - a.playtime_forever)
+      .slice(0, 50) // top 50 most played
+      .map((g) => g.appid);
+
+    if (topPlayedAppids.length > 0) {
+      updateSync(userId, {
+        progress: 65,
+        detail: `Fetching details for your top ${topPlayedAppids.length} games...`,
+      });
+      await ensureGamesCached(topPlayedAppids, (cached, total) => {
+        const progress = 65 + Math.round((cached / total) * 10);
+        updateSync(userId, {
+          progress,
+          detail: `Fetching game details... (${cached}/${total})`,
+        });
+      });
+    }
+
+    await recalculateTasteProfile(userId).catch((e) => {
+      console.error('[sync] taste profile error:', e);
+    });
+
+    // Step 5: Seed popular games for discovery
+    updateSync(userId, { step: 'seeding-discovery', progress: 80, detail: 'Loading discovery catalog...' });
+
+    try {
+      const popularIds = await getPopularGameIds();
+      const allUserAppids = new Set([...ownedAppids, ...wishlistAppids]);
+      const discoveryIds = popularIds.filter((id) => !allUserAppids.has(id));
+      console.log(`[sync] Seeding ${discoveryIds.length} popular games for discovery`);
+
+      await ensureGamesCached(discoveryIds, (cached, total) => {
+        const seedProgress = 80 + Math.round((cached / total) * 18);
+        updateSync(userId, {
+          progress: seedProgress,
+          detail: `Loading discovery catalog... (${cached}/${total})`,
+        });
+      });
+
+      console.log('[sync] Popular games seeding complete');
+    } catch (e) {
+      console.error('[sync] Popular games seeding error:', e);
+    }
+
+    // Done
+    updateSync(userId, {
+      step: 'complete',
+      progress: 100,
+      detail: 'Sync complete!',
+      completedAt: Date.now(),
+    });
+    console.log(`[sync] Sync complete for user ${userId}`);
   } catch (e) {
-    console.error('[sync] Popular games seeding error:', e);
+    console.error('[sync] Sync error:', e);
+    updateSync(userId, {
+      step: 'error',
+      detail: `Sync failed: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      completedAt: Date.now(),
+    });
   }
+}
 
+user.get('/sync-status', async (c) => {
+  const userId = c.get('userId');
+  const state = getSyncStatus(userId);
+  if (!state) {
+    return c.json({ step: 'idle', progress: 0, detail: '', gamesCount: 0, wishlistCount: 0 });
+  }
   return c.json({
-    gamesCount: ownedGames.length,
-    wishlistCount: wishlistAppids.length,
+    step: state.step,
+    progress: state.progress,
+    detail: state.detail,
+    gamesCount: state.gamesCount,
+    wishlistCount: state.wishlistCount,
   });
 });
 

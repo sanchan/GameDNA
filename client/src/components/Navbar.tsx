@@ -10,7 +10,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const { user, loading, login, logout, syncStatus } = useAuth();
+  const { user, loading, login, logout, syncStatus, syncProgress } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -92,10 +92,24 @@ export default function Navbar() {
           ))}
         </div>
       )}
-      {/* Sync status banner */}
-      {user && syncStatus === 'syncing' && (
-        <div className="bg-[var(--primary)] text-[var(--primary-foreground)] text-center py-1.5 text-sm">
-          <span className="inline-block animate-pulse">Syncing your Steam library...</span>
+      {/* Sync progress banner */}
+      {user && syncStatus === 'syncing' && syncProgress && (
+        <div className="bg-[var(--card)] border-b border-[var(--border)] px-4 py-2">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-[var(--foreground)]">{syncProgress.detail}</span>
+              <span className="text-xs text-[var(--muted-foreground)]">{syncProgress.progress}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-[var(--muted)] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[var(--primary)] rounded-full"
+                style={{
+                  width: `${syncProgress.progress}%`,
+                  transition: 'width 0.5s ease-out',
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
     </nav>

@@ -68,7 +68,10 @@ export async function cacheGame(appid: number): Promise<Game | null> {
   return db.select().from(games).where(eq(games.id, appid)).get() ?? null;
 }
 
-export async function ensureGamesCached(appids: number[]): Promise<void> {
+export async function ensureGamesCached(
+  appids: number[],
+  onProgress?: (cached: number, total: number) => void,
+): Promise<void> {
   if (appids.length === 0) return;
 
   const now = Math.floor(Date.now() / 1000);
@@ -93,15 +96,19 @@ export async function ensureGamesCached(appids: number[]): Promise<void> {
   const needsCaching = appids.filter((id) => !freshIds.has(id));
   if (needsCaching.length === 0) return;
 
-  // Fetch in batches of 5 with small delays between batches
-  const batchSize = 5;
+  // Fetch in batches of 3 with delays between batches to avoid rate limits
+  const batchSize = 3;
   for (let i = 0; i < needsCaching.length; i += batchSize) {
     const batch = needsCaching.slice(i, i + batchSize);
     await Promise.allSettled(batch.map((appid) => cacheGame(appid)));
 
-    // Small delay between batches to be respectful of rate limits
+    if (onProgress) {
+      onProgress(Math.min(i + batchSize, needsCaching.length), needsCaching.length);
+    }
+
+    // Delay between batches to be respectful of Steam's rate limits
     if (i + batchSize < needsCaching.length) {
-      await new Promise((r) => setTimeout(r, 200));
+      await new Promise((r) => setTimeout(r, 1000));
     }
   }
 }

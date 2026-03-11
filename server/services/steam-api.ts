@@ -32,7 +32,9 @@ class RateLimiter {
   }
 }
 
-const limiter = new RateLimiter();
+// Separate rate limiters for different Steam API endpoints
+const webApiLimiter = new RateLimiter(200, 300000); // Steam Web API: 200 req/5min
+const storeApiLimiter = new RateLimiter(30, 30000); // Steam Store API: 30 req/30s (conservative to avoid blocks)
 
 export interface OwnedGame {
   appid: number;
@@ -71,7 +73,7 @@ export async function getOwnedGames(steamId: string): Promise<OwnedGame[]> {
     return [];
   }
   try {
-    await limiter.acquire();
+    await webApiLimiter.acquire();
     const url = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${steamId}&format=json&include_appinfo=1&include_played_free_games=1`;
     const res = await fetch(url);
     if (!res.ok) {
@@ -96,7 +98,7 @@ export async function getWishlist(steamId: string): Promise<number[]> {
 
   try {
     while (true) {
-      await limiter.acquire();
+      await storeApiLimiter.acquire();
       const url = `https://store.steampowered.com/wishlist/profiles/${steamId}/wishlistdata/?p=${page}`;
       const res = await fetch(url);
 
@@ -127,7 +129,7 @@ export async function getAppDetails(
   appid: number,
 ): Promise<GameDetails | null> {
   try {
-    await limiter.acquire();
+    await storeApiLimiter.acquire();
     const url = `https://store.steampowered.com/api/appdetails?appids=${appid}`;
     const res = await fetch(url);
     if (!res.ok) return null;
@@ -267,7 +269,7 @@ export async function getPopularGameIds(): Promise<number[]> {
 
   try {
     // Try to fetch Steam's featured games for additional variety
-    await limiter.acquire();
+    await storeApiLimiter.acquire();
     const res = await fetch('https://store.steampowered.com/api/featured');
     if (res.ok) {
       const data = (await res.json()) as {
@@ -295,7 +297,7 @@ export async function getPlayerSummary(
   steamId: string,
 ): Promise<PlayerSummary | null> {
   try {
-    await limiter.acquire();
+    await webApiLimiter.acquire();
     const url = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${steamId}`;
     const res = await fetch(url);
     if (!res.ok) return null;
