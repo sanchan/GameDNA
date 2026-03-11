@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
+<!DOCTYPE html><html><head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,8 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
     <style>::-webkit-scrollbar { display: none;}</style>
     <script>
         tailwind.config = {
@@ -71,405 +69,467 @@
 
 <main id="profile-main">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        <div id="profile-header" class="bg-dark-card border border-dark-border rounded-2xl p-6 lg:p-8 mb-8">
-            <div class="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="Alex Chen" class="w-24 h-24 lg:w-32 lg:h-32 rounded-full border-4 border-brand-orange">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Content Area (Left 2/3) -->
+            <div class="lg:col-span-2 space-y-8">
+                <div id="profile-header" class="bg-dark-card border border-dark-border rounded-2xl p-6 lg:p-8">
+                    <div class="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="Alex Chen" class="w-24 h-24 lg:w-32 lg:h-32 rounded-full border-4 border-brand-orange">
+                        <div class="flex-1">
+                            <div class="flex flex-col lg:flex-row lg:items-center gap-3 mb-3">
+                                <h1 class="text-3xl lg:text-4xl font-black">Alex Chen</h1>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-10 h-10 bg-brand-orange/20 rounded-lg flex items-center justify-center">
+                                        <i class="fa-brands fa-steam text-brand-orange text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-400">Steam ID</p>
+                                        <p class="text-sm font-bold">alexchen_gaming</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-gray-400 mb-4 max-w-2xl">Passionate gamer exploring indie gems and AAA titles. Love roguelikes, action RPGs, and story-driven adventures. Always looking for the next gaming obsession.</p>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 rounded-lg text-sm font-bold transition-all">
+                                    <i class="fa-solid fa-pencil"></i>
+                                    <span>Edit Profile</span>
+                                </button>
+                                <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fa-solid fa-share-nodes"></i>
+                                    <span>Share Profile</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="stats-row" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-gamepad text-blue-500 text-xl"></i>
+                            </div>
+                            <span class="text-4xl font-black">247</span>
+                        </div>
+                        <h3 class="text-sm text-gray-400 mb-1">Games Owned</h3>
+                        <p class="text-xs text-gray-500">In Steam library</p>
+                    </div>
+
+                    <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-clock text-purple-500 text-xl"></i>
+                            </div>
+                            <span class="text-4xl font-black">1,847</span>
+                        </div>
+                        <h3 class="text-sm text-gray-400 mb-1">Hours Played</h3>
+                        <p class="text-xs text-gray-500">Total playtime</p>
+                    </div>
+
+                    <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-hand-pointer text-green-500 text-xl"></i>
+                            </div>
+                            <span class="text-4xl font-black">432</span>
+                        </div>
+                        <h3 class="text-sm text-gray-400 mb-1">Total Swipes</h3>
+                        <p class="text-xs text-gray-500">Discovery activity</p>
+                    </div>
+                </div>
+
+                <div id="radar-chart-section" class="bg-dark-card border border-dark-border rounded-2xl p-6 lg:p-8">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold mb-2">Gaming Preference Profile</h2>
+                            <p class="text-gray-400 text-sm">Your unique gaming DNA based on swipe history and play patterns</p>
+                        </div>
+                        <button class="flex items-center space-x-2 px-4 py-3 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all mt-4 lg:mt-0">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>Refresh Profile</span>
+                        </button>
+                    </div>
+                    <div id="radar-chart" style="height: 500px"></div>
+                </div>
+
+                <div id="tag-management" class="bg-dark-card border border-dark-border rounded-2xl p-6 lg:p-8">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold mb-2">Tag Preferences</h2>
+            <p class="text-gray-400 text-sm">Toggle tags to customize your game recommendations</p>
+        </div>
+        <div class="mt-4 lg:mt-0">
+            <div class="relative">
+                <select id="tag-filter" class="bg-dark-bg border border-dark-border rounded-lg px-4 py-2 text-sm font-medium text-white appearance-none cursor-pointer pr-10 focus:outline-none focus:border-brand-orange">
+                    <option value="all">All Tags</option>
+                    <option value="selected">Selected Only</option>
+                    <option value="unselected">Unselected Only</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                    <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-3" id="tag-list">
+        <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="true">
+            <div class="flex items-center space-x-4 flex-1">
+                <div class="w-10 h-10 bg-brand-orange/20 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-fire text-brand-orange"></i>
+                </div>
                 <div class="flex-1">
-                    <div class="flex flex-col lg:flex-row lg:items-center gap-3 mb-3">
-                        <h1 class="text-3xl lg:text-4xl font-black">Alex Chen</h1>
-                        <div class="flex items-center space-x-2">
-                            <div class="w-10 h-10 bg-brand-orange/20 rounded-lg flex items-center justify-center">
-                                <i class="fa-brands fa-steam text-brand-orange text-xl"></i>
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold">Roguelike</h3>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-sm text-gray-400">Score: <span class="text-brand-orange font-bold">9.8</span></div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked="" class="sr-only peer tag-toggle">
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="true">
+            <div class="flex items-center space-x-4 flex-1">
+                <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-sword text-purple-500"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold">Action RPG</h3>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-sm text-gray-400">Score: <span class="text-purple-500 font-bold">9.5</span></div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked="" class="sr-only peer tag-toggle">
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="true">
+            <div class="flex items-center space-x-4 flex-1">
+                <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-book text-blue-500"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold">Story-Rich</h3>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-sm text-gray-400">Score: <span class="text-blue-500 font-bold">9.2</span></div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked="" class="sr-only peer tag-toggle">
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="true">
+            <div class="flex items-center space-x-4 flex-1">
+                <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-seedling text-green-500"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold">Indie</h3>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-sm text-gray-400">Score: <span class="text-green-500 font-bold">8.9</span></div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked="" class="sr-only peer tag-toggle">
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="true">
+            <div class="flex items-center space-x-4 flex-1">
+                <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-puzzle-piece text-yellow-500"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold">Puzzle</h3>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-sm text-gray-400">Score: <span class="text-yellow-500 font-bold">8.6</span></div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked="" class="sr-only peer tag-toggle">
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="false">
+            <div class="flex items-center space-x-4 flex-1">
+                <div class="w-10 h-10 bg-gray-500/20 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-cloud text-gray-500"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold">Atmospheric</h3>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-sm text-gray-400">Score: <span class="text-gray-400 font-bold">7.7</span></div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer tag-toggle">
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6" id="additional-tags" style="display: none;">
+        <div class="space-y-3">
+            <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="false">
+                <div class="flex items-center space-x-4 flex-1">
+                    <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-person-running text-red-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold">Platformer</h3>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-400">Score: <span class="text-red-500 font-bold">8.4</span></div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer tag-toggle">
+                                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="false">
+                <div class="flex items-center space-x-4 flex-1">
+                    <div class="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-chess text-indigo-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold">Strategy</h3>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-400">Score: <span class="text-indigo-500 font-bold">8.1</span></div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer tag-toggle">
+                                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="false">
+                <div class="flex items-center space-x-4 flex-1">
+                    <div class="w-10 h-10 bg-teal-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-compass text-teal-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold">Exploration</h3>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-400">Score: <span class="text-teal-500 font-bold">7.9</span></div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer tag-toggle">
+                                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="false">
+                <div class="flex items-center space-x-4 flex-1">
+                    <div class="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-gun text-orange-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold">Shooter</h3>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-400">Score: <span class="text-orange-500 font-bold">7.5</span></div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer tag-toggle">
+                                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="false">
+                <div class="flex items-center space-x-4 flex-1">
+                    <div class="w-10 h-10 bg-pink-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-car text-pink-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold">Racing</h3>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-400">Score: <span class="text-pink-500 font-bold">6.8</span></div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer tag-toggle">
+                                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between hover:bg-dark-bg/70 transition-all tag-item" data-selected="false">
+                <div class="flex items-center space-x-4 flex-1">
+                    <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-ghost text-cyan-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold">Horror</h3>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-400">Score: <span class="text-cyan-500 font-bold">6.2</span></div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer tag-toggle">
+                                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6 pt-6 border-t border-dark-border">
+        <button id="show-all-tags" class="w-full bg-dark-bg border border-dark-border hover:border-brand-orange rounded-xl p-4 flex items-center justify-center space-x-3 transition-all group">
+            <i class="fa-solid fa-chevron-down text-brand-orange group-hover:text-white transition-colors" id="show-all-icon"></i>
+            <span class="font-bold text-sm" id="show-all-text">Show All Tags</span>
+        </button>
+    </div>
+</div>
+
+                <div id="ai-summary" class="bg-gradient-to-br from-brand-orange/10 to-purple-500/10 border border-brand-orange/30 rounded-2xl p-6 lg:p-8">
+                    <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-14 h-14 bg-brand-orange/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-brain text-brand-orange text-2xl"></i>
                             </div>
                             <div>
-                                <p class="text-sm text-gray-400">Steam ID</p>
-                                <p class="text-sm font-bold">alexchen_gaming</p>
+                                <h2 class="text-2xl font-bold mb-2">AI Gaming Profile Summary</h2>
+                                <p class="text-gray-400 text-sm">Generated insights based on your gaming DNA and activity patterns</p>
                             </div>
                         </div>
-                    </div>
-                    <p class="text-gray-400 mb-4 max-w-2xl">Passionate gamer exploring indie gems and AAA titles. Love roguelikes, action RPGs, and story-driven adventures. Always looking for the next gaming obsession.</p>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <button class="flex items-center space-x-2 px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 rounded-lg text-sm font-bold transition-all">
-                            <i class="fa-solid fa-pencil"></i>
-                            <span>Edit Profile</span>
-                        </button>
-                        <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
-                            <i class="fa-solid fa-share-nodes"></i>
-                            <span>Share Profile</span>
+                        <button class="flex items-center space-x-2 px-4 py-3 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>Regenerate</span>
                         </button>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="stats-row" class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fa-solid fa-gamepad text-blue-500 text-xl"></i>
-                    </div>
-                    <span class="text-4xl font-black">247</span>
-                </div>
-                <h3 class="text-sm text-gray-400 mb-1">Games Owned</h3>
-                <p class="text-xs text-gray-500">In Steam library</p>
-            </div>
-
-            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fa-solid fa-clock text-purple-500 text-xl"></i>
-                    </div>
-                    <span class="text-4xl font-black">1,847</span>
-                </div>
-                <h3 class="text-sm text-gray-400 mb-1">Hours Played</h3>
-                <p class="text-xs text-gray-500">Total playtime</p>
-            </div>
-
-            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <i class="fa-solid fa-hand-pointer text-green-500 text-xl"></i>
-                    </div>
-                    <span class="text-4xl font-black">432</span>
-                </div>
-                <h3 class="text-sm text-gray-400 mb-1">Total Swipes</h3>
-                <p class="text-xs text-gray-500">Discovery activity</p>
-            </div>
-        </div>
-
-        <div id="radar-chart-section" class="bg-dark-card border border-dark-border rounded-2xl p-6 lg:p-8 mb-8">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2">Gaming Preference Profile</h2>
-                    <p class="text-gray-400 text-sm">Your unique gaming DNA based on swipe history and play patterns</p>
-                </div>
-                <button class="flex items-center space-x-2 px-4 py-3 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all mt-4 lg:mt-0">
-                    <i class="fa-solid fa-rotate"></i>
-                    <span>Refresh Profile</span>
-                </button>
-            </div>
-            <div id="radar-chart" style="height: 500px"></div>
-        </div>
-
-        <div id="tag-management" class="bg-dark-card border border-dark-border rounded-2xl p-6 lg:p-8 mb-8">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold mb-2">Tag Preferences</h2>
-                    <p class="text-gray-400 text-sm">Manage which game tags influence your recommendations</p>
-                </div>
-                <button id="toggle-all-tags" class="flex items-center space-x-2 px-4 py-3 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all mt-4 lg:mt-0">
-                    <i class="fa-solid fa-chevron-down"></i>
-                    <span>Show All Tags</span>
-                </button>
-            </div>
-
-            <div id="top-tags" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-brand-orange/20 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-fire text-brand-orange"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">Roguelike</h3>
-                            <p class="text-xs text-gray-400">Score: 9.8</p>
-                        </div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                    </label>
-                </div>
-
-                <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-sword text-purple-500"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">Action RPG</h3>
-                            <p class="text-xs text-gray-400">Score: 9.5</p>
-                        </div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                    </label>
-                </div>
-
-                <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-book text-blue-500"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">Story-Rich</h3>
-                            <p class="text-xs text-gray-400">Score: 9.2</p>
-                        </div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                    </label>
-                </div>
-
-                <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-seedling text-green-500"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">Indie</h3>
-                            <p class="text-xs text-gray-400">Score: 8.9</p>
-                        </div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                    </label>
-                </div>
-
-                <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-puzzle-piece text-yellow-500"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">Puzzle</h3>
-                            <p class="text-xs text-gray-400">Score: 8.6</p>
-                        </div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                    </label>
-                </div>
-
-                <div class="bg-dark-bg rounded-lg p-4 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-person-running text-red-500"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">Platformer</h3>
-                            <p class="text-xs text-gray-400">Score: 8.4</p>
-                        </div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                    </label>
-                </div>
-            </div>
-
-            <div id="all-tags-section" class="hidden">
-                <div class="border-t border-dark-border pt-6">
-                    <h3 class="text-lg font-bold mb-4">All Tags</h3>
-                    <div class="bg-dark-bg rounded-lg overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="bg-dark-card">
-                                    <tr>
-                                        <th class="px-6 py-4 text-left text-sm font-bold">Tag Name</th>
-                                        <th class="px-6 py-4 text-left text-sm font-bold">Score</th>
-                                        <th class="px-6 py-4 text-left text-sm font-bold">Games</th>
-                                        <th class="px-6 py-4 text-right text-sm font-bold">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-dark-border">
-                                    <tr class="hover:bg-dark-card/50 transition-colors">
-                                        <td class="px-6 py-4 text-sm font-medium">Strategy</td>
-                                        <td class="px-6 py-4 text-sm">8.1</td>
-                                        <td class="px-6 py-4 text-sm text-gray-400">34</td>
-                                        <td class="px-6 py-4 text-right">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" checked class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-dark-card/50 transition-colors">
-                                        <td class="px-6 py-4 text-sm font-medium">Exploration</td>
-                                        <td class="px-6 py-4 text-sm">7.9</td>
-                                        <td class="px-6 py-4 text-sm text-gray-400">28</td>
-                                        <td class="px-6 py-4 text-right">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" checked class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-dark-card/50 transition-colors">
-                                        <td class="px-6 py-4 text-sm font-medium">Atmospheric</td>
-                                        <td class="px-6 py-4 text-sm">7.7</td>
-                                        <td class="px-6 py-4 text-sm text-gray-400">22</td>
-                                        <td class="px-6 py-4 text-right">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-dark-card/50 transition-colors">
-                                        <td class="px-6 py-4 text-sm font-medium">Survival</td>
-                                        <td class="px-6 py-4 text-sm">7.5</td>
-                                        <td class="px-6 py-4 text-sm text-gray-400">19</td>
-                                        <td class="px-6 py-4 text-right">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" checked class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-dark-card/50 transition-colors">
-                                        <td class="px-6 py-4 text-sm font-medium">Horror</td>
-                                        <td class="px-6 py-4 text-sm">7.2</td>
-                                        <td class="px-6 py-4 text-sm text-gray-400">15</td>
-                                        <td class="px-6 py-4 text-right">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-dark-card/50 transition-colors">
-                                        <td class="px-6 py-4 text-sm font-medium">Simulation</td>
-                                        <td class="px-6 py-4 text-sm">6.8</td>
-                                        <td class="px-6 py-4 text-sm text-gray-400">12</td>
-                                        <td class="px-6 py-4 text-right">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-dark-card/50 transition-colors">
-                                        <td class="px-6 py-4 text-sm font-medium">Multiplayer</td>
-                                        <td class="px-6 py-4 text-sm">6.4</td>
-                                        <td class="px-6 py-4 text-sm text-gray-400">18</td>
-                                        <td class="px-6 py-4 text-right">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-dark-card/50 transition-colors">
-                                        <td class="px-6 py-4 text-sm font-medium">Racing</td>
-                                        <td class="px-6 py-4 text-sm">5.9</td>
-                                        <td class="px-6 py-4 text-sm text-gray-400">8</td>
-                                        <td class="px-6 py-4 text-right">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-dark-card/50 transition-colors">
-                                        <td class="px-6 py-4 text-sm font-medium">Sports</td>
-                                        <td class="px-6 py-4 text-sm">5.3</td>
-                                        <td class="px-6 py-4 text-sm text-gray-400">5</td>
-                                        <td class="px-6 py-4 text-right">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="bg-dark-card/50 rounded-xl p-6">
+                        <p class="text-gray-300 leading-relaxed mb-4">
+                            Your gaming profile reveals a strong preference for <span class="text-brand-orange font-bold">challenging, skill-based gameplay</span> with deep mechanical systems. You gravitate towards roguelikes and action RPGs that reward mastery and offer high replayability. Your swipe patterns indicate a love for <span class="text-brand-orange font-bold">indie titles</span> with unique art styles and innovative mechanics.
+                        </p>
+                        <p class="text-gray-300 leading-relaxed mb-4">
+                            Story-rich experiences rank highly in your preferences, particularly those with branching narratives and meaningful choices. You tend to avoid multiplayer-focused games and sports simulations, preferring solo experiences where you can immerse yourself at your own pace.
+                        </p>
+                        <p class="text-gray-300 leading-relaxed">
+                            Based on your playtime distribution, you dedicate <span class="text-brand-orange font-bold">~15 hours per week</span> to gaming, with peak activity during evenings and weekends. Your completion rate of 68% is above average, suggesting you prefer finishing games rather than jumping between titles.
+                        </p>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="ai-summary" class="bg-gradient-to-br from-brand-orange/10 to-purple-500/10 border border-brand-orange/30 rounded-2xl p-6 lg:p-8 mb-8">
-            <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-6">
-                <div class="flex items-start space-x-4">
-                    <div class="w-14 h-14 bg-brand-orange/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-brain text-brand-orange text-2xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-bold mb-2">AI Gaming Profile Summary</h2>
-                        <p class="text-gray-400 text-sm">Generated insights based on your gaming DNA and activity patterns</p>
+            <!-- Sidebar (Right 1/3) -->
+            <div class="lg:col-span-1 space-y-6">
+                <div id="utility-actions" class="bg-dark-card border border-dark-border rounded-2xl p-6 sticky top-24">
+                    <h3 class="text-lg font-bold mb-6">Quick Actions</h3>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full bg-dark-bg border border-dark-border hover:border-brand-orange rounded-xl p-4 flex items-center space-x-3 transition-all group">
+                            <div class="w-12 h-12 bg-blue-500/20 group-hover:bg-blue-500/30 rounded-lg flex items-center justify-center flex-shrink-0 transition-all">
+                                <i class="fa-solid fa-sync text-blue-500 text-xl"></i>
+                            </div>
+                            <div class="text-left flex-1">
+                                <h4 class="font-bold text-sm mb-0.5">Sync Library</h4>
+                                <p class="text-xs text-gray-400">Update from Steam</p>
+                            </div>
+                        </button>
+
+                        <button class="w-full bg-dark-bg border border-dark-border hover:border-brand-orange rounded-xl p-4 flex items-center space-x-3 transition-all group">
+                            <div class="w-12 h-12 bg-green-500/20 group-hover:bg-green-500/30 rounded-lg flex items-center justify-center flex-shrink-0 transition-all">
+                                <i class="fa-solid fa-download text-green-500 text-xl"></i>
+                            </div>
+                            <div class="text-left flex-1">
+                                <h4 class="font-bold text-sm mb-0.5">Export Data</h4>
+                                <p class="text-xs text-gray-400">Download as JSON</p>
+                            </div>
+                        </button>
+
+                        <button class="w-full bg-dark-bg border border-dark-border hover:border-brand-orange rounded-xl p-4 flex items-center space-x-3 transition-all group">
+                            <div class="w-12 h-12 bg-purple-500/20 group-hover:bg-purple-500/30 rounded-lg flex items-center justify-center flex-shrink-0 transition-all">
+                                <i class="fa-solid fa-upload text-purple-500 text-xl"></i>
+                            </div>
+                            <div class="text-left flex-1">
+                                <h4 class="font-bold text-sm mb-0.5">Import Data</h4>
+                                <p class="text-xs text-gray-400">Restore preferences</p>
+                            </div>
+                        </button>
                     </div>
                 </div>
-                <button class="flex items-center space-x-2 px-4 py-3 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
-                    <i class="fa-solid fa-rotate"></i>
-                    <span>Regenerate</span>
-                </button>
+
+                <div id="quick-links" class="bg-dark-card border border-dark-border rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-6">Quick Links</h3>
+                    
+                    <div class="space-y-3">
+                        <a href="#" class="block bg-dark-bg border border-dark-border hover:border-brand-orange rounded-xl p-4 transition-all group">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-brand-orange/20 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-clock-rotate-left text-brand-orange"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-sm mb-0.5">View History</h4>
+                                        <p class="text-xs text-gray-400">432 total swipes</p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-arrow-right text-gray-500 group-hover:text-brand-orange transition-colors"></i>
+                            </div>
+                        </a>
+
+                        <a href="#" class="block bg-dark-bg border border-dark-border hover:border-brand-orange rounded-xl p-4 transition-all group">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-brand-orange/20 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-list-check text-brand-orange"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-sm mb-0.5">Manage Backlog</h4>
+                                        <p class="text-xs text-gray-400">47 unplayed games</p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-arrow-right text-gray-500 group-hover:text-brand-orange transition-colors"></i>
+                            </div>
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="bg-dark-card/50 rounded-xl p-6">
-                <p class="text-gray-300 leading-relaxed mb-4">
-                    Your gaming profile reveals a strong preference for <span class="text-brand-orange font-bold">challenging, skill-based gameplay</span> with deep mechanical systems. You gravitate towards roguelikes and action RPGs that reward mastery and offer high replayability. Your swipe patterns indicate a love for <span class="text-brand-orange font-bold">indie titles</span> with unique art styles and innovative mechanics.
-                </p>
-                <p class="text-gray-300 leading-relaxed mb-4">
-                    Story-rich experiences rank highly in your preferences, particularly those with branching narratives and meaningful choices. You tend to avoid multiplayer-focused games and sports simulations, preferring solo experiences where you can immerse yourself at your own pace.
-                </p>
-                <p class="text-gray-300 leading-relaxed">
-                    Based on your playtime distribution, you dedicate <span class="text-brand-orange font-bold">~15 hours per week</span> to gaming, with peak activity during evenings and weekends. Your completion rate of 68% is above average, suggesting you prefer finishing games rather than jumping between titles.
-                </p>
-            </div>
-        </div>
-
-        <div id="utility-actions" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <button class="bg-dark-card border border-dark-border hover:border-brand-orange rounded-xl p-6 flex items-center space-x-4 transition-all group">
-                <div class="w-14 h-14 bg-blue-500/20 group-hover:bg-blue-500/30 rounded-xl flex items-center justify-center flex-shrink-0 transition-all">
-                    <i class="fa-solid fa-sync text-blue-500 text-2xl"></i>
-                </div>
-                <div class="text-left">
-                    <h3 class="font-bold text-lg mb-1">Sync Library</h3>
-                    <p class="text-sm text-gray-400">Update from Steam</p>
-                </div>
-            </button>
-
-            <button class="bg-dark-card border border-dark-border hover:border-brand-orange rounded-xl p-6 flex items-center space-x-4 transition-all group">
-                <div class="w-14 h-14 bg-green-500/20 group-hover:bg-green-500/30 rounded-xl flex items-center justify-center flex-shrink-0 transition-all">
-                    <i class="fa-solid fa-download text-green-500 text-2xl"></i>
-                </div>
-                <div class="text-left">
-                    <h3 class="font-bold text-lg mb-1">Export Data</h3>
-                    <p class="text-sm text-gray-400">Download as JSON</p>
-                </div>
-            </button>
-
-            <button class="bg-dark-card border border-dark-border hover:border-brand-orange rounded-xl p-6 flex items-center space-x-4 transition-all group">
-                <div class="w-14 h-14 bg-purple-500/20 group-hover:bg-purple-500/30 rounded-xl flex items-center justify-center flex-shrink-0 transition-all">
-                    <i class="fa-solid fa-upload text-purple-500 text-2xl"></i>
-                </div>
-                <div class="text-left">
-                    <h3 class="font-bold text-lg mb-1">Import Data</h3>
-                    <p class="text-sm text-gray-400">Restore preferences</p>
-                </div>
-            </button>
-        </div>
-
-        <div id="quick-links" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <a href="#" class="bg-dark-card border-2 border-dark-border hover:border-brand-orange rounded-xl p-6 flex items-center justify-between transition-all group">
-                <div class="flex items-center space-x-4">
-                    <div class="w-14 h-14 bg-brand-orange/20 rounded-xl flex items-center justify-center">
-                        <i class="fa-solid fa-clock-rotate-left text-brand-orange text-2xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-xl mb-1">View History</h3>
-                        <p class="text-sm text-gray-400">432 total swipes</p>
-                    </div>
-                </div>
-                <i class="fa-solid fa-arrow-right text-gray-500 group-hover:text-brand-orange transition-colors"></i>
-            </a>
-
-            <a href="#" class="bg-dark-card border-2 border-dark-border hover:border-brand-orange rounded-xl p-6 flex items-center justify-between transition-all group">
-                <div class="flex items-center space-x-4">
-                    <div class="w-14 h-14 bg-brand-orange/20 rounded-xl flex items-center justify-center">
-                        <i class="fa-solid fa-list-check text-brand-orange text-2xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-xl mb-1">Manage Backlog</h3>
-                        <p class="text-sm text-gray-400">47 unplayed games</p>
-                    </div>
-                </div>
-                <i class="fa-solid fa-arrow-right text-gray-500 group-hover:text-brand-orange transition-colors"></i>
-            </a>
         </div>
     </div>
 </main>
@@ -640,5 +700,5 @@ window.addEventListener('load', function() {
 });
 </script>
 
-</body>
-</html>
+
+</body></html>

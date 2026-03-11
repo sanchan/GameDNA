@@ -4,12 +4,22 @@ import type { User } from '../../../shared/types';
 
 type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error';
 
+export type SyncCategory = 'library' | 'wishlist' | 'backlog' | 'tags';
+export type CategoryStatus = 'idle' | 'syncing' | 'complete' | 'error';
+
+export interface CategorySyncState {
+  status: CategoryStatus;
+  progress: number;
+  detail: string;
+}
+
 export interface SyncProgress {
   step: string;
   progress: number;
   detail: string;
   gamesCount: number;
   wishlistCount: number;
+  categories: Record<SyncCategory, CategorySyncState>;
 }
 
 interface AuthContextType {
@@ -19,15 +29,21 @@ interface AuthContextType {
   syncProgress: SyncProgress | null;
   login: () => void;
   logout: () => Promise<void>;
-  triggerSync: () => Promise<void>;
+  triggerSync: (categories?: SyncCategory[]) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const defaultCategories: Record<SyncCategory, CategorySyncState> = {
+  library: { status: 'idle', progress: 0, detail: '' },
+  wishlist: { status: 'idle', progress: 0, detail: '' },
+  backlog: { status: 'idle', progress: 0, detail: '' },
+  tags: { status: 'idle', progress: 0, detail: '' },
+};
+
 interface SyncResponse {
   status: 'started' | 'in_progress' | 'already_synced';
-  gamesCount?: number;
-  wishlistCount?: number;
+  categories?: string[];
 }
 
 interface SyncStatusResponse {
@@ -36,6 +52,7 @@ interface SyncStatusResponse {
   detail: string;
   gamesCount: number;
   wishlistCount: number;
+  categories: Record<SyncCategory, CategorySyncState>;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -64,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           detail: status.detail,
           gamesCount: status.gamesCount,
           wishlistCount: status.wishlistCount,
+          categories: status.categories ?? defaultCategories,
         });
 
         if (status.step === 'complete') {
@@ -85,11 +103,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, 2000);
   }, [stopPolling]);
 
-  const doSync = useCallback(async () => {
+  const doSync = useCallback(async (categories?: SyncCategory[]) => {
     setSyncStatus('syncing');
-    setSyncProgress({ step: 'starting', progress: 0, detail: 'Starting sync...', gamesCount: 0, wishlistCount: 0 });
+    setSyncProgress({
+      step: 'starting',
+      progress: 0,
+      detail: 'Starting sync...',
+      gamesCount: 0,
+      wishlistCount: 0,
+      categories: {
+        ...defaultCategories,
+        ...(categories
+          ? Object.fromEntries(categories.map((c) => [c, { status: 'syncing' as const, progress: 0, detail: 'Starting...' }]))
+          : Object.fromEntries(Object.keys(defaultCategories).map((c) => [c, { status: 'syncing' as const, progress: 0, detail: 'Starting...' }]))
+        ),
+      },
+    });
     try {
-      const result = await api.post<SyncResponse>('/user/sync');
+      const body = categories ? { categories } : undefined;
+      const result = await api.post<SyncResponse>('/user/sync', body);
 
       if (result.status === 'started' || result.status === 'in_progress') {
         startPolling();
@@ -99,10 +131,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [startPolling]);
 
-  const triggerSync = useCallback(async () => {
-    if (syncStatus === 'syncing') return;
-    await doSync();
-  }, [syncStatus, doSync]);
+  const triggerSync = useCallback(async (categories?: SyncCategory[]) => {
+    if (syncStatus === 'syncing') {
+      // Allow syncing individual categories even when others are syncing
+      // But check if the specific requested categories are already syncing
+      if (syncProgress?.categories && categories) {
+        const allRequested = categories.every((c) => syncProgress.categories[c].status === 'syncing');
+        if (allRequested) return;
+      } else {
+        return;
+      }
+    }
+    await doSync(categories);
+  }, [syncStatus, syncProgress, doSync]);
 
   useEffect(() => {
     api.get<User>('/auth/me')
@@ -112,12 +153,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (syncTriggered.current) return;
         syncTriggered.current = true;
 
-        // Check server-side sync status before deciding to auto-sync
         try {
           const status = await api.get<SyncStatusResponse>('/user/sync-status');
 
           if (status.step === 'complete') {
-            // Already synced previously — don't re-sync automatically
             setSyncStatus('synced');
             setSyncProgress({
               step: status.step,
@@ -125,17 +164,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               detail: status.detail,
               gamesCount: status.gamesCount,
               wishlistCount: status.wishlistCount,
+              categories: status.categories ?? defaultCategories,
             });
           } else if (status.step !== 'idle') {
-            // Sync is currently in progress (started from another tab/before refresh)
             setSyncStatus('syncing');
+            setSyncProgress({
+              step: status.step,
+              progress: status.progress,
+              detail: status.detail,
+              gamesCount: status.gamesCount,
+              wishlistCount: status.wishlistCount,
+              categories: status.categories ?? defaultCategories,
+            });
             startPolling();
           } else {
-            // Never synced — first login, auto-sync
             doSync();
           }
         } catch {
-          // Can't check status, try syncing
           doSync();
         }
       })
@@ -143,7 +188,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, [doSync, startPolling]);
 
-  // Cleanup polling on unmount
   useEffect(() => {
     return () => stopPolling();
   }, [stopPolling]);
