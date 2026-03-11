@@ -322,10 +322,30 @@ user.get('/gaming-dna', async (c) => {
     .slice(0, 8)
     .map(([name, score]) => ({ name, score }));
 
-  // All tags sorted by score (including ignored, with flag)
-  const allTags = Object.entries(tagScores)
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, score]) => ({ name, score, ignored: ignoredSet.has(name.toLowerCase()) }));
+  // Count games per tag for this user
+  const userGamesWithTags = db
+    .select({ tags: games.tags })
+    .from(user_games)
+    .innerJoin(games, eq(user_games.game_id, games.id))
+    .where(eq(user_games.user_id, userId))
+    .all();
+
+  const tagCounts: Record<string, number> = {};
+  for (const row of userGamesWithTags) {
+    if (!row.tags) continue;
+    try {
+      const gameTags: string[] = JSON.parse(row.tags);
+      for (const t of gameTags) {
+        tagCounts[t] = (tagCounts[t] || 0) + 1;
+      }
+    } catch {}
+  }
+
+  // All tags: merge tagScores and tagCounts so every tag from user's games appears
+  const allTagNames = new Set([...Object.keys(tagScores), ...Object.keys(tagCounts)]);
+  const allTags = Array.from(allTagNames)
+    .map((name) => ({ name, score: tagScores[name] ?? 0, ignored: ignoredSet.has(name.toLowerCase()), count: tagCounts[name] || 0 }))
+    .sort((a, b) => b.count - a.count || b.score - a.score);
 
   // Total games and playtime
   const gameStats = db
