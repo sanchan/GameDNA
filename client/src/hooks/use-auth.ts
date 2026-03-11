@@ -69,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (status.step === 'complete') {
           setSyncStatus('synced');
           stopPolling();
-          // Re-fetch user info (displayName/avatar may have been updated)
           try {
             const updatedUser = await api.get<User>('/auth/me');
             setUser(updatedUser);
@@ -92,25 +91,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await api.post<SyncResponse>('/user/sync');
 
-      if (result.status === 'already_synced') {
-        setSyncStatus('synced');
-        setSyncProgress({
-          step: 'complete',
-          progress: 100,
-          detail: 'Sync complete!',
-          gamesCount: result.gamesCount ?? 0,
-          wishlistCount: result.wishlistCount ?? 0,
-        });
-        // Re-fetch user info
-        try {
-          const updatedUser = await api.get<User>('/auth/me');
-          setUser(updatedUser);
-        } catch {
-          // non-fatal
-        }
-        return;
-      }
-
       if (result.status === 'started' || result.status === 'in_progress') {
         startPolling();
       }
@@ -126,17 +106,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     api.get<User>('/auth/me')
-      .then((u) => {
+      .then(async (u) => {
         setUser(u);
-        // Auto-sync on first successful auth
-        if (!syncTriggered.current) {
-          syncTriggered.current = true;
+
+        if (syncTriggered.current) return;
+        syncTriggered.current = true;
+
+        // Check server-side sync status before deciding to auto-sync
+        try {
+          const status = await api.get<SyncStatusResponse>('/user/sync-status');
+
+          if (status.step === 'complete') {
+            // Already synced previously — don't re-sync automatically
+            setSyncStatus('synced');
+            setSyncProgress({
+              step: status.step,
+              progress: status.progress,
+              detail: status.detail,
+              gamesCount: status.gamesCount,
+              wishlistCount: status.wishlistCount,
+            });
+          } else if (status.step !== 'idle') {
+            // Sync is currently in progress (started from another tab/before refresh)
+            setSyncStatus('syncing');
+            startPolling();
+          } else {
+            // Never synced — first login, auto-sync
+            doSync();
+          }
+        } catch {
+          // Can't check status, try syncing
           doSync();
         }
       })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
-  }, [doSync]);
+  }, [doSync, startPolling]);
 
   // Cleanup polling on unmount
   useEffect(() => {

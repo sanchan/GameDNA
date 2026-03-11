@@ -5,7 +5,7 @@ import { useProfile, useGamingDNA } from '../hooks/use-profile';
 import RadarChart from '../components/RadarChart';
 
 export default function Profile() {
-  const { user, loading: authLoading, syncStatus } = useAuth();
+  const { user, loading: authLoading, syncStatus, triggerSync } = useAuth();
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { data: dna, isLoading: dnaLoading, refetch: refetchDna } = useGamingDNA();
   const prevSyncStatus = useRef(syncStatus);
@@ -60,6 +60,17 @@ export default function Profile() {
           <h1 className="text-2xl font-bold text-[var(--foreground)]">
             {user.displayName ?? 'Gamer'}
           </h1>
+          <button
+            onClick={() => triggerSync()}
+            disabled={syncStatus === 'syncing'}
+            className="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-50 flex items-center gap-1.5"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 2v6h-6" /><path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+              <path d="M3 22v-6h6" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+            </svg>
+            {syncStatus === 'syncing' ? 'Syncing...' : 'Sync Steam Library'}
+          </button>
         </div>
 
         {/* Stats Row */}
