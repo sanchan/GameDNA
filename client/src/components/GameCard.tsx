@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import type { Game } from '../../../shared/types';
 import BookmarkButton from './BookmarkButton';
+import MediaGallery from './MediaGallery';
 import { api } from '../lib/api';
 
 function formatPrice(cents: number | null): string {
@@ -29,7 +31,7 @@ function reviewColor(score: number | null): string {
   return 'oklch(0.65 0.2 25)';
 }
 
-interface MediaItem {
+export interface MediaItem {
   type: 'image' | 'video';
   thumbnail: string;
   full: string;
@@ -42,8 +44,6 @@ interface MediaResponse {
     id: number;
     name: string;
     thumbnail: string;
-    webm480: string | null;
-    webmMax: string | null;
     mp4480: string | null;
     mp4Max: string | null;
   }>;
@@ -61,6 +61,7 @@ export default function GameCard({ game, className = '' }: GameCardProps) {
   const [mediaItems, setMediaItems] = useState<MediaItem[] | null>(null);
   const [mediaLoading, setMediaLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [galleryOpen, setGalleryOpen] = useState(false);
 
   const loadMedia = useCallback(async () => {
     if (mediaItems !== null || mediaLoading) return mediaItems;
@@ -69,13 +70,12 @@ export default function GameCard({ game, className = '' }: GameCardProps) {
       const data = await api.get<MediaResponse>(`/games/${game.id}/media`);
       const items: MediaItem[] = [];
 
-      // Videos first, then screenshots
       for (const m of data.movies) {
         items.push({
           type: 'video',
           thumbnail: m.thumbnail,
           full: m.thumbnail,
-          videoSrc: m.mp4480 || m.webm480 || m.mp4Max || m.webmMax || undefined,
+          videoSrc: m.mp4480 || m.mp4Max || undefined,
         });
       }
       for (const s of data.screenshots) {
@@ -100,7 +100,7 @@ export default function GameCard({ game, className = '' }: GameCardProps) {
     e.stopPropagation();
     const items = mediaItems ?? (await loadMedia());
     if (!items || items.length === 0) return;
-    const total = items.length + 1; // +1 for header
+    const total = items.length + 1;
     setCurrentIndex((prev) => (prev - 1 + total) % total);
   };
 
@@ -112,10 +112,20 @@ export default function GameCard({ game, className = '' }: GameCardProps) {
     setCurrentIndex((prev) => (prev + 1) % total);
   };
 
+  const handleFullscreen = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const items = mediaItems ?? (await loadMedia());
+    if (!items || items.length === 0) return;
+    setGalleryOpen(true);
+  };
+
   // Determine what to show
   const showHeader = currentIndex === 0;
   const currentMedia = !showHeader && mediaItems ? mediaItems[currentIndex - 1] : null;
   const totalSlides = mediaItems ? mediaItems.length + 1 : null;
+
+  // Gallery index maps: card index 0 = header (not in gallery), 1+ = mediaItems[i-1]
+  const galleryIndex = currentIndex > 0 ? currentIndex - 1 : 0;
 
   return (
     <div
@@ -156,7 +166,21 @@ export default function GameCard({ game, className = '' }: GameCardProps) {
           </div>
         )}
 
-        {/* Nav arrows — always visible on hover */}
+        {/* Fullscreen button — top right */}
+        <button
+          onClick={handleFullscreen}
+          className="absolute top-1.5 right-1.5 p-1.5 rounded-md bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+          title="Fullscreen gallery"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 3 21 3 21 9" />
+            <polyline points="9 21 3 21 3 15" />
+            <line x1="21" y1="3" x2="14" y2="10" />
+            <line x1="3" y1="21" x2="10" y2="14" />
+          </svg>
+        </button>
+
+        {/* Nav arrows */}
         <button
           onClick={handlePrev}
           className="absolute left-1 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
@@ -290,6 +314,16 @@ export default function GameCard({ game, className = '' }: GameCardProps) {
           </p>
         )}
       </div>
+
+      {/* Fullscreen gallery portal */}
+      {galleryOpen && mediaItems && mediaItems.length > 0 && createPortal(
+        <MediaGallery
+          items={mediaItems}
+          initialIndex={galleryIndex}
+          onClose={() => setGalleryOpen(false)}
+        />,
+        document.body,
+      )}
     </div>
   );
 }
