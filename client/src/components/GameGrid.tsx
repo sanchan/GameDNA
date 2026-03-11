@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { Recommendation } from '../../../shared/types';
 import GameCard from './GameCard';
 
@@ -9,6 +10,7 @@ interface GameGridProps {
 }
 
 export default function GameGrid({ games, onExplain, onDismiss, dismissedIds }: GameGridProps) {
+  const { t } = useTranslation();
   if (games.length === 0) return null;
 
   return (
@@ -23,7 +25,7 @@ export default function GameGrid({ games, onExplain, onDismiss, dismissedIds }: 
               className="bg-[#1a1a1a] border border-[#333] border-dashed rounded-2xl overflow-hidden flex flex-col items-center justify-center min-h-[360px] opacity-60"
             >
               <i className="fa-solid fa-ban text-3xl text-[var(--muted-foreground)] mb-3" />
-              <p className="text-[var(--muted-foreground)] font-medium">Juego descartado</p>
+              <p className="text-[var(--muted-foreground)] font-medium">{t('gameGrid.gameDismissed')}</p>
               <p className="text-xs text-[var(--muted-foreground)] mt-1">{rec.game.name}</p>
             </div>
           );
@@ -42,7 +44,7 @@ export default function GameGrid({ games, onExplain, onDismiss, dismissedIds }: 
                   onClick={() => onExplain(rec.id)}
                   className="text-[var(--primary)] hover:opacity-80 text-sm font-semibold flex items-center space-x-1.5"
                 >
-                  <span>Why this game?</span>
+                  <span>{t('gameGrid.whyThisGame')}</span>
                   <i className="fa-solid fa-arrow-right text-xs" />
                 </button>
               )}
@@ -50,10 +52,10 @@ export default function GameGrid({ games, onExplain, onDismiss, dismissedIds }: 
                 <button
                   onClick={() => onDismiss(rec.id)}
                   className="text-[var(--muted-foreground)] hover:text-red-400 text-sm flex items-center space-x-1.5 transition-colors"
-                  title="Descartar juego"
+                  title="Dismiss game"
                 >
                   <i className="fa-solid fa-xmark" />
-                  <span>Descartar</span>
+                  <span>{t('gameGrid.dismiss')}</span>
                 </button>
               )}
             </div>

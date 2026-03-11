@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface MediaItem {
   type: 'image' | 'video';
@@ -14,6 +15,7 @@ interface MediaGalleryProps {
 }
 
 export default function MediaGallery({ items, initialIndex, onClose }: MediaGalleryProps) {
+  const { t } = useTranslation();
   const [index, setIndex] = useState(initialIndex);
   const [playingVideo, setPlayingVideo] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -80,7 +82,7 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
       <button
         onClick={close}
         className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
-        title="Close (Esc)"
+        title={t('mediaGallery.closeEsc')}
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -90,7 +92,7 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
 
       {/* Counter */}
       <div className="absolute top-4 left-4 z-10 text-white/70 text-sm">
-        {index + 1} / {items.length}
+        {t('mediaGallery.counter', { current: index + 1, total: items.length })}
       </div>
 
       {/* Main content */}
@@ -134,7 +136,7 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
           <button
             onClick={(e) => { e.stopPropagation(); goPrev(); }}
             className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
-            title="Previous"
+            title={t('mediaGallery.previous')}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
@@ -143,7 +145,7 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
           <button
             onClick={(e) => { e.stopPropagation(); goNext(); }}
             className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
-            title="Next"
+            title={t('mediaGallery.next')}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />

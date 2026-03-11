@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Navigate, Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
 import { api } from '../lib/api';
 import type { Game } from '../../../shared/types';
@@ -39,9 +41,9 @@ function matchScoreColor(score: number | null): string {
 
 function matchBadge(score: number | null): { label: string; classes: string } | null {
   if (score === null) return null;
-  if (score >= 80) return { label: 'HIGH PRIORITY', classes: 'bg-green-500/20 text-green-500' };
-  if (score >= 60) return { label: 'GOOD MATCH', classes: 'bg-yellow-500/20 text-yellow-500' };
-  if (score >= 40) return { label: 'FAIR MATCH', classes: 'bg-blue-500/20 text-blue-500' };
+  if (score >= 80) return { label: i18n.t('backlog.highPriorityBadge'), classes: 'bg-green-500/20 text-green-500' };
+  if (score >= 60) return { label: i18n.t('backlog.goodMatch'), classes: 'bg-yellow-500/20 text-yellow-500' };
+  if (score >= 40) return { label: i18n.t('backlog.fairMatch'), classes: 'bg-blue-500/20 text-blue-500' };
   return null;
 }
 
@@ -50,6 +52,7 @@ type PlaytimeFilter = 'all' | 'under5' | '5to15' | '15to40' | '40plus';
 type ScoreFilter = 'all' | 'excellent' | 'great' | 'good' | 'fair';
 
 export default function Backlog() {
+  const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus } = useAuth();
   const [backlog, setBacklog] = useState<BacklogEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -159,10 +162,10 @@ export default function Backlog() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3 text-white">
-          AI Backlog Analysis
+          {t('backlog.title')}
         </h1>
         <p className="text-[var(--muted-foreground)] text-lg max-w-3xl">
-          Let AI analyze your unplayed games and get personalized insights on what to play next based on estimated playtime and predicted enjoyment.
+          {t('backlog.subtitle')}
         </p>
       </div>
 
@@ -175,16 +178,16 @@ export default function Backlog() {
                 <i className="fa-solid fa-brain text-[var(--primary)] text-xl" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">AI Analysis Ready</h2>
+                <h2 className="text-2xl font-bold text-white">{t('backlog.aiAnalysisReady')}</h2>
                 <p className="text-sm text-[var(--muted-foreground)]">
                   {lastAnalyzed
-                    ? `Last analyzed: ${lastAnalyzed.toLocaleDateString()} at ${lastAnalyzed.toLocaleTimeString()}`
-                    : `${backlog.length} games ready for analysis`}
+                    ? t('backlog.lastAnalyzed', { date: lastAnalyzed.toLocaleDateString(), time: lastAnalyzed.toLocaleTimeString() })
+                    : t('backlog.gamesReadyForAnalysis', { count: backlog.length })}
                 </p>
               </div>
             </div>
             <p className="text-sm text-[var(--muted-foreground)]">
-              Run a fresh analysis to get updated recommendations based on your latest gaming patterns and preferences.
+              {t('backlog.freshAnalysisPrompt')}
             </p>
           </div>
           <button
@@ -193,7 +196,7 @@ export default function Backlog() {
             className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)] rounded-xl text-lg font-bold px-6 py-4 shadow-lg shadow-[var(--primary)]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
           >
             <i className="fa-solid fa-wand-magic-sparkles" />
-            {analyzing ? 'Analyzing...' : 'Analyze with AI'}
+            {analyzing ? t('backlog.analyzing') : t('backlog.analyzeWithAI')}
           </button>
         </div>
       </div>
@@ -207,8 +210,8 @@ export default function Backlog() {
             </div>
             <span className="text-3xl font-black text-white">{unplayedCount}</span>
           </div>
-          <h3 className="text-sm text-[var(--muted-foreground)] mb-1">Unplayed Games</h3>
-          <p className="text-xs text-gray-500">In your library</p>
+          <h3 className="text-sm text-[var(--muted-foreground)] mb-1">{t('backlog.unplayedGames')}</h3>
+          <p className="text-xs text-gray-500">{t('backlog.inYourLibrary')}</p>
         </div>
         <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
@@ -217,8 +220,8 @@ export default function Backlog() {
             </div>
             <span className="text-3xl font-black text-white">{totalPlaytimeHours}h</span>
           </div>
-          <h3 className="text-sm text-[var(--muted-foreground)] mb-1">Total Playtime</h3>
-          <p className="text-xs text-gray-500">Estimated to complete</p>
+          <h3 className="text-sm text-[var(--muted-foreground)] mb-1">{t('backlog.totalPlaytime')}</h3>
+          <p className="text-xs text-gray-500">{t('backlog.estimatedToComplete')}</p>
         </div>
         <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
@@ -227,8 +230,8 @@ export default function Backlog() {
             </div>
             <span className="text-3xl font-black text-white">{highPriorityCount}</span>
           </div>
-          <h3 className="text-sm text-[var(--muted-foreground)] mb-1">High Priority</h3>
-          <p className="text-xs text-gray-500">Recommended to play</p>
+          <h3 className="text-sm text-[var(--muted-foreground)] mb-1">{t('backlog.highPriority')}</h3>
+          <p className="text-xs text-gray-500">{t('backlog.recommendedToPlay')}</p>
         </div>
         <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
@@ -237,8 +240,8 @@ export default function Backlog() {
             </div>
             <span className="text-3xl font-black text-white">{avgScore}</span>
           </div>
-          <h3 className="text-sm text-[var(--muted-foreground)] mb-1">Avg. Match Score</h3>
-          <p className="text-xs text-gray-500">Based on your DNA</p>
+          <h3 className="text-sm text-[var(--muted-foreground)] mb-1">{t('backlog.avgMatchScore')}</h3>
+          <p className="text-xs text-gray-500">{t('backlog.basedOnYourDNA')}</p>
         </div>
       </div>
 
@@ -246,59 +249,59 @@ export default function Backlog() {
       <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--muted-foreground)] font-medium">Sort By</label>
+            <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('common.sortBy')}</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
               className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
             >
-              <option value="score-desc">Match Score (High to Low)</option>
-              <option value="score-asc">Match Score (Low to High)</option>
-              <option value="playtime-asc">Playtime (Shortest First)</option>
-              <option value="playtime-desc">Playtime (Longest First)</option>
-              <option value="name-asc">Game Name A-Z</option>
-              <option value="name-desc">Game Name Z-A</option>
+              <option value="score-desc">{t('backlog.sortOptions.scoreDesc')}</option>
+              <option value="score-asc">{t('backlog.sortOptions.scoreAsc')}</option>
+              <option value="playtime-asc">{t('backlog.sortOptions.playtimeAsc')}</option>
+              <option value="playtime-desc">{t('backlog.sortOptions.playtimeDesc')}</option>
+              <option value="name-asc">{t('backlog.sortOptions.nameAsc')}</option>
+              <option value="name-desc">{t('backlog.sortOptions.nameDesc')}</option>
             </select>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--muted-foreground)] font-medium">Playtime Filter</label>
+            <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('backlog.playtimeFilter')}</label>
             <select
               value={playtimeFilter}
               onChange={(e) => setPlaytimeFilter(e.target.value as PlaytimeFilter)}
               className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
             >
-              <option value="all">All Games</option>
-              <option value="under5">Quick Wins (Under 5h)</option>
-              <option value="5to15">Short Games (5-15h)</option>
-              <option value="15to40">Medium Games (15-40h)</option>
-              <option value="40plus">Long Games (40h+)</option>
+              <option value="all">{t('backlog.playtimeOptions.allGames')}</option>
+              <option value="under5">{t('backlog.playtimeOptions.quickWins')}</option>
+              <option value="5to15">{t('backlog.playtimeOptions.shortGames')}</option>
+              <option value="15to40">{t('backlog.playtimeOptions.mediumGames')}</option>
+              <option value="40plus">{t('backlog.playtimeOptions.longGames')}</option>
             </select>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--muted-foreground)] font-medium">Match Score</label>
+            <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('backlog.matchScore')}</label>
             <select
               value={scoreFilter}
               onChange={(e) => setScoreFilter(e.target.value as ScoreFilter)}
               className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
             >
-              <option value="all">All Scores</option>
-              <option value="excellent">Excellent Match (90+)</option>
-              <option value="great">Great Match (70-89)</option>
-              <option value="good">Good Match (50-69)</option>
-              <option value="fair">Fair Match (Below 50)</option>
+              <option value="all">{t('backlog.scoreOptions.allScores')}</option>
+              <option value="excellent">{t('backlog.scoreOptions.excellent')}</option>
+              <option value="great">{t('backlog.scoreOptions.great')}</option>
+              <option value="good">{t('backlog.scoreOptions.good')}</option>
+              <option value="fair">{t('backlog.scoreOptions.fair')}</option>
             </select>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--muted-foreground)] font-medium">Genre</label>
+            <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('common.genre')}</label>
             <select
               value={genreFilter}
               onChange={(e) => setGenreFilter(e.target.value)}
               className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
             >
-              <option value="all">All Genres</option>
+              <option value="all">{t('common.allGenres')}</option>
               {allGenres.map((genre) => (
                 <option key={genre} value={genre}>{genre}</option>
               ))}
@@ -331,14 +334,14 @@ export default function Backlog() {
           {syncStatus === 'syncing' ? (
             <>
               <i className="fa-solid fa-sync fa-spin text-4xl text-[var(--primary)] mb-4" />
-              <p className="text-lg mb-2">Syncing your Steam library...</p>
-              <p className="text-sm">Your backlog will appear once sync is complete.</p>
+              <p className="text-lg mb-2">{t('backlog.syncingLibrary')}</p>
+              <p className="text-sm">{t('backlog.syncingSubtext')}</p>
             </>
           ) : (
             <>
               <i className="fa-solid fa-gamepad text-4xl mb-4 opacity-50" />
-              <p className="text-lg mb-2">No unplayed games in your library.</p>
-              <p className="text-sm">You must be busy!</p>
+              <p className="text-lg mb-2">{t('backlog.noUnplayedGames')}</p>
+              <p className="text-sm">{t('backlog.mustBeBusy')}</p>
             </>
           )}
         </div>
@@ -348,7 +351,7 @@ export default function Backlog() {
             const isHighPriority = isPrioritized(entry.game.id);
             const reason = getPrioritizedReason(entry.game.id);
             const badge = isHighPriority
-              ? { label: 'HIGH PRIORITY', classes: 'bg-green-500/20 text-green-500' }
+              ? { label: t('backlog.highPriorityBadge'), classes: 'bg-green-500/20 text-green-500' }
               : matchBadge(entry.game.reviewScore);
 
             return (
@@ -412,7 +415,7 @@ export default function Backlog() {
                             >
                               {entry.game.reviewScore}%
                             </p>
-                            <p className="text-xs text-[var(--muted-foreground)]">Match Score</p>
+                            <p className="text-xs text-[var(--muted-foreground)]">{t('backlog.matchScore')}</p>
                           </div>
                         )}
                         {entry.game.reviewScore !== null && (
@@ -420,7 +423,7 @@ export default function Backlog() {
                         )}
                         <div className="text-center">
                           <p className="text-3xl font-black text-white mb-1">{formatPlaytimeShort(entry.playtimeMins)}</p>
-                          <p className="text-xs text-[var(--muted-foreground)]">Est. Playtime</p>
+                          <p className="text-xs text-[var(--muted-foreground)]">{t('backlog.estPlaytime')}</p>
                         </div>
                       </div>
                     </div>
@@ -430,7 +433,7 @@ export default function Backlog() {
                       <div className="bg-[#1a1a1a] rounded-lg p-4 mb-4">
                         <h4 className="text-sm font-bold text-[var(--primary)] mb-2">
                           <i className="fa-solid fa-lightbulb mr-2" />
-                          AI Recommendation
+                          {t('backlog.aiRecommendation')}
                         </h4>
                         <p className="text-sm text-gray-300 leading-relaxed">
                           {reason}
@@ -450,7 +453,7 @@ export default function Backlog() {
                         }`}
                       >
                         <i className="fa-solid fa-play" />
-                        Play Now
+                        {t('backlog.playNow')}
                       </a>
                       <a
                         href={`steam://addtowishlist/${entry.game.id}`}
@@ -458,20 +461,20 @@ export default function Backlog() {
                         className="bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2"
                       >
                         <i className="fa-solid fa-bookmark" />
-                        Add to Wishlist
+                        {t('common.addToWishlist')}
                       </a>
                       <Link
                         to={`/game/${entry.game.id}`}
                         className="bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2"
                       >
                         <i className="fa-solid fa-eye" />
-                        View Details
+                        {t('common.viewDetails')}
                       </Link>
                       <button
                         className="bg-[#1a1a1a] border border-[#333] hover:border-gray-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2"
                       >
                         <i className="fa-solid fa-check" />
-                        Mark as Played
+                        {t('backlog.markAsPlayed')}
                       </button>
                     </div>
                   </div>

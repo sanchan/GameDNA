@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 
 interface WhyThisGameProps {
@@ -20,6 +21,7 @@ export default function WhyThisGame({
   open,
   onClose,
 }: WhyThisGameProps) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export default function WhyThisGame({
         });
 
         if (!res.ok) {
-          setError('Failed to load explanation.');
+          setError(t('whyThisGame.failedToLoad'));
           setLoading(false);
           return;
         }
@@ -87,7 +89,7 @@ export default function WhyThisGame({
         setLoading(false);
       } catch (err: any) {
         if (err.name !== 'AbortError') {
-          setError('Failed to load explanation.');
+          setError(t('whyThisGame.failedToLoad'));
           setLoading(false);
         }
       }
@@ -131,13 +133,13 @@ export default function WhyThisGame({
               <div className="flex items-center gap-2 mt-2">
                 {matchPercent != null && (
                   <span className="bg-[var(--primary)]/90 px-3 py-1 rounded-full text-xs font-bold">
-                    {matchPercent}% Match
+                    {t('common.match', { score: matchPercent })}
                   </span>
                 )}
                 {isHighConfidence && (
                   <span className="bg-[oklch(0.72_0.19_142)]/20 text-[oklch(0.72_0.19_142)] border border-[oklch(0.72_0.19_142)]/30 px-3 py-1 rounded-full text-xs font-bold">
                     <i className="fa-solid fa-check mr-1" />
-                    High Confidence
+                    {t('whyThisGame.highConfidence')}
                   </span>
                 )}
               </div>
@@ -157,7 +159,7 @@ export default function WhyThisGame({
           <div className="mb-4">
             <h3 className="text-sm font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-3 flex items-center gap-2">
               <i className="fa-solid fa-brain" />
-              AI Explanation
+              {t('whyThisGame.aiExplanation')}
             </h3>
             <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-5">
               {error ? (

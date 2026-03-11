@@ -1,8 +1,10 @@
 import { useAuth } from '../hooks/use-auth';
 import { Navigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 export default function Landing() {
   const { user, loading, login } = useAuth();
+  const { t } = useTranslation();
 
   if (loading) return null;
   if (user) return <Navigate to="/discover" />;
@@ -21,18 +23,17 @@ export default function Landing() {
           {/* Left column - Hero content */}
           <div className="order-2 lg:order-1">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black mb-6">
-              <span className="text-[var(--primary)]">Game</span>
-              <span className="text-white">DNA</span>
+              <span className="text-[var(--primary)]">{t('brand.game')}</span>
+              <span className="text-white">{t('brand.dna')}</span>
             </h1>
 
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-              Discover Your Next
-              <span className="text-[var(--primary)] block mt-2">Gaming Obsession</span>
+              {t('landing.heroTitle')}
+              <span className="text-[var(--primary)] block mt-2">{t('landing.heroTitleHighlight')}</span>
             </h2>
 
             <p className="text-lg sm:text-xl text-gray-400 mb-8 lg:mb-10">
-              Swipe through games, build your taste profile, and get AI-powered
-              recommendations tailored to your unique gaming DNA.
+              {t('landing.heroDescription')}
             </p>
 
             <button
@@ -40,7 +41,7 @@ export default function Landing() {
               className="bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] text-white px-10 py-5 rounded-xl text-lg sm:text-xl font-semibold transition-all duration-300 flex items-center gap-3 mb-8 cursor-pointer"
             >
               <i className="fa-brands fa-steam text-2xl" />
-              Sign in with Steam
+              {t('common.signInWithSteam')}
               <i className="fa-solid fa-arrow-right" />
             </button>
 
@@ -48,19 +49,19 @@ export default function Landing() {
             <div className="flex flex-wrap gap-3 mb-8">
               <span className="bg-[#242424] border border-[#333] px-4 py-2 rounded-full text-sm text-gray-300 flex items-center gap-2">
                 <i className="fa-solid fa-brain text-[var(--primary)]" />
-                AI-Powered
+                {t('landing.featureAI')}
               </span>
               <span className="bg-[#242424] border border-[#333] px-4 py-2 rounded-full text-sm text-gray-300 flex items-center gap-2">
                 <i className="fa-solid fa-hand-pointer text-[var(--primary)]" />
-                Swipe to Discover
+                {t('landing.featureSwipe')}
               </span>
               <span className="bg-[#242424] border border-[#333] px-4 py-2 rounded-full text-sm text-gray-300 flex items-center gap-2">
                 <i className="fa-solid fa-chart-pie text-[var(--primary)]" />
-                Taste Profile
+                {t('landing.featureTaste')}
               </span>
               <span className="bg-[#242424] border border-[#333] px-4 py-2 rounded-full text-sm text-gray-300 flex items-center gap-2">
                 <i className="fa-solid fa-bookmark text-[var(--primary)]" />
-                Smart Backlog
+                {t('landing.featureBacklog')}
               </span>
             </div>
 
@@ -68,15 +69,15 @@ export default function Landing() {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <div className="text-2xl sm:text-3xl font-bold text-white">50K+</div>
-                <div className="text-sm text-gray-400">Games Analyzed</div>
+                <div className="text-sm text-gray-400">{t('landing.statsGames')}</div>
               </div>
               <div>
                 <div className="text-2xl sm:text-3xl font-bold text-white">10K+</div>
-                <div className="text-sm text-gray-400">Active Users</div>
+                <div className="text-sm text-gray-400">{t('landing.statsUsers')}</div>
               </div>
               <div>
                 <div className="text-2xl sm:text-3xl font-bold text-white">98%</div>
-                <div className="text-sm text-gray-400">Match Rate</div>
+                <div className="text-sm text-gray-400">{t('landing.statsMatch')}</div>
               </div>
             </div>
           </div>
@@ -96,8 +97,8 @@ export default function Landing() {
                 </div>
                 {/* Card content */}
                 <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-xl font-bold text-white mb-1">Your Next Game</h3>
-                  <p className="text-sm text-gray-400 mb-3">Tailored just for you</p>
+                  <h3 className="text-xl font-bold text-white mb-1">{t('landing.cardTitle')}</h3>
+                  <p className="text-sm text-gray-400 mb-3">{t('landing.cardSubtitle')}</p>
                   <div className="flex flex-wrap gap-2 mb-auto">
                     <span className="bg-[var(--primary)]/20 text-[var(--primary)] px-2.5 py-1 rounded-md text-xs font-medium">RPG</span>
                     <span className="bg-purple-600/20 text-purple-400 px-2.5 py-1 rounded-md text-xs font-medium">Action</span>

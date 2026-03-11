@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { DiscoveryFilters } from '../../../shared/types';
 
 interface FilterPanelProps {
@@ -17,14 +18,15 @@ const POPULAR_TAGS = [
 ];
 
 const RELEASE_DATE_OPTIONS = [
-  { label: 'Any Time', value: '' },
-  { label: 'Last 30 Days', value: '30d' },
-  { label: 'Last 6 Months', value: '6m' },
-  { label: 'Last Year', value: '1y' },
-  { label: 'Last 5 Years', value: '5y' },
+  { key: 'anyTime', value: '' },
+  { key: 'last30Days', value: '30d' },
+  { key: 'last6Months', value: '6m' },
+  { key: 'lastYear', value: '1y' },
+  { key: 'last5Years', value: '5y' },
 ];
 
 export default function FilterPanel({ filters, onApply, className = '' }: FilterPanelProps) {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const [minPrice, setMinPrice] = useState<string>(filters.minPrice?.toString() ?? '');
   const [maxPrice, setMaxPrice] = useState<string>(filters.maxPrice?.toString() ?? '');
@@ -101,12 +103,12 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold flex items-center space-x-2">
             <i className="fa-solid fa-filter text-[var(--primary)]" />
-            <span>Filters</span>
+            <span>{t('common.filters')}</span>
           </h2>
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="text-gray-400 hover:text-white transition-colors"
-            title={collapsed ? 'Expand filters' : 'Collapse filters'}
+            title={collapsed ? t('filterPanel.expandFilters') : t('filterPanel.collapseFilters')}
           >
             <i className="fa-solid fa-chevron-left" />
           </button>
@@ -116,10 +118,10 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
           <div className="flex flex-col gap-0">
             {/* Price Range */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold mb-3">Price Range</label>
+              <label className="block text-sm font-semibold mb-3">{t('filterPanel.priceRange')}</label>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Min Price</label>
+                  <label className="text-xs text-gray-400 mb-1 block">{t('filterPanel.minPrice')}</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                     <input
@@ -132,7 +134,7 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Max Price</label>
+                  <label className="text-xs text-gray-400 mb-1 block">{t('filterPanel.maxPrice')}</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                     <input
@@ -149,7 +151,7 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
 
             {/* Min Review Score */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold mb-3">Minimum Review Score</label>
+              <label className="block text-sm font-semibold mb-3">{t('filterPanel.minimumReviewScore')}</label>
               <input
                 type="range"
                 min="0"
@@ -167,20 +169,20 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
 
             {/* Genres */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold mb-3">Genres</label>
+              <label className="block text-sm font-semibold mb-3">{t('filterPanel.genres')}</label>
               <textarea
                 value={genres}
                 onChange={(e) => setGenres(e.target.value)}
-                placeholder="action, rpg, indie, strategy..."
+                placeholder={t('filterPanel.genresPlaceholder')}
                 rows={3}
                 className={`${inputClass} resize-none`}
               />
-              <p className="text-xs text-gray-400 mt-1">Separate genres with commas</p>
+              <p className="text-xs text-gray-400 mt-1">{t('filterPanel.separateWithCommas')}</p>
             </div>
 
             {/* Popular Tags */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold mb-3">Popular Tags</label>
+              <label className="block text-sm font-semibold mb-3">{t('filterPanel.popularTags')}</label>
               <div className="flex flex-wrap gap-2">
                 {POPULAR_TAGS.map((tag) => {
                   const isActive = selectedTags.includes(tag);
@@ -203,7 +205,7 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
 
             {/* Release Date */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold mb-3">Release Date</label>
+              <label className="block text-sm font-semibold mb-3">{t('filterPanel.releaseDate')}</label>
               <select
                 value={releaseDate}
                 onChange={(e) => setReleaseDate(e.target.value)}
@@ -211,7 +213,7 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
               >
                 {RELEASE_DATE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {t(`filterPanel.releaseDateOptions.${opt.key}`)}
                   </option>
                 ))}
               </select>
@@ -223,7 +225,7 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
                 onClick={handleApply}
                 className="flex-1 bg-[var(--primary)] hover:bg-[var(--primary)]/80 text-[#1a1a1a] font-semibold py-3 rounded-lg transition-opacity"
               >
-                Apply Filters
+                {t('filterPanel.applyFilters')}
               </button>
               <button
                 onClick={handleReset}
@@ -235,7 +237,7 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
 
             {/* Active Filters */}
             <div className="mt-6 pt-6 border-t border-[#333]">
-              <div className="text-xs text-gray-400 mb-2">Active Filters</div>
+              <div className="text-xs text-gray-400 mb-2">{t('filterPanel.activeFilters')}</div>
               <div className="text-2xl font-bold text-[var(--primary)]">{activeCount}</div>
             </div>
           </div>

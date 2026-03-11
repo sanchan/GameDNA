@@ -1,13 +1,15 @@
 import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import type { Game } from '../../../shared/types';
 import BookmarkButton from './BookmarkButton';
 import MediaGallery from './MediaGallery';
 import { api } from '../lib/api';
+import i18n from '../i18n';
 
 function formatPrice(cents: number | null, currency?: string | null): string | null {
-  if (cents === null || cents === 0) return cents === 0 ? 'Free' : null;
+  if (cents === null || cents === 0) return cents === 0 ? i18n.t('common.free') : null;
   const amount = cents / 100;
   if (currency) {
     try {
@@ -19,8 +21,8 @@ function formatPrice(cents: number | null, currency?: string | null): string | n
 
 function formatReviewCount(count: number | null): string | null {
   if (count === null) return null;
-  if (count >= 1000) return `${Math.round(count / 1000)}K reviews`;
-  return `${count} reviews`;
+  if (count >= 1000) return i18n.t('gameCard.reviewsK', { count: Math.round(count / 1000) });
+  return i18n.t('gameCard.reviews', { count });
 }
 
 function extractYear(releaseDate: string | null): string | null {
@@ -54,6 +56,7 @@ interface GameCardProps {
 }
 
 export default function GameCard({ game, score, className = '' }: GameCardProps) {
+  const { t } = useTranslation();
   const [mediaItems, setMediaItems] = useState<MediaItem[] | null>(null);
   const [mediaLoading, setMediaLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -192,7 +195,7 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
         {score != null && score > 0 && (
           <div className="absolute top-4 right-4 bg-[var(--primary)] text-[#1a1a1a] px-3 py-1.5 rounded-full font-bold text-sm flex items-center space-x-1.5 z-20">
             <i className="fa-solid fa-star" />
-            <span>{Math.round(score)}% Match</span>
+            <span>{t('common.match', { score: Math.round(score) })}</span>
           </div>
         )}
 
@@ -207,7 +210,7 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
             href={`steam://addtowishlist/${game.id}`}
             onClick={(e) => e.stopPropagation()}
             className="w-9 h-9 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-red-500 rounded-full flex items-center justify-center transition-all"
-            title="Add to Steam Wishlist"
+            title={t('gameCard.addToSteamWishlist')}
           >
             <i className="fa-regular fa-heart text-white/70" />
           </a>
@@ -223,7 +226,7 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
           <button
             onClick={handleFullscreen}
             className="w-9 h-9 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center transition-all"
-            title="Fullscreen gallery"
+            title={t('gameCard.fullscreenGallery')}
           >
             <i className="fa-solid fa-expand text-white/70" />
           </button>
