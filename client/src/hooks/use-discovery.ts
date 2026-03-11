@@ -19,19 +19,23 @@ export function useDiscovery() {
   const { syncStatus } = useAuth();
   const [filters, setFilters] = useState<DiscoveryFilters>({});
   const [queue, setQueue] = useState<Game[]>([]);
+  const [swipedCount, setSwipedCount] = useState(0);
+  const [totalLoaded, setTotalLoaded] = useState(0);
   const [animatingOut, setAnimatingOut] = useState<'left' | 'right' | 'down' | null>(null);
   const prevSyncStatus = useRef(syncStatus);
 
   const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['discovery-queue', filters],
     queryFn: () => api.get<Game[]>(`/discovery/queue${buildQueryString(filters)}`),
-    staleTime: 0, // Always refetch on mount - discovery needs fresh data
+    staleTime: 0,
   });
 
   // Refetch queue when sync transitions to 'synced'
   useEffect(() => {
     if (prevSyncStatus.current === 'syncing' && syncStatus === 'synced') {
       setQueue([]);
+      setSwipedCount(0);
+      setTotalLoaded(0);
       refetch();
     }
     prevSyncStatus.current = syncStatus;
@@ -43,14 +47,17 @@ export function useDiscovery() {
       setQueue((prev) => {
         const existingIds = new Set(prev.map((g) => g.id));
         const newGames = data.filter((g) => !existingIds.has(g.id));
+        if (newGames.length > 0) {
+          setTotalLoaded((t) => t + newGames.length);
+        }
         return [...prev, ...newGames];
       });
     }
   }, [data, dataUpdatedAt]);
 
-  // Auto-fetch more when queue runs low
+  // Auto-fetch more when queue runs low (but not when fully exhausted)
   useEffect(() => {
-    if (queue.length < 3 && !isLoading) {
+    if (queue.length > 0 && queue.length < 3 && !isLoading) {
       refetch();
     }
   }, [queue.length, isLoading, refetch]);
@@ -72,6 +79,7 @@ export function useDiscovery() {
       // After animation, remove card and post to API
       setTimeout(() => {
         setQueue((prev) => prev.slice(1));
+        setSwipedCount((c) => c + 1);
         setAnimatingOut(null);
         swipeMutation.mutate({ gameId: currentGame.id, decision });
       }, 300);
@@ -81,6 +89,8 @@ export function useDiscovery() {
 
   const refetchQueue = useCallback(() => {
     setQueue([]);
+    setSwipedCount(0);
+    setTotalLoaded(0);
     refetch();
   }, [refetch]);
 
@@ -93,5 +103,7 @@ export function useDiscovery() {
     setFilters,
     animatingOut,
     refetchQueue,
+    swipedCount,
+    totalLoaded,
   };
 }

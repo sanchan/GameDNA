@@ -74,6 +74,15 @@ export const recommendations = sqliteTable('recommendations', {
   uniqueIndex('rec_user_game_idx').on(table.user_id, table.game_id),
 ]);
 
+export const bookmarks = sqliteTable('bookmarks', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  user_id: integer('user_id').references(() => users.id).notNull(),
+  game_id: integer('game_id').references(() => games.id).notNull(),
+  created_at: integer('created_at').default(sql`(unixepoch())`),
+}, (table) => [
+  uniqueIndex('bookmark_user_game_idx').on(table.user_id, table.game_id),
+]);
+
 export const sessions = sqliteTable('sessions', {
   id: text('id').primaryKey(),
   user_id: integer('user_id').references(() => users.id).notNull(),

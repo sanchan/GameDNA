@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { api } from '../lib/api';
 import type { Game, SwipeDecision } from '../../../shared/types';
+import BookmarkButton from '../components/BookmarkButton';
 
 function formatPrice(cents: number | null): string {
   if (cents === null || cents === 0) return 'Free';
@@ -114,7 +115,34 @@ export default function GameDetail() {
         />
       )}
 
-      <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">{game.name}</h1>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">{game.name}</h1>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <BookmarkButton gameId={game.id} size={20} />
+          <a
+            href={`steam://addtowishlist/${game.id}`}
+            className="p-2 rounded-lg hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)] hover:text-[oklch(0.72_0.19_142)]"
+            title="Add to Steam Wishlist"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </a>
+          <a
+            href={`https://store.steampowered.com/app/${game.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 rounded-lg hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            title="View on Steam"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </a>
+        </div>
+      </div>
 
       <div className="flex items-center gap-4 mb-4">
         <span className="text-xl font-semibold text-[var(--foreground)]">
