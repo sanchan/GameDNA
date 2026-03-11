@@ -6,6 +6,7 @@ import { useDiscovery } from '../hooks/use-discovery';
 import { useGamingDNA } from '../hooks/use-profile';
 import { api } from '../lib/api';
 import GameCard from '../components/GameCard';
+import SwipeControls from '../components/SwipeControls';
 import FilterPanel, { useFilterCount } from '../components/FilterPanel';
 import type { Game, SwipeDecision } from '../../../shared/types';
 
@@ -79,11 +80,11 @@ export default function Discovery() {
 
   const animationClass = animatingOut
     ? animatingOut === 'left'
-      ? 'swipe-out-left'
+      ? 'discovery-swipe-out-left'
       : animatingOut === 'right'
-        ? 'swipe-out-right'
-        : 'swipe-out-down'
-    : 'swipe-in';
+        ? 'discovery-swipe-out-right'
+        : 'discovery-swipe-out-down'
+    : 'discovery-swipe-in';
 
   const recentSwipes = recentSwipesData?.items ?? [];
 
@@ -149,62 +150,61 @@ export default function Discovery() {
 
         {/* Card container */}
         <div className="max-w-md mx-auto">
-          <div className="relative h-[600px]">
-            {isLoading || loadingMore ? (
-              /* Skeleton card */
-              <div className="absolute inset-0 bg-[#242424] border border-[#333] rounded-3xl overflow-hidden shadow-lg">
-                <div className="w-full h-[360px] bg-[var(--muted)] animate-pulse" />
-                <div className="p-6 flex flex-col gap-3">
-                  <div className="h-6 w-3/4 bg-[var(--muted)] rounded animate-pulse" />
-                  <div className="flex gap-1.5">
-                    <div className="h-5 w-16 bg-[var(--muted)] rounded-full animate-pulse" />
-                    <div className="h-5 w-12 bg-[var(--muted)] rounded-full animate-pulse" />
-                    <div className="h-5 w-20 bg-[var(--muted)] rounded-full animate-pulse" />
-                  </div>
-                  <div className="h-4 w-1/2 bg-[var(--muted)] rounded animate-pulse" />
-                  <div className="h-12 w-full bg-[var(--muted)] rounded animate-pulse" />
+          {isLoading || loadingMore ? (
+            /* Skeleton card */
+            <div className="bg-[#242424] border border-[#333] rounded-2xl overflow-hidden">
+              <div className="h-64 bg-[#1a1a1a] animate-pulse" />
+              <div className="p-6 flex flex-col gap-3">
+                <div className="h-6 w-3/4 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="h-4 w-1/2 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="flex gap-2">
+                  <div className="h-6 w-14 bg-[#1a1a1a] rounded-full animate-pulse" />
+                  <div className="h-6 w-20 bg-[#1a1a1a] rounded animate-pulse" />
                 </div>
-                {loadingMore && (
-                  <div className="p-4 pt-0 text-center">
-                    <p className="text-sm text-[var(--muted-foreground)]">Fetching new games from Steam...</p>
-                  </div>
-                )}
-              </div>
-            ) : currentGame ? (
-              <>
-                {/* Back card */}
-                <div className="absolute inset-0 bg-[#242424]/30 border border-[#333] rounded-3xl transform translate-y-8 scale-90 pointer-events-none" />
-                {/* Middle card */}
-                <div className="absolute inset-0 bg-[#242424]/50 border border-[#333] rounded-3xl transform translate-y-4 scale-95 pointer-events-none" />
-                {/* Main card */}
-                <div key={currentGame.id} className={`absolute inset-0 ${animationClass}`}>
-                  <GameCard game={currentGame} onSwipe={swipe} onInfo={() => window.open(`/game/${currentGame.id}`, '_blank')} />
+                <div className="flex gap-2">
+                  <div className="h-6 w-20 bg-[#1a1a1a] rounded-full animate-pulse" />
+                  <div className="h-6 w-16 bg-[#1a1a1a] rounded-full animate-pulse" />
+                  <div className="h-6 w-14 bg-[#1a1a1a] rounded-full animate-pulse" />
                 </div>
-              </>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-center text-[var(--muted-foreground)]">
-                {syncStatus === 'syncing' ? (
-                  <div>
-                    <p className="text-lg mb-2">Setting up your discovery queue...</p>
-                    <p className="text-sm">Syncing your Steam library and loading games. This may take a moment.</p>
-                    <div className="mt-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)]" />
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-lg mb-2">No more games to discover!</p>
-                    <p className="text-sm mb-4">Want to load more games from Steam?</p>
-                    <button
-                      onClick={handleLoadMore}
-                      className="bg-[var(--primary)] text-[var(--primary-foreground)] px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-                    >
-                      Load More Games
-                    </button>
-                  </div>
-                )}
+                <div className="h-10 w-full bg-[#1a1a1a] rounded animate-pulse" />
               </div>
-            )}
-          </div>
+              {loadingMore && (
+                <div className="p-4 pt-0 text-center">
+                  <p className="text-sm text-[var(--muted-foreground)]">Fetching new games from Steam...</p>
+                </div>
+              )}
+            </div>
+          ) : currentGame ? (
+            <div key={currentGame.id} className={animationClass}>
+              <GameCard game={currentGame} />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center text-center text-[var(--muted-foreground)] py-20">
+              {syncStatus === 'syncing' ? (
+                <div>
+                  <p className="text-lg mb-2">Setting up your discovery queue...</p>
+                  <p className="text-sm">Syncing your Steam library and loading games. This may take a moment.</p>
+                  <div className="mt-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)]" />
+                </div>
+              ) : (
+                <div>
+                  <p className="text-lg mb-2">No more games to discover!</p>
+                  <p className="text-sm mb-4">Want to load more games from Steam?</p>
+                  <button
+                    onClick={handleLoadMore}
+                    className="bg-[var(--primary)] text-[var(--primary-foreground)] px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Load More Games
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
+          {/* Swipe buttons — outside the card */}
+          {currentGame && !isLoading && (
+            <SwipeControls onSwipe={swipe} />
+          )}
         </div>
 
         {/* Discovery Stats */}
@@ -283,29 +283,29 @@ export default function Discovery() {
       </div>
 
       <style>{`
-        .swipe-in {
-          animation: fadeIn 0.25s ease-out;
+        .discovery-swipe-in {
+          animation: discoveryFadeIn 0.25s ease-out;
         }
-        .swipe-out-left {
-          animation: slideLeft 0.3s ease-in forwards;
+        .discovery-swipe-out-left {
+          animation: discoverySlideLeft 0.3s ease-in forwards;
         }
-        .swipe-out-right {
-          animation: slideRight 0.3s ease-in forwards;
+        .discovery-swipe-out-right {
+          animation: discoverySlideRight 0.3s ease-in forwards;
         }
-        .swipe-out-down {
-          animation: slideDown 0.3s ease-in forwards;
+        .discovery-swipe-out-down {
+          animation: discoverySlideDown 0.3s ease-in forwards;
         }
-        @keyframes fadeIn {
+        @keyframes discoveryFadeIn {
           from { opacity: 0; transform: scale(0.95); }
           to { opacity: 1; transform: scale(1); }
         }
-        @keyframes slideLeft {
+        @keyframes discoverySlideLeft {
           to { opacity: 0; transform: translateX(-120%) rotate(-8deg); }
         }
-        @keyframes slideRight {
+        @keyframes discoverySlideRight {
           to { opacity: 0; transform: translateX(120%) rotate(8deg); }
         }
-        @keyframes slideDown {
+        @keyframes discoverySlideDown {
           to { opacity: 0; transform: translateY(60px) scale(0.9); }
         }
       `}</style>
