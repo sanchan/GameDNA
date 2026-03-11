@@ -107,7 +107,7 @@ export default function Discovery() {
       <FilterPanel
         filters={filters}
         onApply={setFilters}
-        className="hidden lg:block w-80 h-screen sticky top-20"
+        className="hidden lg:block h-screen sticky top-20"
       />
 
       {/* Mobile filter overlay */}
