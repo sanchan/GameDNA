@@ -34,7 +34,7 @@ class RateLimiter {
 
 // Separate rate limiters for different Steam API endpoints
 const webApiLimiter = new RateLimiter(200, 300000); // Steam Web API: 200 req/5min
-const storeApiLimiter = new RateLimiter(30, 30000); // Steam Store API: 30 req/30s (conservative to avoid blocks)
+export const storeApiLimiter = new RateLimiter(30, 30000); // Steam Store API: 30 req/30s (conservative to avoid blocks)
 
 export interface OwnedGame {
   appid: number;
