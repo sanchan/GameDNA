@@ -156,7 +156,7 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
                 max="100"
                 value={minReviewScore}
                 onChange={(e) => setMinReviewScore(Number(e.target.value))}
-                className="w-full accent-[var(--primary)]"
+                className="range-slider w-full"
               />
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs text-gray-400">0%</span>
