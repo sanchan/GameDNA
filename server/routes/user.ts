@@ -7,7 +7,11 @@ import { getOwnedGames, getWishlist, getPopularGameIds } from '../services/steam
 import { ensureGamesCached } from '../services/game-cache';
 import { recalculateTasteProfile } from '../services/taste-profile';
 import { generateRecommendations } from '../services/recommendation';
-import { getSyncStatus, startSync, updateSync } from '../services/sync-manager';
+import {
+  getSyncStatus, startSync, updateCategory, updateSyncCounts,
+  markCategoryComplete, markCategoryError, getOverallStep, getOverallProgress,
+  type SyncCategory, ALL_CATEGORIES,
+} from '../services/sync-manager';
 import { DEFAULT_IGNORED_TAGS, getIgnoredTagsSet } from '../services/tag-filter';
 import type { GamingDNA } from '../../shared/types';
 
@@ -24,10 +28,28 @@ user.use('*', requireAuth);
 user.post('/sync', async (c) => {
   const userId = c.get('userId');
 
-  // If sync is already in progress, return status
+  let body: { categories?: string[] } = {};
+  try {
+    body = await c.req.json();
+  } catch {
+    // no body = sync all
+  }
+
+  const requested: SyncCategory[] = body.categories?.length
+    ? (body.categories.filter((c) => ALL_CATEGORIES.includes(c as SyncCategory)) as SyncCategory[])
+    : [...ALL_CATEGORIES];
+
+  if (requested.length === 0) {
+    return c.json({ error: 'No valid categories specified' }, 400);
+  }
+
+  // Check if requested categories are already syncing
   const existing = getSyncStatus(userId);
-  if (existing && existing.step !== 'complete' && existing.step !== 'error') {
-    return c.json({ status: 'in_progress' });
+  if (existing) {
+    const anySyncing = requested.some((c) => existing.categories[c].status === 'syncing');
+    if (anySyncing) {
+      return c.json({ status: 'in_progress' });
+    }
   }
 
   // Get the user's steam_id
@@ -36,219 +58,277 @@ user.post('/sync', async (c) => {
     return c.json({ error: 'User not found' }, 404);
   }
 
-  // Start sync - returns false if already in progress (race condition guard)
-  if (!startSync(userId)) {
+  if (!startSync(userId, requested)) {
     return c.json({ status: 'in_progress' });
   }
 
   const steamId = userRow.steam_id;
   const countryCode = userRow.country_code ?? undefined;
-  console.log(`[sync] Starting sync for user ${userId} (steam: ${steamId}, cc: ${countryCode ?? 'auto'})`);
+  console.log(`[sync] Starting sync for user ${userId} (steam: ${steamId}, categories: ${requested.join(', ')})`);
 
-  // Run sync in background (don't await)
-  runSyncInBackground(userId, steamId, countryCode);
+  // Run sync in background
+  runCategorySync(userId, steamId, countryCode, requested);
 
-  return c.json({ status: 'started' });
+  return c.json({ status: 'started', categories: requested });
 });
 
-async function runSyncInBackground(userId: number, steamId: string, cc?: string) {
-  try {
-    // Step 1: Fetch library from Steam Web API (1 call each, fast)
-    updateSync(userId, { step: 'fetching-library', progress: 10, detail: 'Fetching your Steam library...' });
+/**
+ * Run sync for the specified categories. Categories that depend on data from
+ * previous categories will wait for them (library/wishlist → backlog → tags).
+ */
+async function runCategorySync(userId: number, steamId: string, cc: string | undefined, categories: SyncCategory[]) {
+  const has = (c: SyncCategory) => categories.includes(c);
 
-    const [ownedGames, wishlistAppids] = await Promise.all([
-      getOwnedGames(steamId),
-      getWishlist(steamId),
-    ]);
-    console.log(`[sync] Fetched ${ownedGames.length} owned games, ${wishlistAppids.length} wishlist items`);
+  let ownedGames: { appid: number; name: string; playtime_forever: number; rtime_last_played?: number }[] = [];
+  let wishlistAppids: number[] = [];
 
-    updateSync(userId, {
-      progress: 25,
-      detail: `Found ${ownedGames.length} games. Saving to library...`,
-      gamesCount: ownedGames.length,
-      wishlistCount: wishlistAppids.length,
-    });
+  // --- Library ---
+  if (has('library')) {
+    try {
+      updateCategory(userId, 'library', { progress: 10, detail: 'Fetching owned games from Steam...' });
+      ownedGames = await getOwnedGames(steamId);
+      updateCategory(userId, 'library', { progress: 50, detail: `Found ${ownedGames.length} games. Saving...` });
+      updateSyncCounts(userId, { gamesCount: ownedGames.length });
 
-    // Step 2: Insert stub game records for FK constraints (no Steam Store API calls!)
-    const now = Math.floor(Date.now() / 1000);
-    for (const game of ownedGames) {
-      db.insert(games)
-        .values({
-          id: game.appid,
-          name: game.name || `Game ${game.appid}`,
-          cached_at: 0,
-        })
-        .onConflictDoNothing()
-        .run();
-    }
-    for (const appid of wishlistAppids) {
-      db.insert(games)
-        .values({
-          id: appid,
-          name: `Game ${appid}`,
-          cached_at: 0,
-        })
-        .onConflictDoNothing()
-        .run();
-    }
+      const now = Math.floor(Date.now() / 1000);
+      // Insert stub game records for FK constraints
+      for (const game of ownedGames) {
+        db.insert(games)
+          .values({ id: game.appid, name: game.name || `Game ${game.appid}`, cached_at: 0 })
+          .onConflictDoNothing()
+          .run();
+      }
 
-    // Step 3: Upsert owned games into user_games
-    updateSync(userId, { step: 'caching-library', progress: 40, detail: 'Saving your game library...' });
+      // Get wishlist set for from_wishlist flag (best effort)
+      const existingState = getSyncStatus(userId);
+      const existingWishlistCount = existingState?.wishlistCount ?? 0;
+      // If wishlist was previously synced, check user_games for wishlist flags
+      const wishlistSet = new Set<number>();
+      if (!has('wishlist') && existingWishlistCount > 0) {
+        const wl = db.select({ game_id: user_games.game_id })
+          .from(user_games)
+          .where(and(eq(user_games.user_id, userId), eq(user_games.from_wishlist, 1)))
+          .all();
+        for (const r of wl) wishlistSet.add(r.game_id);
+      }
 
-    const wishlistSet = new Set(wishlistAppids);
-    for (const game of ownedGames) {
-      db.insert(user_games)
-        .values({
-          user_id: userId,
-          game_id: game.appid,
-          playtime_mins: game.playtime_forever,
-          last_played: game.rtime_last_played || null,
-          from_wishlist: wishlistSet.has(game.appid) ? 1 : 0,
-          synced_at: now,
-        })
-        .onConflictDoUpdate({
-          target: [user_games.user_id, user_games.game_id],
-          set: {
+      for (const game of ownedGames) {
+        db.insert(user_games)
+          .values({
+            user_id: userId,
+            game_id: game.appid,
             playtime_mins: game.playtime_forever,
             last_played: game.rtime_last_played || null,
             from_wishlist: wishlistSet.has(game.appid) ? 1 : 0,
             synced_at: now,
-          },
-        })
-        .run();
-    }
+          })
+          .onConflictDoUpdate({
+            target: [user_games.user_id, user_games.game_id],
+            set: {
+              playtime_mins: game.playtime_forever,
+              last_played: game.rtime_last_played || null,
+              from_wishlist: wishlistSet.has(game.appid) ? 1 : 0,
+              synced_at: now,
+            },
+          })
+          .run();
+      }
 
-    // Upsert wishlist-only games
-    const ownedAppids = ownedGames.map((g) => g.appid);
-    const ownedSet = new Set(ownedAppids);
-    for (const appid of wishlistAppids) {
-      if (ownedSet.has(appid)) continue;
-      db.insert(user_games)
-        .values({
-          user_id: userId,
-          game_id: appid,
-          playtime_mins: 0,
-          last_played: null,
-          from_wishlist: 1,
-          synced_at: now,
-        })
-        .onConflictDoUpdate({
-          target: [user_games.user_id, user_games.game_id],
-          set: {
-            from_wishlist: 1,
-            synced_at: now,
-          },
-        })
-        .run();
-    }
-
-    // Step 4: Build taste profile
-    updateSync(userId, { step: 'building-profile', progress: 50, detail: 'Building your taste profile...' });
-
-    // Fetch details for top played games only
-    const topPlayedAppids = ownedGames
-      .filter((g) => g.playtime_forever > 60)
-      .sort((a, b) => b.playtime_forever - a.playtime_forever)
-      .slice(0, 50)
-      .map((g) => g.appid);
-
-    if (topPlayedAppids.length > 0) {
-      updateSync(userId, {
-        progress: 55,
-        detail: `Fetching details for your top ${topPlayedAppids.length} games...`,
-      });
-      await ensureGamesCached(topPlayedAppids, (cached, total) => {
-        const progress = 55 + Math.round((cached / total) * 10);
-        updateSync(userId, {
-          progress,
-          detail: `Fetching game details... (${cached}/${total})`,
-        });
-      }, cc);
-    }
-
-    // Cache wishlist game details
-    const wishlistOnly = wishlistAppids.filter((id) => !ownedSet.has(id));
-    if (wishlistOnly.length > 0) {
-      updateSync(userId, {
-        progress: 64,
-        detail: `Fetching wishlist game details... (0/${wishlistOnly.length})`,
-      });
-      await ensureGamesCached(wishlistOnly, (cached, total) => {
-        const progress = 64 + Math.round((cached / total) * 4);
-        updateSync(userId, {
-          progress,
-          detail: `Fetching wishlist game details... (${cached}/${total})`,
-        });
-      }, cc);
-    }
-
-    await recalculateTasteProfile(userId).catch((e) => {
-      console.error('[sync] taste profile error:', e);
-    });
-
-    // Step 5: Seed popular games for discovery
-    updateSync(userId, { step: 'seeding-discovery', progress: 68, detail: 'Loading discovery catalog...' });
-
-    try {
-      const popularIds = await getPopularGameIds();
-      const allUserAppids = new Set([...ownedAppids, ...wishlistAppids]);
-      const discoveryIds = popularIds.filter((id) => !allUserAppids.has(id));
-      console.log(`[sync] Seeding ${discoveryIds.length} popular games for discovery`);
-
-      await ensureGamesCached(discoveryIds, (cached, total) => {
-        const seedProgress = 68 + Math.round((cached / total) * 15);
-        updateSync(userId, {
-          progress: seedProgress,
-          detail: `Loading discovery catalog... (${cached}/${total})`,
-        });
-      }, cc);
-
-      console.log('[sync] Popular games seeding complete');
+      markCategoryComplete(userId, 'library');
+      console.log(`[sync] Library sync complete: ${ownedGames.length} games`);
     } catch (e) {
-      console.error('[sync] Popular games seeding error:', e);
+      console.error('[sync] Library sync error:', e);
+      markCategoryError(userId, 'library', `Failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
-
-    // Step 6: Generate recommendations
-    updateSync(userId, { step: 'generating-recommendations', progress: 85, detail: 'Generating personalized recommendations...' });
-
-    try {
-      const recCount = await generateRecommendations(userId);
-      console.log(`[sync] Generated ${recCount} recommendations for user ${userId}`);
-      updateSync(userId, { progress: 98, detail: `Generated ${recCount} recommendations!` });
-    } catch (e) {
-      console.error('[sync] Recommendation generation error:', e);
-    }
-
-    // Done
-    updateSync(userId, {
-      step: 'complete',
-      progress: 100,
-      detail: 'Sync complete!',
-      completedAt: Date.now(),
-    });
-    console.log(`[sync] Sync complete for user ${userId}`);
-  } catch (e) {
-    console.error('[sync] Sync error:', e);
-    updateSync(userId, {
-      step: 'error',
-      detail: `Sync failed: ${e instanceof Error ? e.message : 'Unknown error'}`,
-      completedAt: Date.now(),
-    });
+  } else {
+    // Load existing library data for downstream categories
+    const existing = db.select({ game_id: user_games.game_id, playtime: user_games.playtime_mins })
+      .from(user_games)
+      .where(eq(user_games.user_id, userId))
+      .all();
+    ownedGames = existing.map((r) => ({ appid: r.game_id, name: '', playtime_forever: r.playtime ?? 0 }));
   }
+
+  // --- Wishlist ---
+  if (has('wishlist')) {
+    try {
+      updateCategory(userId, 'wishlist', { progress: 10, detail: 'Fetching wishlist from Steam...' });
+      wishlistAppids = await getWishlist(steamId);
+      updateCategory(userId, 'wishlist', { progress: 50, detail: `Found ${wishlistAppids.length} wishlist items. Saving...` });
+      updateSyncCounts(userId, { wishlistCount: wishlistAppids.length });
+
+      const now = Math.floor(Date.now() / 1000);
+      // Insert stubs
+      for (const appid of wishlistAppids) {
+        db.insert(games)
+          .values({ id: appid, name: `Game ${appid}`, cached_at: 0 })
+          .onConflictDoNothing()
+          .run();
+      }
+
+      // Upsert wishlist-only games
+      const ownedSet = new Set(ownedGames.map((g) => g.appid));
+      for (const appid of wishlistAppids) {
+        if (ownedSet.has(appid)) {
+          // Mark existing owned game as also wishlisted
+          db.update(user_games)
+            .set({ from_wishlist: 1, synced_at: now })
+            .where(and(eq(user_games.user_id, userId), eq(user_games.game_id, appid)))
+            .run();
+        } else {
+          db.insert(user_games)
+            .values({
+              user_id: userId,
+              game_id: appid,
+              playtime_mins: 0,
+              last_played: null,
+              from_wishlist: 1,
+              synced_at: now,
+            })
+            .onConflictDoUpdate({
+              target: [user_games.user_id, user_games.game_id],
+              set: { from_wishlist: 1, synced_at: now },
+            })
+            .run();
+        }
+      }
+
+      markCategoryComplete(userId, 'wishlist');
+      console.log(`[sync] Wishlist sync complete: ${wishlistAppids.length} items`);
+    } catch (e) {
+      console.error('[sync] Wishlist sync error:', e);
+      markCategoryError(userId, 'wishlist', `Failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    }
+  } else {
+    // Load existing wishlist for downstream
+    const wl = db.select({ game_id: user_games.game_id })
+      .from(user_games)
+      .where(and(eq(user_games.user_id, userId), eq(user_games.from_wishlist, 1)))
+      .all();
+    wishlistAppids = wl.map((r) => r.game_id);
+  }
+
+  // --- Backlog (game detail caching + discovery seeding) ---
+  if (has('backlog')) {
+    try {
+      updateCategory(userId, 'backlog', { progress: 5, detail: 'Caching game details...' });
+
+      // Cache top played games
+      const topPlayedAppids = ownedGames
+        .filter((g) => g.playtime_forever > 60)
+        .sort((a, b) => b.playtime_forever - a.playtime_forever)
+        .slice(0, 50)
+        .map((g) => g.appid);
+
+      if (topPlayedAppids.length > 0) {
+        updateCategory(userId, 'backlog', { progress: 10, detail: `Fetching details for ${topPlayedAppids.length} top games...` });
+        await ensureGamesCached(topPlayedAppids, (cached, total) => {
+          const progress = 10 + Math.round((cached / total) * 30);
+          updateCategory(userId, 'backlog', { progress, detail: `Game details... (${cached}/${total})` });
+        }, cc);
+      }
+
+      // Cache wishlist game details
+      const ownedSet = new Set(ownedGames.map((g) => g.appid));
+      const wishlistOnly = wishlistAppids.filter((id) => !ownedSet.has(id));
+      if (wishlistOnly.length > 0) {
+        updateCategory(userId, 'backlog', { progress: 40, detail: `Fetching wishlist details... (0/${wishlistOnly.length})` });
+        await ensureGamesCached(wishlistOnly, (cached, total) => {
+          const progress = 40 + Math.round((cached / total) * 15);
+          updateCategory(userId, 'backlog', { progress, detail: `Wishlist details... (${cached}/${total})` });
+        }, cc);
+      }
+
+      // Seed popular games for discovery
+      updateCategory(userId, 'backlog', { progress: 55, detail: 'Loading discovery catalog...' });
+      try {
+        const popularIds = await getPopularGameIds();
+        const allUserAppids = new Set([...ownedGames.map((g) => g.appid), ...wishlistAppids]);
+        const discoveryIds = popularIds.filter((id) => !allUserAppids.has(id));
+        console.log(`[sync] Seeding ${discoveryIds.length} popular games for discovery`);
+
+        await ensureGamesCached(discoveryIds, (cached, total) => {
+          const progress = 55 + Math.round((cached / total) * 40);
+          updateCategory(userId, 'backlog', { progress, detail: `Discovery catalog... (${cached}/${total})` });
+        }, cc);
+      } catch (e) {
+        console.error('[sync] Discovery seeding error:', e);
+      }
+
+      markCategoryComplete(userId, 'backlog');
+      console.log('[sync] Backlog sync complete');
+    } catch (e) {
+      console.error('[sync] Backlog sync error:', e);
+      markCategoryError(userId, 'backlog', `Failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    }
+  }
+
+  // --- Tags (taste profile + recommendations) ---
+  if (has('tags')) {
+    try {
+      updateCategory(userId, 'tags', { progress: 10, detail: 'Building taste profile...' });
+
+      await recalculateTasteProfile(userId).catch((e) => {
+        console.error('[sync] taste profile error:', e);
+      });
+
+      updateCategory(userId, 'tags', { progress: 50, detail: 'Generating recommendations...' });
+
+      try {
+        const recCount = await generateRecommendations(userId);
+        console.log(`[sync] Generated ${recCount} recommendations for user ${userId}`);
+        updateCategory(userId, 'tags', { progress: 95, detail: `Generated ${recCount} recommendations!` });
+      } catch (e) {
+        console.error('[sync] Recommendation generation error:', e);
+        updateCategory(userId, 'tags', { progress: 80, detail: 'Recommendations skipped (Ollama unavailable)' });
+      }
+
+      markCategoryComplete(userId, 'tags');
+      console.log('[sync] Tags sync complete');
+    } catch (e) {
+      console.error('[sync] Tags sync error:', e);
+      markCategoryError(userId, 'tags', `Failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    }
+  }
+
+  console.log(`[sync] All requested categories complete for user ${userId}`);
 }
 
 user.get('/sync-status', async (c) => {
   const userId = c.get('userId');
   const state = getSyncStatus(userId);
   if (!state) {
-    return c.json({ step: 'idle', progress: 0, detail: '', gamesCount: 0, wishlistCount: 0 });
+    return c.json({
+      step: 'idle',
+      progress: 0,
+      detail: '',
+      gamesCount: 0,
+      wishlistCount: 0,
+      categories: {
+        library: { status: 'idle', progress: 0, detail: '' },
+        wishlist: { status: 'idle', progress: 0, detail: '' },
+        backlog: { status: 'idle', progress: 0, detail: '' },
+        tags: { status: 'idle', progress: 0, detail: '' },
+      },
+    });
   }
+
+  const step = getOverallStep(state);
+  const progress = getOverallProgress(state, ALL_CATEGORIES);
+
+  // Find a useful detail string
+  const syncingCat = ALL_CATEGORIES.find((c) => state.categories[c].status === 'syncing');
+  const detail = syncingCat
+    ? state.categories[syncingCat].detail
+    : step === 'complete' ? 'Sync complete!' : '';
+
   return c.json({
-    step: state.step,
-    progress: state.progress,
-    detail: state.detail,
+    step,
+    progress,
+    detail,
     gamesCount: state.gamesCount,
     wishlistCount: state.wishlistCount,
+    categories: state.categories,
   });
 });
 
@@ -411,14 +491,12 @@ user.post('/ignored-tags', async (c) => {
 
   let updated: string[];
   if (body.ignored) {
-    // Add to ignored list
     if (!currentTags.some((t) => t.toLowerCase() === body.tag.toLowerCase())) {
       updated = [...currentTags, body.tag];
     } else {
       updated = currentTags;
     }
   } else {
-    // Remove from ignored list
     updated = currentTags.filter((t) => t.toLowerCase() !== body.tag.toLowerCase());
   }
 
@@ -427,7 +505,6 @@ user.post('/ignored-tags', async (c) => {
     .where(eq(users.id, userId))
     .run();
 
-  // Recalculate taste profile with new ignored tags
   recalculateTasteProfile(userId).catch(() => {});
 
   return c.json({ ignoredTags: updated });
@@ -437,11 +514,9 @@ user.post('/ignored-tags', async (c) => {
 user.get('/export', async (c) => {
   const userId = c.get('userId');
 
-  // Get ignored tags
   const userRow = db.select({ ignored_tags: users.ignored_tags }).from(users).where(eq(users.id, userId)).get();
   const ignoredTags: string[] = userRow?.ignored_tags ? JSON.parse(userRow.ignored_tags) : DEFAULT_IGNORED_TAGS;
 
-  // Get all tag scores from taste profile
   const tasteProfile = db
     .select()
     .from(taste_profiles)
@@ -455,7 +530,6 @@ user.get('/export', async (c) => {
     ? JSON.parse(tasteProfile.genre_scores)
     : {};
 
-  // Get swipe history
   const swipes = db
     .select({
       gameId: swipe_history.game_id,
@@ -500,7 +574,6 @@ user.post('/import', async (c) => {
   let importedTags = 0;
   let importedSwipes = 0;
 
-  // Import ignored tags
   if (body.tags?.ignored) {
     db.update(users)
       .set({ ignored_tags: JSON.stringify(body.tags.ignored) })
@@ -509,19 +582,13 @@ user.post('/import', async (c) => {
     importedTags = body.tags.ignored.length;
   }
 
-  // Import swipe history
   if (body.swipeHistory && body.swipeHistory.length > 0) {
     const nowUnix = Math.floor(Date.now() / 1000);
     for (const swipe of body.swipeHistory) {
       if (!['yes', 'no', 'maybe'].includes(swipe.decision)) continue;
 
-      // Ensure game stub exists for FK
       db.insert(games)
-        .values({
-          id: swipe.gameId,
-          name: `Game ${swipe.gameId}`,
-          cached_at: 0,
-        })
+        .values({ id: swipe.gameId, name: `Game ${swipe.gameId}`, cached_at: 0 })
         .onConflictDoNothing()
         .run();
 
@@ -543,7 +610,6 @@ user.post('/import', async (c) => {
       importedSwipes++;
     }
 
-    // Recalculate taste profile after importing swipes
     recalculateTasteProfile(userId).catch(() => {});
   }
 
