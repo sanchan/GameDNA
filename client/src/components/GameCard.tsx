@@ -257,40 +257,58 @@ export default function GameCard({ game, score, className = '', onSwipe, onInfo 
               {Math.round(score)}% Match
             </div>
           )}
+
+          {/* Price badge — bottom right of image */}
+          <div className="absolute bottom-4 right-4 z-20 bg-[#1a1a1a]/90 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+            <span className="text-lg font-bold text-[var(--primary)]">{formatPrice(game.priceCents)}</span>
+          </div>
         </div>
 
         {/* Content section */}
         <div id="card-content-section" className="flex-1 p-6 flex flex-col">
-          {/* Title + Price */}
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-2xl font-bold mb-1 truncate">{game.name}</h2>
-              {(game.developers.length > 0 || releaseYear) && (
-                <div className="flex items-center space-x-3 text-sm text-gray-400">
-                  {game.developers.length > 0 && <span>{game.developers.join(', ')}</span>}
-                  {game.developers.length > 0 && releaseYear && <span>&bull;</span>}
-                  {releaseYear && <span>{releaseYear}</span>}
-                </div>
-              )}
-            </div>
-            <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
-              <div className="text-2xl font-bold text-[var(--primary)]">
-                {formatPrice(game.priceCents)}
-              </div>
-            </div>
+          {/* Title + Info */}
+          <div className="flex items-start gap-2 mb-1">
+            <h2 className="text-2xl font-bold leading-tight">{game.name}</h2>
+            {onInfo && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onInfo(); }}
+                className="flex-shrink-0 w-7 h-7 bg-blue-500/20 hover:bg-blue-500 rounded-full flex items-center justify-center text-blue-400 hover:text-white transition-all mt-1"
+                title="More info"
+              >
+                <i className="fa-solid fa-info text-xs" />
+              </button>
+            )}
           </div>
 
-          {/* Review badge */}
+          {/* Developer / Year */}
+          {(game.developers.length > 0 || releaseYear) && (
+            <div className="flex items-center space-x-3 text-sm text-gray-400 mb-3">
+              {game.developers.length > 0 && <span>{game.developers.join(', ')}</span>}
+              {game.developers.length > 0 && releaseYear && <span>&bull;</span>}
+              {releaseYear && <span>{releaseYear}</span>}
+            </div>
+          )}
+
+          {/* Review bar */}
           {game.reviewScore !== null && (
-            <div className="flex items-center space-x-2 mb-4">
-              <div className={`flex items-center space-x-1 ${reviewBadgeClasses(game.reviewScore)} px-3 py-1 rounded-full text-xs font-semibold`}>
-                <i className="fa-solid fa-thumbs-up" />
-                <span>{game.reviewScore}%</span>
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm font-semibold" style={{ color: reviewColor(game.reviewScore) }}>
+                  {reviewLabel(game.reviewScore, game.reviewCount)}
+                </span>
+                <span className="text-sm font-bold" style={{ color: reviewColor(game.reviewScore) }}>
+                  {game.reviewScore}%
+                </span>
+              </div>
+              <div className="h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: `${game.reviewScore}%`, backgroundColor: reviewColor(game.reviewScore) }}
+                />
               </div>
               {game.reviewCount !== null && game.reviewCount > 0 && (
-                <div className="flex items-center space-x-1 text-gray-400 text-xs">
-                  <i className="fa-solid fa-users" />
-                  <span>{formatReviewCount(game.reviewCount)}</span>
+                <div className="text-xs text-gray-400 mt-1">
+                  {formatReviewCount(game.reviewCount)}
                 </div>
               )}
             </div>
@@ -318,44 +336,29 @@ export default function GameCard({ game, score, className = '', onSwipe, onInfo 
           )}
 
           {/* Swipe buttons */}
-          {(onSwipe || onInfo) && (
+          {onSwipe && (
             <div className="mt-auto flex items-center justify-center space-x-4">
-              {onSwipe && (
-                <button
-                  onClick={() => onSwipe('no')}
-                  className="group w-16 h-16 bg-red-500/20 hover:bg-red-500 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
-                  title="Not interested"
-                >
-                  <i className="fa-solid fa-xmark text-2xl text-red-500 group-hover:text-white transition-colors" />
-                </button>
-              )}
-              {onSwipe && (
-                <button
-                  onClick={() => onSwipe('maybe')}
-                  className="group w-14 h-14 bg-yellow-500/20 hover:bg-yellow-500 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
-                  title="Maybe later"
-                >
-                  <i className="fa-solid fa-question text-xl text-yellow-500 group-hover:text-white transition-colors" />
-                </button>
-              )}
-              {onSwipe && (
-                <button
-                  onClick={() => onSwipe('yes')}
-                  className="group w-20 h-20 bg-[var(--primary)] hover:bg-[var(--primary)]/80 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-lg shadow-[var(--primary)]/30"
-                  title="Interested!"
-                >
-                  <i className="fa-solid fa-heart text-3xl text-white transition-colors" />
-                </button>
-              )}
-              {onInfo && (
-                <button
-                  onClick={onInfo}
-                  className="group w-14 h-14 bg-blue-500/20 hover:bg-blue-500 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
-                  title="More info"
-                >
-                  <i className="fa-solid fa-info text-xl text-blue-500 group-hover:text-white transition-colors" />
-                </button>
-              )}
+              <button
+                onClick={() => onSwipe('no')}
+                className="group w-16 h-16 bg-red-500/20 hover:bg-red-500 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                title="Not interested"
+              >
+                <i className="fa-solid fa-thumbs-down text-2xl text-red-500 group-hover:text-white transition-colors" />
+              </button>
+              <button
+                onClick={() => onSwipe('maybe')}
+                className="group w-16 h-16 bg-gray-500/20 hover:bg-gray-500 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                title="Maybe later"
+              >
+                <i className="fa-solid fa-minus text-2xl text-gray-400 group-hover:text-white transition-colors" />
+              </button>
+              <button
+                onClick={() => onSwipe('yes')}
+                className="group w-16 h-16 bg-green-500/20 hover:bg-green-500 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                title="Interested!"
+              >
+                <i className="fa-solid fa-thumbs-up text-2xl text-green-500 group-hover:text-white transition-colors" />
+              </button>
             </div>
           )}
         </div>
