@@ -26,7 +26,7 @@ interface HistoryResponse {
 
 export default function Discovery() {
   const { user, loading: authLoading, syncStatus } = useAuth();
-  const { currentGame, swipe, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded } = useDiscovery();
+  const { currentGame, currentScore, swipe, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const filterCount = useFilterCount(filters);
@@ -176,7 +176,7 @@ export default function Discovery() {
             </div>
           ) : currentGame ? (
             <div key={currentGame.id} className={animationClass}>
-              <GameCard game={currentGame} />
+              <GameCard game={currentGame} score={currentScore ? currentScore * 100 : null} />
             </div>
           ) : (
             <div className="flex items-center justify-center text-center text-[var(--muted-foreground)] py-20">

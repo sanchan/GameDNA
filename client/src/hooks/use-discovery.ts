@@ -4,6 +4,11 @@ import { api } from '../lib/api';
 import { useAuth } from './use-auth';
 import type { Game, SwipeDecision, DiscoveryFilters } from '../../../shared/types';
 
+interface ScoredGame {
+  game: Game;
+  score: number;
+}
+
 function buildQueryString(filters: DiscoveryFilters): string {
   const params = new URLSearchParams();
   if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
@@ -18,7 +23,7 @@ export function useDiscovery() {
   const queryClient = useQueryClient();
   const { syncStatus } = useAuth();
   const [filters, setFilters] = useState<DiscoveryFilters>({});
-  const [queue, setQueue] = useState<Game[]>([]);
+  const [queue, setQueue] = useState<ScoredGame[]>([]);
   const [swipedCount, setSwipedCount] = useState(0);
   const [totalLoaded, setTotalLoaded] = useState(0);
   const [animatingOut, setAnimatingOut] = useState<'left' | 'right' | 'down' | null>(null);
@@ -26,7 +31,7 @@ export function useDiscovery() {
 
   const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['discovery-queue', filters],
-    queryFn: () => api.get<Game[]>(`/discovery/queue${buildQueryString(filters)}`),
+    queryFn: () => api.get<ScoredGame[]>(`/discovery/queue${buildQueryString(filters)}`),
     staleTime: 0,
   });
 
@@ -45,12 +50,12 @@ export function useDiscovery() {
   useEffect(() => {
     if (data && data.length > 0) {
       setQueue((prev) => {
-        const existingIds = new Set(prev.map((g) => g.id));
-        const newGames = data.filter((g) => !existingIds.has(g.id));
-        if (newGames.length > 0) {
-          setTotalLoaded((t) => t + newGames.length);
+        const existingIds = new Set(prev.map((sg) => sg.game.id));
+        const newItems = data.filter((sg) => !existingIds.has(sg.game.id));
+        if (newItems.length > 0) {
+          setTotalLoaded((t) => t + newItems.length);
         }
-        return [...prev, ...newGames];
+        return [...prev, ...newItems];
       });
     }
   }, [data, dataUpdatedAt]);
@@ -65,9 +70,15 @@ export function useDiscovery() {
   const swipeMutation = useMutation({
     mutationFn: (params: { gameId: number; decision: SwipeDecision }) =>
       api.post<{ success: boolean }>('/discovery/swipe', params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gaming-dna'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-swipes'] });
+    },
   });
 
-  const currentGame = queue[0] ?? undefined;
+  const current = queue[0] ?? undefined;
+  const currentGame = current?.game;
+  const currentScore = current?.score ?? null;
 
   const swipe = useCallback(
     (decision: SwipeDecision) => {
@@ -97,6 +108,7 @@ export function useDiscovery() {
   return {
     queue,
     currentGame,
+    currentScore,
     swipe,
     isLoading: isLoading && queue.length === 0,
     filters,
