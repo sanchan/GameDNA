@@ -47,6 +47,9 @@ app.route('/api/history', historyRoutes);
 // Lists routes (library, bookmarks, wishlist)
 app.route('/api/lists', listsRoutes);
 
+// Serve design files statically
+app.use('/designs/*', serveStatic({ root: './' }));
+
 // In production, serve static files
 if (process.env.NODE_ENV === 'production') {
   app.use('/*', serveStatic({ root: './client/dist' }));

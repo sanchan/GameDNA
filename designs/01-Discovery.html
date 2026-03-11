@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discovery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>::-webkit-scrollbar { display: none;}</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-orange': 'oklch(0.646 0.222 41.116)',
+                        'dark-bg': '#1a1a1a',
+                        'dark-card': '#242424',
+                        'dark-border': '#333333',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-white font-sans antialiased overflow-x-hidden">
+
+<header id="header" class="sticky top-0 z-50 bg-dark-card/95 backdrop-blur-lg border-b border-dark-border">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 lg:h-20">
+            <div class="flex items-baseline space-x-1">
+                <span class="text-brand-orange text-2xl lg:text-3xl font-black">Game</span>
+                <span class="text-white text-2xl lg:text-3xl font-black">DNA</span>
+            </div>
+
+            <nav id="main-nav" class="hidden lg:flex items-center space-x-1">
+                <a href="#" class="px-4 py-2 rounded-lg bg-brand-orange/10 text-brand-orange font-semibold transition-all">Discovery</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Recommendations</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">My Lists</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">History</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Backlog</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Profile</a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <div class="hidden md:flex items-center space-x-3 bg-dark-bg rounded-full px-4 py-2">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="User" class="w-8 h-8 rounded-full">
+                    <span class="text-sm font-medium">Alex Chen</span>
+                    <button class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                </div>
+                <button class="lg:hidden w-10 h-10 flex items-center justify-center">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main id="discovery-main" class="relative">
+    <div class="flex">
+        <aside id="filter-sidebar" class="hidden lg:block w-80 bg-dark-card border-r border-dark-border h-screen sticky top-20 overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold flex items-center space-x-2">
+                        <i class="fa-solid fa-filter text-brand-orange"></i>
+                        <span>Filters</span>
+                    </h2>
+                    <button id="collapse-sidebar" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                </div>
+
+                <div id="filter-price-range" class="mb-6">
+                    <label class="block text-sm font-semibold mb-3">Price Range</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-400 mb-1 block">Min Price</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                                <input type="number" placeholder="0" class="w-full bg-dark-bg border border-dark-border rounded-lg pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-brand-orange transition-colors">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 mb-1 block">Max Price</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                                <input type="number" placeholder="60" class="w-full bg-dark-bg border border-dark-border rounded-lg pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-brand-orange transition-colors">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="filter-review-score" class="mb-6">
+                    <label class="block text-sm font-semibold mb-3">Minimum Review Score</label>
+                    <input type="range" min="0" max="100" value="70" class="w-full h-2 bg-dark-bg rounded-lg appearance-none cursor-pointer accent-brand-orange">
+                    <div class="flex items-center justify-between mt-2">
+                        <span class="text-xs text-gray-400">0%</span>
+                        <span class="text-sm font-bold text-brand-orange">70%</span>
+                        <span class="text-xs text-gray-400">100%</span>
+                    </div>
+                </div>
+
+                <div id="filter-genres" class="mb-6">
+                    <label class="block text-sm font-semibold mb-3">Genres</label>
+                    <textarea placeholder="Action, RPG, Open World..." class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-orange transition-colors resize-none h-24"></textarea>
+                    <p class="text-xs text-gray-400 mt-2">Separate genres with commas</p>
+                </div>
+
+                <div id="filter-tags" class="mb-6">
+                    <label class="block text-sm font-semibold mb-3">Popular Tags</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="px-3 py-1.5 bg-dark-bg border border-dark-border rounded-full text-xs hover:border-brand-orange hover:text-brand-orange transition-all">Singleplayer</button>
+                        <button class="px-3 py-1.5 bg-dark-bg border border-dark-border rounded-full text-xs hover:border-brand-orange hover:text-brand-orange transition-all">Multiplayer</button>
+                        <button class="px-3 py-1.5 bg-dark-bg border border-dark-border rounded-full text-xs hover:border-brand-orange hover:text-brand-orange transition-all">Co-op</button>
+                        <button class="px-3 py-1.5 bg-dark-bg border border-dark-border rounded-full text-xs hover:border-brand-orange hover:text-brand-orange transition-all">Story Rich</button>
+                        <button class="px-3 py-1.5 bg-dark-bg border border-dark-border rounded-full text-xs hover:border-brand-orange hover:text-brand-orange transition-all">Indie</button>
+                        <button class="px-3 py-1.5 bg-dark-bg border border-dark-border rounded-full text-xs hover:border-brand-orange hover:text-brand-orange transition-all">Atmospheric</button>
+                    </div>
+                </div>
+
+                <div id="filter-release-date" class="mb-6">
+                    <label class="block text-sm font-semibold mb-3">Release Date</label>
+                    <select class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-orange transition-colors">
+                        <option>Any Time</option>
+                        <option>Last 30 Days</option>
+                        <option>Last 6 Months</option>
+                        <option>Last Year</option>
+                        <option>Last 5 Years</option>
+                    </select>
+                </div>
+
+                <div id="filter-actions" class="flex gap-3">
+                    <button class="flex-1 bg-brand-orange hover:bg-brand-orange/80 text-dark-bg font-semibold py-3 rounded-lg transition-all">
+                        Apply
+                    </button>
+                    <button class="px-4 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg transition-all">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+
+                <div id="filter-stats" class="mt-6 pt-6 border-t border-dark-border">
+                    <div class="text-xs text-gray-400 mb-2">Active Filters</div>
+                    <div class="text-2xl font-bold text-brand-orange">3</div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="flex-1 relative">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div id="discovery-header" class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+                    <div>
+                        <h1 class="text-3xl lg:text-4xl font-bold mb-2">Discover Games</h1>
+                        <p class="text-gray-400">Swipe through personalized recommendations</p>
+                    </div>
+                    <button class="lg:hidden flex items-center space-x-2 px-4 py-2 bg-dark-card border border-dark-border rounded-lg">
+                        <i class="fa-solid fa-filter text-brand-orange"></i>
+                        <span class="font-semibold">Filters</span>
+                        <span class="bg-brand-orange text-dark-bg px-2 py-0.5 rounded-full text-xs font-bold">3</span>
+                    </button>
+                </div>
+
+                <div id="swipe-container" class="max-w-md mx-auto">
+                    <div id="game-card-stack" class="relative h-[600px]">
+                        <div id="card-3" class="absolute inset-0 bg-dark-card/30 border border-dark-border rounded-3xl transform translate-y-8 scale-90"></div>
+                        <div id="card-2" class="absolute inset-0 bg-dark-card/50 border border-dark-border rounded-3xl transform translate-y-4 scale-95"></div>
+                        
+                        <div id="main-game-card" class="absolute inset-0 bg-dark-card border border-dark-border rounded-3xl overflow-hidden shadow-2xl">
+                            <div class="relative h-full flex flex-col">
+                                <div id="card-media-section" class="relative h-[360px] bg-dark-bg">
+                                    <button class="absolute top-4 left-4 z-20 w-10 h-10 bg-dark-bg/80 backdrop-blur-sm hover:bg-dark-bg rounded-full flex items-center justify-center transition-all">
+                                        <i class="fa-solid fa-chevron-left"></i>
+                                    </button>
+                                    <button class="absolute top-4 right-4 z-20 w-10 h-10 bg-dark-bg/80 backdrop-blur-sm hover:bg-dark-bg rounded-full flex items-center justify-center transition-all">
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </button>
+                                    <button class="absolute top-4 right-16 z-20 w-10 h-10 bg-dark-bg/80 backdrop-blur-sm hover:bg-dark-bg rounded-full flex items-center justify-center transition-all">
+                                        <i class="fa-solid fa-expand"></i>
+                                    </button>
+                                    
+                                    <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/6aeefddc61-9fc623adfa6ae09094a8.png" alt="dark fantasy action RPG game cover art, dramatic lighting, epic warrior character, neon purple and orange accents, AAA gaming aesthetic, cinematic composition" />
+                                    
+                                    <div class="absolute inset-0 bg-gradient-to-t from-dark-card via-transparent to-transparent"></div>
+                                    
+                                    <div class="absolute top-4 left-1/2 -translate-x-1/2 flex items-center space-x-1">
+                                        <div class="w-2 h-2 bg-brand-orange rounded-full"></div>
+                                        <div class="w-2 h-2 bg-dark-border rounded-full"></div>
+                                        <div class="w-2 h-2 bg-dark-border rounded-full"></div>
+                                        <div class="w-2 h-2 bg-dark-border rounded-full"></div>
+                                    </div>
+
+                                    <div class="absolute top-16 right-4 bg-brand-orange text-dark-bg px-4 py-2 rounded-full font-bold text-sm flex items-center space-x-2 shadow-lg">
+                                        <i class="fa-solid fa-star"></i>
+                                        <span>94% Match</span>
+                                    </div>
+                                </div>
+
+                                <div id="card-content-section" class="flex-1 p-6 flex flex-col">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex-1 min-w-0">
+                                            <h2 class="text-2xl font-bold mb-1 truncate">Dark Souls III</h2>
+                                            <div class="flex items-center space-x-3 text-sm text-gray-400">
+                                                <span>FromSoftware</span>
+                                                <span>•</span>
+                                                <span>2016</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2 flex-shrink-0 ml-4">
+                                            <div class="text-2xl font-bold text-brand-orange">$39.99</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center space-x-2 mb-4">
+                                        <div class="flex items-center space-x-1 bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-xs font-semibold">
+                                            <i class="fa-solid fa-thumbs-up"></i>
+                                            <span>95%</span>
+                                        </div>
+                                        <div class="flex items-center space-x-1 text-gray-400 text-xs">
+                                            <i class="fa-solid fa-users"></i>
+                                            <span>127K reviews</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-wrap gap-2 mb-4">
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action RPG</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Souls-like</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Dark Fantasy</span>
+                                        <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Challenging</span>
+                                    </div>
+
+                                    <p class="text-sm text-gray-400 leading-relaxed mb-6 line-clamp-3">
+                                        Embark on a dark fantasy journey through a dying world. Face challenging enemies, explore intricate environments, and uncover the mysteries of the fading flame in this critically acclaimed action RPG.
+                                    </p>
+
+                                    <div class="mt-auto flex items-center justify-center space-x-4">
+                                        <button id="swipe-no" class="group w-16 h-16 bg-red-500/20 hover:bg-red-500 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg">
+                                            <i class="fa-solid fa-xmark text-2xl group-hover:text-white text-red-500"></i>
+                                        </button>
+                                        <button id="swipe-maybe" class="group w-14 h-14 bg-yellow-500/20 hover:bg-yellow-500 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg">
+                                            <i class="fa-solid fa-question text-xl group-hover:text-dark-bg text-yellow-500"></i>
+                                        </button>
+                                        <button id="swipe-yes" class="group w-20 h-20 bg-brand-orange hover:bg-brand-orange/80 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl shadow-brand-orange/50">
+                                            <i class="fa-solid fa-heart text-3xl"></i>
+                                        </button>
+                                        <button id="info-btn" class="group w-14 h-14 bg-blue-500/20 hover:bg-blue-500 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg">
+                                            <i class="fa-solid fa-info text-xl group-hover:text-white text-blue-500"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="keyboard-hints" class="mt-8 flex items-center justify-center space-x-8 text-sm text-gray-400">
+                        <div class="flex items-center space-x-2">
+                            <kbd class="px-3 py-1 bg-dark-card border border-dark-border rounded-lg font-mono">←</kbd>
+                            <span>No</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <kbd class="px-3 py-1 bg-dark-card border border-dark-border rounded-lg font-mono">↑</kbd>
+                            <span>Maybe</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <kbd class="px-3 py-1 bg-dark-card border border-dark-border rounded-lg font-mono">→</kbd>
+                            <span>Yes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="discovery-stats" class="max-w-4xl mx-auto mt-16">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-dark-card border border-dark-border rounded-2xl p-6 text-center">
+                            <div class="text-3xl font-bold text-brand-orange mb-2">47</div>
+                            <div class="text-sm text-gray-400">Games Swiped</div>
+                        </div>
+                        <div class="bg-dark-card border border-dark-border rounded-2xl p-6 text-center">
+                            <div class="text-3xl font-bold text-green-500 mb-2">23</div>
+                            <div class="text-sm text-gray-400">Liked</div>
+                        </div>
+                        <div class="bg-dark-card border border-dark-border rounded-2xl p-6 text-center">
+                            <div class="text-3xl font-bold text-yellow-500 mb-2">12</div>
+                            <div class="text-sm text-gray-400">Maybe Later</div>
+                        </div>
+                        <div class="bg-dark-card border border-dark-border rounded-2xl p-6 text-center">
+                            <div class="text-3xl font-bold text-red-500 mb-2">12</div>
+                            <div class="text-sm text-gray-400">Passed</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="recent-swipes" class="max-w-4xl mx-auto mt-12">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold">Recent Swipes</h3>
+                        <button class="text-brand-orange hover:text-brand-orange/80 font-semibold text-sm flex items-center space-x-2">
+                            <span>View All</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden hover:border-brand-orange transition-all cursor-pointer group">
+                            <div class="aspect-[3/4] relative overflow-hidden">
+                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/223937de0f-db0104b5707c3cb8b407.png" alt="indie roguelike game cover art, pixel art style, vibrant colors, action-packed" />
+                                <div class="absolute top-2 right-2">
+                                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-heart text-sm"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3">
+                                <div class="font-semibold text-sm mb-1 truncate">Hades</div>
+                                <div class="text-xs text-gray-400">Roguelike</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden hover:border-brand-orange transition-all cursor-pointer group">
+                            <div class="aspect-[3/4] relative overflow-hidden">
+                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/ccd95d281d-523a88f74d54d3baa199.png" alt="sci-fi FPS game cover art, futuristic weapons, cyberpunk aesthetic, neon lighting" />
+                                <div class="absolute top-2 right-2">
+                                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-heart text-sm"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3">
+                                <div class="font-semibold text-sm mb-1 truncate">Cyberpunk 2077</div>
+                                <div class="text-xs text-gray-400">RPG</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden hover:border-brand-orange transition-all cursor-pointer group">
+                            <div class="aspect-[3/4] relative overflow-hidden">
+                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/43b050755b-cdd96235fa5f5123246c.png" alt="horror survival game cover art, dark atmosphere, mysterious forest, eerie lighting" />
+                                <div class="absolute top-2 right-2">
+                                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-question text-sm text-dark-bg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3">
+                                <div class="font-semibold text-sm mb-1 truncate">Resident Evil Village</div>
+                                <div class="text-xs text-gray-400">Horror</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden hover:border-brand-orange transition-all cursor-pointer group">
+                            <div class="aspect-[3/4] relative overflow-hidden">
+                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3807ac7a49-8985c51f11ccc1202dc1.png" alt="strategy game cover art, medieval warfare, tactical battle scene, epic scale" />
+                                <div class="absolute top-2 right-2">
+                                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-xmark text-sm"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3">
+                                <div class="font-semibold text-sm mb-1 truncate">Total War: Warhammer III</div>
+                                <div class="text-xs text-gray-400">Strategy</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="discovery-tips" class="max-w-4xl mx-auto mt-12 bg-gradient-to-br from-purple-600/10 to-brand-orange/10 border border-brand-orange/30 rounded-2xl p-8">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-12 h-12 bg-brand-orange/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-lightbulb text-brand-orange text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">Pro Tip</h4>
+                            <p class="text-gray-400 leading-relaxed">
+                                The more you swipe, the better our AI understands your preferences! Your match percentages will become more accurate with each decision you make.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer id="footer" class="bg-dark-card border-t border-dark-border py-12 lg:py-16 mt-20">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+                <div id="footer-brand">
+                    <div class="flex items-baseline space-x-1 mb-4">
+                        <span class="text-brand-orange text-3xl font-black">Game</span>
+                        <span class="text-white text-3xl font-black">DNA</span>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                        AI-powered game discovery platform that helps you find your next gaming obsession.
+                    </p>
+                    <div class="flex items-center space-x-4">
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-discord"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-reddit"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="footer-product">
+                    <h4 class="font-bold text-lg mb-4">Product</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Features</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">How It Works</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Pricing</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Roadmap</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Changelog</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-company">
+                    <h4 class="font-bold text-lg mb-4">Company</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Press Kit</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-legal">
+                    <h4 class="font-bold text-lg mb-4">Legal</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Cookie Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">GDPR</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Licenses</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-dark-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-gray-500 text-sm text-center md:text-left">
+                    © 2024 GameDNA. All rights reserved. Not affiliated with Valve Corporation.
+                </p>
+                <div class="flex items-center space-x-6 text-sm text-gray-500">
+                    <a href="#" class="hover:text-brand-orange transition-colors">Status</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">API</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">Docs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+window.addEventListener('load', function() {
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') {
+            document.getElementById('swipe-no').click();
+        } else if (e.key === 'ArrowRight') {
+            document.getElementById('swipe-yes').click();
+        } else if (e.key === 'ArrowUp') {
+            document.getElementById('swipe-maybe').click();
+        }
+    });
+
+    const collapseBtn = document.getElementById('collapse-sidebar');
+    const sidebar = document.getElementById('filter-sidebar');
+    
+    if (collapseBtn && sidebar) {
+        collapseBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('hidden');
+        });
+    }
+});
+</script>
+
+</body>
+</html>

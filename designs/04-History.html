@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>::-webkit-scrollbar { display: none;}</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-orange': 'oklch(0.646 0.222 41.116)',
+                        'dark-bg': '#1a1a1a',
+                        'dark-card': '#242424',
+                        'dark-border': '#333333',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-white font-sans antialiased overflow-x-hidden">
+
+<header id="header" class="sticky top-0 z-50 bg-dark-card/95 backdrop-blur-lg border-b border-dark-border">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 lg:h-20">
+            <div class="flex items-baseline space-x-1">
+                <span class="text-brand-orange text-2xl lg:text-3xl font-black">Game</span>
+                <span class="text-white text-2xl lg:text-3xl font-black">DNA</span>
+            </div>
+
+            <nav id="main-nav" class="hidden lg:flex items-center space-x-1">
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Discovery</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Recommendations</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">My Lists</a>
+                <a href="#" class="px-4 py-2 rounded-lg bg-dark-bg text-brand-orange transition-all">History</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Backlog</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Profile</a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <button class="hidden md:flex items-center justify-center w-10 h-10 bg-dark-bg rounded-full hover:bg-brand-orange transition-all">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="hidden md:flex items-center space-x-3 bg-dark-bg rounded-full px-4 py-2">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="User" class="w-8 h-8 rounded-full">
+                    <span class="text-sm font-medium">Alex Chen</span>
+                    <button class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                </div>
+                <button class="lg:hidden w-10 h-10 flex items-center justify-center">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main id="history-main">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <div id="page-header" class="mb-8">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">Swipe History</h1>
+            <p class="text-gray-400 text-lg max-w-3xl">Review your past decisions and discover patterns in your gaming preferences. Your swipe history helps us refine recommendations.</p>
+        </div>
+
+        <div id="search-and-filters" class="bg-dark-card border border-dark-border rounded-2xl p-6 mb-8">
+            <div class="flex flex-col gap-4">
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" placeholder="Search games in your history..." class="w-full bg-dark-bg border border-dark-border rounded-lg pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange transition-all">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm text-gray-400 font-medium">Date Range</label>
+                        <select class="bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange transition-all">
+                            <option>All Time</option>
+                            <option>Last 7 Days</option>
+                            <option>Last 30 Days</option>
+                            <option>Last 3 Months</option>
+                            <option>Last 6 Months</option>
+                            <option>Last Year</option>
+                            <option>Custom Range</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm text-gray-400 font-medium">Decision Type</label>
+                        <select class="bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange transition-all">
+                            <option>All Decisions</option>
+                            <option>Yes (Interested)</option>
+                            <option>Maybe (Consider Later)</option>
+                            <option>No (Not Interested)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm text-gray-400 font-medium">Sort By</label>
+                        <select class="bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange transition-all">
+                            <option>Most Recent</option>
+                            <option>Oldest First</option>
+                            <option>Game Name A-Z</option>
+                            <option>Game Name Z-A</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="decision-summary" class="mb-8">
+            <div class="bg-dark-card border border-dark-border rounded-2xl p-6">
+                <h2 class="text-2xl font-bold mb-6">Decision Summary</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div id="yes-summary" class="bg-dark-bg rounded-xl p-6 border-2 border-green-500/30">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                                    <i class="fa-solid fa-thumbs-up text-green-500 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-green-500">Yes</h3>
+                                    <p class="text-sm text-gray-400">Interested</p>
+                                </div>
+                            </div>
+                            <div class="text-4xl font-black text-green-500">147</div>
+                        </div>
+                        <div class="w-full bg-dark-card rounded-full h-3 overflow-hidden">
+                            <div class="bg-green-500 h-full rounded-full" style="width: 52%"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">52% of total swipes</p>
+                    </div>
+
+                    <div id="maybe-summary" class="bg-dark-bg rounded-xl p-6 border-2 border-yellow-500/30">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                                    <i class="fa-solid fa-minus text-yellow-500 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-yellow-500">Maybe</h3>
+                                    <p class="text-sm text-gray-400">Consider Later</p>
+                                </div>
+                            </div>
+                            <div class="text-4xl font-black text-yellow-500">68</div>
+                        </div>
+                        <div class="w-full bg-dark-card rounded-full h-3 overflow-hidden">
+                            <div class="bg-yellow-500 h-full rounded-full" style="width: 24%"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">24% of total swipes</p>
+                    </div>
+
+                    <div id="no-summary" class="bg-dark-bg rounded-xl p-6 border-2 border-red-500/30">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+                                    <i class="fa-solid fa-thumbs-down text-red-500 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-red-500">No</h3>
+                                    <p class="text-sm text-gray-400">Not Interested</p>
+                                </div>
+                            </div>
+                            <div class="text-4xl font-black text-red-500">68</div>
+                        </div>
+                        <div class="w-full bg-dark-card rounded-full h-3 overflow-hidden">
+                            <div class="bg-red-500 h-full rounded-full" style="width: 24%"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">24% of total swipes</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-dark-border">
+                    <div class="flex items-center space-x-6">
+                        <div>
+                            <p class="text-sm text-gray-400">Total Swipes</p>
+                            <p class="text-2xl font-black">283</p>
+                        </div>
+                        <div class="h-12 w-px bg-dark-border"></div>
+                        <div>
+                            <p class="text-sm text-gray-400">This Week</p>
+                            <p class="text-2xl font-black text-brand-orange">42</p>
+                        </div>
+                        <div class="h-12 w-px bg-dark-border"></div>
+                        <div>
+                            <p class="text-sm text-gray-400">Avg. Per Day</p>
+                            <p class="text-2xl font-black">6.8</p>
+                        </div>
+                    </div>
+                    <button class="flex items-center space-x-2 px-5 py-3 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Export History</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="history-list" class="space-y-4">
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3a26c875c2-98372a76cc4ed92f77d3.png" alt="fantasy RPG game thumbnail" />
+                    </div>
+                    <div class="flex-1 min-w-0 w-full">
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-xl font-bold mb-2 truncate">Elden Ring</h3>
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Open World</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action RPG</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Souls-like</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="flex items-center space-x-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full font-bold">
+                                    <i class="fa-solid fa-thumbs-up"></i>
+                                    <span>Yes</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <div class="text-sm text-gray-400">
+                                <i class="fa-solid fa-clock mr-1"></i>Swiped 2 hours ago
+                            </div>
+                            <span class="text-gray-600">•</span>
+                            <div class="text-sm text-gray-400">Dec 15, 2024 at 3:42 PM</div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-yellow-500 hover:text-yellow-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>Change to Maybe</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-xmark"></i>
+                                <span>Change to No</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Game</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/74aed75155-1e908bc25c7caf8f5dc8.png" alt="cyberpunk action game thumbnail" />
+                    </div>
+                    <div class="flex-1 min-w-0 w-full">
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-xl font-bold mb-2 truncate">Cyberpunk 2077</h3>
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">RPG</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Cyberpunk</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Open World</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="flex items-center space-x-2 bg-yellow-500/20 text-yellow-500 px-4 py-2 rounded-full font-bold">
+                                    <i class="fa-solid fa-minus"></i>
+                                    <span>Maybe</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <div class="text-sm text-gray-400">
+                                <i class="fa-solid fa-clock mr-1"></i>Swiped 5 hours ago
+                            </div>
+                            <span class="text-gray-600">•</span>
+                            <div class="text-sm text-gray-400">Dec 15, 2024 at 12:18 PM</div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-green-500 hover:text-green-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-thumbs-up"></i>
+                                <span>Change to Yes</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-xmark"></i>
+                                <span>Change to No</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Game</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/4d4d3bbc66-97cf68d20b6db2ba34f3.png" alt="dark fantasy action game thumbnail" />
+                    </div>
+                    <div class="flex-1 min-w-0 w-full">
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-xl font-bold mb-2 truncate">Dark Souls III</h3>
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Souls-like</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Dark Fantasy</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="flex items-center space-x-2 bg-red-500/20 text-red-500 px-4 py-2 rounded-full font-bold">
+                                    <i class="fa-solid fa-thumbs-down"></i>
+                                    <span>No</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <div class="text-sm text-gray-400">
+                                <i class="fa-solid fa-clock mr-1"></i>Swiped yesterday
+                            </div>
+                            <span class="text-gray-600">•</span>
+                            <div class="text-sm text-gray-400">Dec 14, 2024 at 8:32 PM</div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-green-500 hover:text-green-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-thumbs-up"></i>
+                                <span>Change to Yes</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-yellow-500 hover:text-yellow-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>Change to Maybe</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Game</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/c5a2c39014-bd53d153c56a3b5b8e5e.png" alt="samurai action game thumbnail" />
+                    </div>
+                    <div class="flex-1 min-w-0 w-full">
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-xl font-bold mb-2 truncate">Sekiro: Shadows Die Twice</h3>
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Ninja</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Souls-like</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="flex items-center space-x-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full font-bold">
+                                    <i class="fa-solid fa-thumbs-up"></i>
+                                    <span>Yes</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <div class="text-sm text-gray-400">
+                                <i class="fa-solid fa-clock mr-1"></i>Swiped 2 days ago
+                            </div>
+                            <span class="text-gray-600">•</span>
+                            <div class="text-sm text-gray-400">Dec 13, 2024 at 4:15 PM</div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-yellow-500 hover:text-yellow-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>Change to Maybe</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-xmark"></i>
+                                <span>Change to No</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Game</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/71d420f6a3-89874474795834064c8d.png" alt="space exploration game thumbnail" />
+                    </div>
+                    <div class="flex-1 min-w-0 w-full">
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-xl font-bold mb-2 truncate">Starfield</h3>
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">RPG</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Sci-Fi</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Space</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="flex items-center space-x-2 bg-yellow-500/20 text-yellow-500 px-4 py-2 rounded-full font-bold">
+                                    <i class="fa-solid fa-minus"></i>
+                                    <span>Maybe</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <div class="text-sm text-gray-400">
+                                <i class="fa-solid fa-clock mr-1"></i>Swiped 3 days ago
+                            </div>
+                            <span class="text-gray-600">•</span>
+                            <div class="text-sm text-gray-400">Dec 12, 2024 at 10:45 AM</div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-green-500 hover:text-green-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-thumbs-up"></i>
+                                <span>Change to Yes</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-xmark"></i>
+                                <span>Change to No</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Game</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/1eb18c2cd5-664651eb28f6b1f9cf0a.png" alt="horror survival game thumbnail" />
+                    </div>
+                    <div class="flex-1 min-w-0 w-full">
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-xl font-bold mb-2 truncate">Resident Evil Village</h3>
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Horror</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Survival</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="flex items-center space-x-2 bg-red-500/20 text-red-500 px-4 py-2 rounded-full font-bold">
+                                    <i class="fa-solid fa-thumbs-down"></i>
+                                    <span>No</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <div class="text-sm text-gray-400">
+                                <i class="fa-solid fa-clock mr-1"></i>Swiped 4 days ago
+                            </div>
+                            <span class="text-gray-600">•</span>
+                            <div class="text-sm text-gray-400">Dec 11, 2024 at 7:22 PM</div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-green-500 hover:text-green-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-thumbs-up"></i>
+                                <span>Change to Yes</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-yellow-500 hover:text-yellow-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>Change to Maybe</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Game</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/74aed75155-1e908bc25c7caf8f5dc8.png" alt="indie platformer game thumbnail" />
+                    </div>
+                    <div class="flex-1 min-w-0 w-full">
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-xl font-bold mb-2 truncate">Hollow Knight</h3>
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Metroidvania</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Indie</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Platformer</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="flex items-center space-x-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full font-bold">
+                                    <i class="fa-solid fa-thumbs-up"></i>
+                                    <span>Yes</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <div class="text-sm text-gray-400">
+                                <i class="fa-solid fa-clock mr-1"></i>Swiped 5 days ago
+                            </div>
+                            <span class="text-gray-600">•</span>
+                            <div class="text-sm text-gray-400">Dec 10, 2024 at 2:56 PM</div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-yellow-500 hover:text-yellow-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>Change to Maybe</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-xmark"></i>
+                                <span>Change to No</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Game</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-brand-orange transition-all">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="w-full sm:w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/4d4d3bbc66-97cf68d20b6db2ba34f3.png" alt="strategy game thumbnail" />
+                    </div>
+                    <div class="flex-1 min-w-0 w-full">
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-xl font-bold mb-2 truncate">Baldur's Gate 3</h3>
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">RPG</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Strategy</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Turn-Based</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="flex items-center space-x-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full font-bold">
+                                    <i class="fa-solid fa-thumbs-up"></i>
+                                    <span>Yes</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <div class="text-sm text-gray-400">
+                                <i class="fa-solid fa-clock mr-1"></i>Swiped 1 week ago
+                            </div>
+                            <span class="text-gray-600">•</span>
+                            <div class="text-sm text-gray-400">Dec 8, 2024 at 6:12 PM</div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-yellow-500 hover:text-yellow-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>Change to Maybe</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-xmark"></i>
+                                <span>Change to No</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Game</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pagination" class="flex items-center justify-center gap-2 pt-8">
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button class="w-10 h-10 bg-brand-orange text-dark-bg font-bold rounded-lg flex items-center justify-center">1</button>
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">2</button>
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">3</button>
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">4</button>
+            <span class="text-gray-500">...</span>
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">18</button>
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</main>
+
+<footer id="footer" class="bg-dark-card border-t border-dark-border py-12 lg:py-16 mt-20">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+                <div id="footer-brand">
+                    <div class="flex items-baseline space-x-1 mb-4">
+                        <span class="text-brand-orange text-3xl font-black">Game</span>
+                        <span class="text-white text-3xl font-black">DNA</span>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                        AI-powered game discovery platform that helps you find your next gaming obsession.
+                    </p>
+                    <div class="flex items-center space-x-4">
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-discord"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-reddit"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="footer-product">
+                    <h4 class="font-bold text-lg mb-4">Product</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Features</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">How It Works</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Pricing</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Roadmap</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Changelog</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-company">
+                    <h4 class="font-bold text-lg mb-4">Company</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Press Kit</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-legal">
+                    <h4 class="font-bold text-lg mb-4">Legal</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Cookie Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">GDPR</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Licenses</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-dark-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-gray-500 text-sm text-center md:text-left">
+                    © 2024 GameDNA. All rights reserved. Not affiliated with Valve Corporation.
+                </p>
+                <div class="flex items-center space-x-6 text-sm text-gray-500">
+                    <a href="#" class="hover:text-brand-orange transition-colors">Status</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">API</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">Docs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

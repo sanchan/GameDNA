@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backlog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>::-webkit-scrollbar { display: none;}</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-orange': 'oklch(0.646 0.222 41.116)',
+                        'dark-bg': '#1a1a1a',
+                        'dark-card': '#242424',
+                        'dark-border': '#333333',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-white font-sans antialiased overflow-x-hidden">
+
+<header id="header" class="sticky top-0 z-50 bg-dark-card/95 backdrop-blur-lg border-b border-dark-border">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 lg:h-20">
+            <div class="flex items-baseline space-x-1">
+                <span class="text-brand-orange text-2xl lg:text-3xl font-black">Game</span>
+                <span class="text-white text-2xl lg:text-3xl font-black">DNA</span>
+            </div>
+
+            <nav id="main-nav" class="hidden lg:flex items-center space-x-1">
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Discovery</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Recommendations</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">My Lists</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">History</a>
+                <a href="#" class="px-4 py-2 rounded-lg bg-dark-bg text-brand-orange transition-all">Backlog</a>
+                <a href="#" class="px-4 py-2 rounded-lg hover:bg-dark-bg transition-all">Profile</a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <button class="hidden md:flex items-center justify-center w-10 h-10 bg-dark-bg rounded-full hover:bg-brand-orange transition-all">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="hidden md:flex items-center space-x-3 bg-dark-bg rounded-full px-4 py-2">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="User" class="w-8 h-8 rounded-full">
+                    <span class="text-sm font-medium">Alex Chen</span>
+                    <button class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                </div>
+                <button class="lg:hidden w-10 h-10 flex items-center justify-center">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main id="backlog-main">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <div id="page-header" class="mb-8">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">AI Backlog Analysis</h1>
+            <p class="text-gray-400 text-lg max-w-3xl">Let AI analyze your unplayed games and get personalized insights on what to play next based on estimated playtime and predicted enjoyment.</p>
+        </div>
+
+        <div id="analysis-header" class="bg-dark-card border border-dark-border rounded-2xl p-6 mb-8">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-12 h-12 bg-brand-orange/20 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-brain text-brand-orange text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold">AI Analysis Ready</h2>
+                            <p class="text-sm text-gray-400">Last analyzed: Dec 10, 2024 at 2:45 PM</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 text-sm">Run a fresh analysis to get updated recommendations based on your latest gaming patterns and preferences.</p>
+                </div>
+                <button id="analyze-button" class="flex items-center space-x-3 px-6 py-4 bg-brand-orange hover:bg-brand-orange/90 rounded-xl text-lg font-bold transition-all shadow-lg shadow-brand-orange/20">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Analyze with AI</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="backlog-stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-gamepad text-blue-500"></i>
+                    </div>
+                    <span class="text-3xl font-black">47</span>
+                </div>
+                <h3 class="text-sm text-gray-400 mb-1">Unplayed Games</h3>
+                <p class="text-xs text-gray-500">In your library</p>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-clock text-purple-500"></i>
+                    </div>
+                    <span class="text-3xl font-black">342h</span>
+                </div>
+                <h3 class="text-sm text-gray-400 mb-1">Total Playtime</h3>
+                <p class="text-xs text-gray-500">Estimated to complete</p>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-star text-green-500"></i>
+                    </div>
+                    <span class="text-3xl font-black">12</span>
+                </div>
+                <h3 class="text-sm text-gray-400 mb-1">High Priority</h3>
+                <p class="text-xs text-gray-500">Recommended to play</p>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-yellow-500"></i>
+                    </div>
+                    <span class="text-3xl font-black">8.4</span>
+                </div>
+                <h3 class="text-sm text-gray-400 mb-1">Avg. Match Score</h3>
+                <p class="text-xs text-gray-500">Based on your DNA</p>
+            </div>
+        </div>
+
+        <div id="filters-and-sort" class="bg-dark-card border border-dark-border rounded-2xl p-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm text-gray-400 font-medium">Sort By</label>
+                    <select class="bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange transition-all">
+                        <option>Enjoyment Score (High to Low)</option>
+                        <option>Enjoyment Score (Low to High)</option>
+                        <option>Playtime (Shortest First)</option>
+                        <option>Playtime (Longest First)</option>
+                        <option>Recently Added</option>
+                        <option>Game Name A-Z</option>
+                        <option>Game Name Z-A</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm text-gray-400 font-medium">Playtime Filter</label>
+                    <select class="bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange transition-all">
+                        <option>All Games</option>
+                        <option>Quick Wins (Under 5h)</option>
+                        <option>Short Games (5-15h)</option>
+                        <option>Medium Games (15-40h)</option>
+                        <option>Long Games (40h+)</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm text-gray-400 font-medium">Match Score</label>
+                    <select class="bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange transition-all">
+                        <option>All Scores</option>
+                        <option>Excellent Match (9-10)</option>
+                        <option>Great Match (7-8.9)</option>
+                        <option>Good Match (5-6.9)</option>
+                        <option>Fair Match (Below 5)</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm text-gray-400 font-medium">Genre</label>
+                    <select class="bg-dark-bg border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-orange transition-all">
+                        <option>All Genres</option>
+                        <option>Action</option>
+                        <option>RPG</option>
+                        <option>Strategy</option>
+                        <option>Indie</option>
+                        <option>Adventure</option>
+                        <option>Simulation</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="backlog-list" class="space-y-4">
+            <div class="bg-dark-card border-2 border-green-500/30 rounded-xl p-6 hover:border-green-500 transition-all">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3a26c875c2-98372a76cc4ed92f77d3.png" alt="action RPG with dark fantasy theme" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <h3 class="text-2xl font-bold">Hades</h3>
+                                    <span class="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-xs font-bold">HIGH PRIORITY</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Roguelike</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Action</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Indie</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center">
+                                    <div class="text-4xl font-black text-green-500 mb-1">9.6</div>
+                                    <p class="text-xs text-gray-400">Match Score</p>
+                                </div>
+                                <div class="w-px h-16 bg-dark-border"></div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-black mb-1">22h</div>
+                                    <p class="text-xs text-gray-400">Est. Playtime</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-bold text-brand-orange mb-2">
+                                <i class="fa-solid fa-lightbulb mr-2"></i>AI Recommendation
+                            </h4>
+                            <p class="text-sm text-gray-300 leading-relaxed">Perfect match for your love of fast-paced combat and Greek mythology. The roguelike structure fits your preference for replayable content. Estimated 22 hours to complete main story with high replay value.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-sm font-bold transition-all">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Play Now</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Add to Wishlist</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Details</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-gray-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Mark as Played</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border-2 border-green-500/30 rounded-xl p-6 hover:border-green-500 transition-all">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/74aed75155-1e908bc25c7caf8f5dc8.png" alt="indie puzzle platformer game" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <h3 class="text-2xl font-bold">Celeste</h3>
+                                    <span class="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-xs font-bold">HIGH PRIORITY</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Platformer</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Indie</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Precision</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center">
+                                    <div class="text-4xl font-black text-green-500 mb-1">9.3</div>
+                                    <p class="text-xs text-gray-400">Match Score</p>
+                                </div>
+                                <div class="w-px h-16 bg-dark-border"></div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-black mb-1">8h</div>
+                                    <p class="text-xs text-gray-400">Est. Playtime</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-bold text-brand-orange mb-2">
+                                <i class="fa-solid fa-lightbulb mr-2"></i>AI Recommendation
+                            </h4>
+                            <p class="text-sm text-gray-300 leading-relaxed">Excellent match for your skill-based gameplay preference. The tight controls and challenging platforming align with your DNA profile. Compact 8-hour experience perfect for a focused weekend session.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-sm font-bold transition-all">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Play Now</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Add to Wishlist</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Details</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-gray-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Mark as Played</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/4d4d3bbc66-97cf68d20b6db2ba34f3.png" alt="story-driven adventure game" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <h3 class="text-2xl font-bold">Disco Elysium</h3>
+                                    <span class="bg-yellow-500/20 text-yellow-500 px-3 py-1 rounded-full text-xs font-bold">GOOD MATCH</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">RPG</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Story-Rich</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Detective</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center">
+                                    <div class="text-4xl font-black text-yellow-500 mb-1">8.7</div>
+                                    <p class="text-xs text-gray-400">Match Score</p>
+                                </div>
+                                <div class="w-px h-16 bg-dark-border"></div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-black mb-1">25h</div>
+                                    <p class="text-xs text-gray-400">Est. Playtime</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-bold text-brand-orange mb-2">
+                                <i class="fa-solid fa-lightbulb mr-2"></i>AI Recommendation
+                            </h4>
+                            <p class="text-sm text-gray-300 leading-relaxed">Strong narrative focus matches your interest in story-driven games. Deep dialogue system and unique mechanics offer fresh gameplay. Estimated 25 hours for a thorough playthrough with multiple conversation paths.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 rounded-lg text-sm font-bold transition-all">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Play Now</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Add to Wishlist</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Details</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-gray-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Mark as Played</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/c5a2c39014-bd53d153c56a3b5b8e5e.png" alt="tactical strategy game" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <h3 class="text-2xl font-bold">XCOM 2</h3>
+                                    <span class="bg-yellow-500/20 text-yellow-500 px-3 py-1 rounded-full text-xs font-bold">GOOD MATCH</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Strategy</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Turn-Based</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Tactical</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center">
+                                    <div class="text-4xl font-black text-yellow-500 mb-1">8.2</div>
+                                    <p class="text-xs text-gray-400">Match Score</p>
+                                </div>
+                                <div class="w-px h-16 bg-dark-border"></div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-black mb-1">35h</div>
+                                    <p class="text-xs text-gray-400">Est. Playtime</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-bold text-brand-orange mb-2">
+                                <i class="fa-solid fa-lightbulb mr-2"></i>AI Recommendation
+                            </h4>
+                            <p class="text-sm text-gray-300 leading-relaxed">Strategic depth aligns with your tactical thinking preferences. Turn-based combat allows for thoughtful decision-making. Campaign estimated at 35 hours with high replayability through different squad builds.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 rounded-lg text-sm font-bold transition-all">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Play Now</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Add to Wishlist</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Details</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-gray-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Mark as Played</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/71d420f6a3-89874474795834064c8d.png" alt="survival crafting game" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <h3 class="text-2xl font-bold">Subnautica</h3>
+                                    <span class="bg-blue-500/20 text-blue-500 px-3 py-1 rounded-full text-xs font-bold">FAIR MATCH</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Survival</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Exploration</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Crafting</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center">
+                                    <div class="text-4xl font-black text-blue-500 mb-1">7.8</div>
+                                    <p class="text-xs text-gray-400">Match Score</p>
+                                </div>
+                                <div class="w-px h-16 bg-dark-border"></div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-black mb-1">28h</div>
+                                    <p class="text-xs text-gray-400">Est. Playtime</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-bold text-brand-orange mb-2">
+                                <i class="fa-solid fa-lightbulb mr-2"></i>AI Recommendation
+                            </h4>
+                            <p class="text-sm text-gray-300 leading-relaxed">Exploration mechanics match your curiosity-driven playstyle. Underwater setting offers unique atmosphere different from typical survival games. Main story completion estimated at 28 hours with optional base building extending playtime.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 rounded-lg text-sm font-bold transition-all">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Play Now</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Add to Wishlist</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Details</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-gray-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Mark as Played</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/1eb18c2cd5-664651eb28f6b1f9cf0a.png" alt="puzzle adventure game" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <h3 class="text-2xl font-bold">The Witness</h3>
+                                    <span class="bg-blue-500/20 text-blue-500 px-3 py-1 rounded-full text-xs font-bold">FAIR MATCH</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Puzzle</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Exploration</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">First-Person</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center">
+                                    <div class="text-4xl font-black text-blue-500 mb-1">7.4</div>
+                                    <p class="text-xs text-gray-400">Match Score</p>
+                                </div>
+                                <div class="w-px h-16 bg-dark-border"></div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-black mb-1">12h</div>
+                                    <p class="text-xs text-gray-400">Est. Playtime</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-bold text-brand-orange mb-2">
+                                <i class="fa-solid fa-lightbulb mr-2"></i>AI Recommendation
+                            </h4>
+                            <p class="text-sm text-gray-300 leading-relaxed">Cerebral puzzle design appeals to your problem-solving skills. Minimalist approach contrasts with action-heavy preferences but offers mental challenge. Compact 12-hour experience with optional 100% completion extending playtime significantly.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 rounded-lg text-sm font-bold transition-all">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Play Now</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Add to Wishlist</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Details</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-gray-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Mark as Played</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3a26c875c2-98372a76cc4ed92f77d3.png" alt="racing simulation game" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <h3 class="text-2xl font-bold">Forza Horizon 5</h3>
+                                    <span class="bg-gray-500/20 text-gray-400 px-3 py-1 rounded-full text-xs font-bold">LOW PRIORITY</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Racing</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Open World</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Simulation</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center">
+                                    <div class="text-4xl font-black text-gray-400 mb-1">6.2</div>
+                                    <p class="text-xs text-gray-400">Match Score</p>
+                                </div>
+                                <div class="w-px h-16 bg-dark-border"></div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-black mb-1">45h</div>
+                                    <p class="text-xs text-gray-400">Est. Playtime</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-bold text-brand-orange mb-2">
+                                <i class="fa-solid fa-lightbulb mr-2"></i>AI Recommendation
+                            </h4>
+                            <p class="text-sm text-gray-300 leading-relaxed">Racing genre shows limited match with your typical preferences. Open world structure provides variety but gameplay loop differs significantly from your DNA profile. Consider for casual sessions rather than deep engagement. Estimated 45 hours for main content.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 rounded-lg text-sm font-bold transition-all">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Play Now</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Add to Wishlist</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Details</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-gray-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Mark as Played</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6 hover:border-brand-orange transition-all">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/74aed75155-1e908bc25c7caf8f5dc8.png" alt="sports simulation game" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <h3 class="text-2xl font-bold">FIFA 24</h3>
+                                    <span class="bg-gray-500/20 text-gray-400 px-3 py-1 rounded-full text-xs font-bold">LOW PRIORITY</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Sports</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Simulation</span>
+                                    <span class="bg-dark-bg px-3 py-1 rounded-full text-xs font-medium">Multiplayer</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-center">
+                                    <div class="text-4xl font-black text-gray-400 mb-1">5.8</div>
+                                    <p class="text-xs text-gray-400">Match Score</p>
+                                </div>
+                                <div class="w-px h-16 bg-dark-border"></div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-black mb-1">∞</div>
+                                    <p class="text-xs text-gray-400">Est. Playtime</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-bold text-brand-orange mb-2">
+                                <i class="fa-solid fa-lightbulb mr-2"></i>AI Recommendation
+                            </h4>
+                            <p class="text-sm text-gray-300 leading-relaxed">Sports simulation doesn't align with your gaming DNA profile. Multiplayer focus contrasts with your single-player preferences. May serve as a casual alternative for social gaming sessions. Playtime varies greatly based on engagement with online modes.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 rounded-lg text-sm font-bold transition-all">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Play Now</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Add to Wishlist</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-brand-orange rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View Details</span>
+                            </button>
+                            <button class="flex items-center space-x-2 px-4 py-2 bg-dark-bg border border-dark-border hover:border-gray-500 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Mark as Played</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pagination" class="flex items-center justify-center gap-2 pt-8">
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button class="w-10 h-10 bg-brand-orange text-dark-bg font-bold rounded-lg flex items-center justify-center">1</button>
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">2</button>
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">3</button>
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">4</button>
+            <span class="text-gray-500">...</span>
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">6</button>
+            <button class="w-10 h-10 bg-dark-card border border-dark-border hover:border-brand-orange rounded-lg flex items-center justify-center transition-all">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <div id="ai-insights" class="bg-gradient-to-br from-brand-orange/10 to-purple-500/10 border border-brand-orange/30 rounded-2xl p-8 mt-12">
+            <div class="flex items-start space-x-4 mb-6">
+                <div class="w-16 h-16 bg-brand-orange/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-chart-line text-brand-orange text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">Your Backlog Insights</h2>
+                    <p class="text-gray-400">AI-generated analysis based on your gaming DNA and backlog composition</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-dark-card/50 rounded-xl p-6">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-fire text-green-500"></i>
+                        </div>
+                        <h3 class="font-bold">Top Genre Match</h3>
+                    </div>
+                    <p class="text-2xl font-black text-green-500 mb-2">Roguelike/Action</p>
+                    <p class="text-sm text-gray-400">You have 8 unplayed games in your favorite genre with an average match score of 9.1</p>
+                </div>
+
+                <div class="bg-dark-card/50 rounded-xl p-6">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-hourglass-half text-purple-500"></i>
+                        </div>
+                        <h3 class="font-bold">Quick Wins Available</h3>
+                    </div>
+                    <p class="text-2xl font-black text-purple-500 mb-2">14 Games</p>
+                    <p class="text-sm text-gray-400">Under 10 hours to complete. Perfect for finishing between major releases</p>
+                </div>
+
+                <div class="bg-dark-card/50 rounded-xl p-6">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-calendar-days text-yellow-500"></i>
+                        </div>
+                        <h3 class="font-bold">Completion Timeline</h3>
+                    </div>
+                    <p class="text-2xl font-black text-yellow-500 mb-2">~8 Months</p>
+                    <p class="text-sm text-gray-400">Playing 10 hours per week at current pace to clear backlog</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer id="footer" class="bg-dark-card border-t border-dark-border py-12 lg:py-16 mt-20">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+                <div id="footer-brand">
+                    <div class="flex items-baseline space-x-1 mb-4">
+                        <span class="text-brand-orange text-3xl font-black">Game</span>
+                        <span class="text-white text-3xl font-black">DNA</span>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                        AI-powered game discovery platform that helps you find your next gaming obsession.
+                    </p>
+                    <div class="flex items-center space-x-4">
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-discord"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-reddit"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-dark-bg hover:bg-brand-orange rounded-full flex items-center justify-center transition-all">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="footer-product">
+                    <h4 class="font-bold text-lg mb-4">Product</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Features</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">How It Works</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Pricing</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Roadmap</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Changelog</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-company">
+                    <h4 class="font-bold text-lg mb-4">Company</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Press Kit</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div id="footer-legal">
+                    <h4 class="font-bold text-lg mb-4">Legal</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Cookie Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">GDPR</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-brand-orange transition-colors">Licenses</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-dark-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-gray-500 text-sm text-center md:text-left">
+                    © 2024 GameDNA. All rights reserved. Not affiliated with Valve Corporation.
+                </p>
+                <div class="flex items-center space-x-6 text-sm text-gray-500">
+                    <a href="#" class="hover:text-brand-orange transition-colors">Status</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">API</a>
+                    <a href="#" class="hover:text-brand-orange transition-colors">Docs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+window.addEventListener('load', function() {
+    const analyzeButton = document.getElementById('analyze-button');
+    
+    analyzeButton.addEventListener('click', function() {
+        analyzeButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Analyzing...</span>';
+        analyzeButton.classList.add('opacity-75', 'cursor-not-allowed');
+        
+        setTimeout(function() {
+            analyzeButton.innerHTML = '<i class="fa-solid fa-check"></i><span>Analysis Complete!</span>';
+            setTimeout(function() {
+                analyzeButton.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i><span>Analyze with AI</span>';
+                analyzeButton.classList.remove('opacity-75', 'cursor-not-allowed');
+            }, 2000);
+        }, 3000);
+    });
+});
+</script>
+
+</body>
+</html>
