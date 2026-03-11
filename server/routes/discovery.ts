@@ -130,7 +130,7 @@ discovery.get('/queue', async (c) => {
 
   if (!hasProfile) {
     // No taste profile yet — fall back to popular games
-    return c.json(rows.map(dbGameToGame));
+    return c.json(rows.map((r) => ({ game: dbGameToGame(r), score: 0 })));
   }
 
   // Score each game by taste match
@@ -168,7 +168,7 @@ discovery.get('/queue', async (c) => {
     [top[i], top[j]] = [top[j], top[i]];
   }
 
-  const result: Game[] = top.slice(0, 10).map((s) => dbGameToGame(s.game));
+  const result = top.slice(0, 10).map((s) => ({ game: dbGameToGame(s.game), score: s.score }));
   return c.json(result);
 });
 
