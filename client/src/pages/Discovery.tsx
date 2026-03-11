@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { useDiscovery } from '../hooks/use-discovery';
+import { api } from '../lib/api';
 import GameCard from '../components/GameCard';
 import SwipeControls from '../components/SwipeControls';
 import FilterPanel from '../components/FilterPanel';
@@ -9,7 +10,8 @@ import type { SwipeDecision } from '../../../shared/types';
 
 export default function Discovery() {
   const { user, loading: authLoading, syncStatus } = useAuth();
-  const { currentGame, swipe, isLoading, filters, setFilters, animatingOut } = useDiscovery();
+  const { currentGame, swipe, isLoading, filters, setFilters, animatingOut, refetchQueue } = useDiscovery();
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -30,6 +32,20 @@ export default function Discovery() {
     return () => window.removeEventListener('keydown', handler);
   }, [currentGame, swipe]);
 
+  const handleLoadMore = async () => {
+    setLoadingMore(true);
+    try {
+      const result = await api.post<{ added: number }>('/discovery/load-more');
+      if (result.added > 0) {
+        refetchQueue();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   if (authLoading) return null;
   if (!user) return <Navigate to="/" />;
 
@@ -47,7 +63,7 @@ export default function Discovery() {
         <FilterPanel filters={filters} onApply={setFilters} />
 
         <div className="relative min-h-[500px] flex items-start justify-center w-full">
-          {isLoading ? (
+          {isLoading || loadingMore ? (
             /* Skeleton card */
             <div className="max-w-sm w-full rounded-xl overflow-hidden bg-[var(--card)] shadow-lg">
               <div className="w-full aspect-video bg-[var(--muted)] animate-pulse" />
@@ -61,6 +77,11 @@ export default function Discovery() {
                 <div className="h-4 w-1/2 bg-[var(--muted)] rounded animate-pulse" />
                 <div className="h-12 w-full bg-[var(--muted)] rounded animate-pulse" />
               </div>
+              {loadingMore && (
+                <div className="p-4 pt-0 text-center">
+                  <p className="text-sm text-[var(--muted-foreground)]">Fetching new games from Steam...</p>
+                </div>
+              )}
             </div>
           ) : currentGame ? (
             <div key={currentGame.id} className={animationClass}>
@@ -77,7 +98,13 @@ export default function Discovery() {
               ) : (
                 <>
                   <p className="text-lg mb-2">No more games to discover!</p>
-                  <p className="text-sm">Adjust your filters or check back later.</p>
+                  <p className="text-sm mb-4">Want to load more games from Steam?</p>
+                  <button
+                    onClick={handleLoadMore}
+                    className="bg-[var(--primary)] text-[var(--primary-foreground)] px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Load More Games
+                  </button>
                 </>
               )}
             </div>

@@ -396,4 +396,121 @@ user.post('/ignored-tags', async (c) => {
   return c.json({ ignoredTags: updated });
 });
 
+// Export user data as JSON
+user.get('/export', async (c) => {
+  const userId = c.get('userId');
+
+  // Get ignored tags
+  const userRow = db.select({ ignored_tags: users.ignored_tags }).from(users).where(eq(users.id, userId)).get();
+  const ignoredTags: string[] = userRow?.ignored_tags ? JSON.parse(userRow.ignored_tags) : DEFAULT_IGNORED_TAGS;
+
+  // Get all tag scores from taste profile
+  const tasteProfile = db
+    .select()
+    .from(taste_profiles)
+    .where(eq(taste_profiles.user_id, userId))
+    .get();
+
+  const tagScores: Record<string, number> = tasteProfile?.tag_scores
+    ? JSON.parse(tasteProfile.tag_scores)
+    : {};
+  const genreScores: Record<string, number> = tasteProfile?.genre_scores
+    ? JSON.parse(tasteProfile.genre_scores)
+    : {};
+
+  // Get swipe history
+  const swipes = db
+    .select({
+      gameId: swipe_history.game_id,
+      gameName: games.name,
+      decision: swipe_history.decision,
+      swipedAt: swipe_history.swiped_at,
+    })
+    .from(swipe_history)
+    .innerJoin(games, eq(swipe_history.game_id, games.id))
+    .where(eq(swipe_history.user_id, userId))
+    .all();
+
+  const exportData = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    tags: {
+      scores: tagScores,
+      ignored: ignoredTags,
+    },
+    genres: {
+      scores: genreScores,
+    },
+    swipeHistory: swipes.map((s) => ({
+      gameId: s.gameId,
+      gameName: s.gameName,
+      decision: s.decision,
+      swipedAt: s.swipedAt,
+    })),
+  };
+
+  return c.json(exportData);
+});
+
+// Import user data from JSON
+user.post('/import', async (c) => {
+  const userId = c.get('userId');
+  const body = await c.req.json<{
+    tags?: { ignored?: string[] };
+    swipeHistory?: { gameId: number; decision: string; swipedAt?: number }[];
+  }>();
+
+  let importedTags = 0;
+  let importedSwipes = 0;
+
+  // Import ignored tags
+  if (body.tags?.ignored) {
+    db.update(users)
+      .set({ ignored_tags: JSON.stringify(body.tags.ignored) })
+      .where(eq(users.id, userId))
+      .run();
+    importedTags = body.tags.ignored.length;
+  }
+
+  // Import swipe history
+  if (body.swipeHistory && body.swipeHistory.length > 0) {
+    const nowUnix = Math.floor(Date.now() / 1000);
+    for (const swipe of body.swipeHistory) {
+      if (!['yes', 'no', 'maybe'].includes(swipe.decision)) continue;
+
+      // Ensure game stub exists for FK
+      db.insert(games)
+        .values({
+          id: swipe.gameId,
+          name: `Game ${swipe.gameId}`,
+          cached_at: 0,
+        })
+        .onConflictDoNothing()
+        .run();
+
+      db.insert(swipe_history)
+        .values({
+          user_id: userId,
+          game_id: swipe.gameId,
+          decision: swipe.decision,
+          swiped_at: swipe.swipedAt ?? nowUnix,
+        })
+        .onConflictDoUpdate({
+          target: [swipe_history.user_id, swipe_history.game_id],
+          set: {
+            decision: swipe.decision,
+            swiped_at: swipe.swipedAt ?? nowUnix,
+          },
+        })
+        .run();
+      importedSwipes++;
+    }
+
+    // Recalculate taste profile after importing swipes
+    recalculateTasteProfile(userId).catch(() => {});
+  }
+
+  return c.json({ importedTags, importedSwipes });
+});
+
 export default user;

@@ -321,6 +321,75 @@ export async function getPopularGameIds(): Promise<number[]> {
   return curatedIds;
 }
 
+// Fetch more game IDs from Steam's various browse endpoints
+export async function fetchMoreGameIds(exclude: Set<number>): Promise<number[]> {
+  const ids = new Set<number>();
+
+  // Try multiple Steam endpoints to get a diverse set of games
+  const endpoints = [
+    'https://store.steampowered.com/api/featuredcategories',
+    'https://store.steampowered.com/api/featured',
+  ];
+
+  for (const url of endpoints) {
+    try {
+      await storeApiLimiter.acquire();
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json() as Record<string, unknown>;
+
+      // Extract app IDs from various response structures
+      const extractIds = (obj: unknown): void => {
+        if (!obj || typeof obj !== 'object') return;
+        if (Array.isArray(obj)) {
+          for (const item of obj) {
+            if (item && typeof item === 'object') {
+              const id = (item as Record<string, unknown>).id ?? (item as Record<string, unknown>).appid;
+              if (typeof id === 'number' && !exclude.has(id)) ids.add(id);
+            }
+          }
+          return;
+        }
+        for (const val of Object.values(obj as Record<string, unknown>)) {
+          if (val && typeof val === 'object' && 'items' in (val as Record<string, unknown>)) {
+            extractIds((val as Record<string, unknown>).items);
+          } else if (Array.isArray(val)) {
+            extractIds(val);
+          }
+        }
+      };
+      extractIds(data);
+    } catch {
+      // continue to next endpoint
+    }
+  }
+
+  // Also try the search API for top-rated games across different genres
+  const searchTags = ['indie', 'rpg', 'action', 'strategy', 'simulation', 'adventure', 'puzzle', 'platformer', 'roguelike', 'survival'];
+  // Pick 3 random tags each time for variety
+  const shuffled = searchTags.sort(() => Math.random() - 0.5).slice(0, 3);
+
+  for (const tag of shuffled) {
+    try {
+      await storeApiLimiter.acquire();
+      const url = `https://store.steampowered.com/search/results/?sort_by=Reviews_DESC&tags=${tag}&category1=998&json=1&start=0&count=50`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const text = await res.text();
+      // Extract appids from the HTML/JSON response
+      const matches = text.matchAll(/data-ds-appid="(\d+)"/g);
+      for (const match of matches) {
+        const id = parseInt(match[1], 10);
+        if (!isNaN(id) && !exclude.has(id)) ids.add(id);
+      }
+    } catch {
+      // continue
+    }
+  }
+
+  return [...ids];
+}
+
 export async function getPlayerSummary(
   steamId: string,
 ): Promise<PlayerSummary | null> {

@@ -79,6 +79,11 @@ export function useDiscovery() {
     [currentGame, swipeMutation],
   );
 
+  const refetchQueue = useCallback(() => {
+    setQueue([]);
+    refetch();
+  }, [refetch]);
+
   return {
     queue,
     currentGame,
@@ -87,5 +92,6 @@ export function useDiscovery() {
     filters,
     setFilters,
     animatingOut,
+    refetchQueue,
   };
 }
