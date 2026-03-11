@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import type { Game } from '../../../shared/types';
+import type { Game, SwipeDecision } from '../../../shared/types';
 import BookmarkButton from './BookmarkButton';
 import MediaGallery from './MediaGallery';
 import { api } from '../lib/api';
@@ -31,6 +31,18 @@ function reviewColor(score: number | null): string {
   return 'oklch(0.65 0.2 25)';
 }
 
+function reviewBadgeClasses(score: number | null): string {
+  if (score === null) return 'bg-gray-500/20 text-gray-400';
+  if (score >= 70) return 'bg-green-500/20 text-green-500';
+  if (score >= 40) return 'bg-yellow-500/20 text-yellow-500';
+  return 'bg-red-500/20 text-red-500';
+}
+
+function formatReviewCount(count: number): string {
+  if (count >= 1000) return `${Math.round(count / 1000)}K reviews`;
+  return `${count.toLocaleString()} reviews`;
+}
+
 export interface MediaItem {
   type: 'image' | 'video';
   thumbnail: string;
@@ -51,10 +63,13 @@ interface MediaResponse {
 
 interface GameCardProps {
   game: Game;
+  score?: number | null;
   className?: string;
+  onSwipe?: (decision: SwipeDecision) => void;
+  onInfo?: () => void;
 }
 
-export default function GameCard({ game, className = '' }: GameCardProps) {
+export default function GameCard({ game, score, className = '', onSwipe, onInfo }: GameCardProps) {
   const steamUrl = `https://store.steampowered.com/app/${game.id}`;
 
   // Carousel state — index 0 = header image (always available)
@@ -127,192 +142,223 @@ export default function GameCard({ game, className = '' }: GameCardProps) {
   // Gallery index maps: card index 0 = header (not in gallery), 1+ = mediaItems[i-1]
   const galleryIndex = currentIndex > 0 ? currentIndex - 1 : 0;
 
+  // Extract year from release date
+  const releaseYear = game.releaseDate
+    ? new Date(game.releaseDate).getFullYear() || game.releaseDate
+    : null;
+
   return (
     <div
-      className={`max-w-sm w-full rounded-xl overflow-hidden bg-[var(--card)] text-[var(--card-foreground)] shadow-lg ${className}`}
+      className={`absolute inset-0 bg-[#242424] border border-[#333] rounded-3xl overflow-hidden shadow-2xl ${className}`}
     >
-      {/* Image/Video carousel area */}
-      <div className="relative w-full aspect-video bg-[var(--muted)] group">
-        {showHeader ? (
-          game.headerImage && (
-            <img
-              src={game.headerImage}
-              alt={game.name}
+      <div className="relative h-full flex flex-col">
+        {/* Media section */}
+        <div id="card-media-section" className="relative h-[360px] bg-[#1a1a1a] group">
+          {showHeader ? (
+            game.headerImage && (
+              <img
+                src={game.headerImage}
+                alt={game.name}
+                className="w-full h-full object-cover"
+              />
+            )
+          ) : currentMedia?.type === 'video' && currentMedia.videoSrc ? (
+            <video
+              src={currentMedia.videoSrc}
+              poster={currentMedia.thumbnail}
+              controls
+              autoPlay
+              muted
               className="w-full h-full object-cover"
             />
-          )
-        ) : currentMedia?.type === 'video' && currentMedia.videoSrc ? (
-          <video
-            src={currentMedia.videoSrc}
-            poster={currentMedia.thumbnail}
-            controls
-            autoPlay
-            muted
-            className="w-full h-full object-cover"
-          />
-        ) : currentMedia ? (
-          <img
-            src={currentMedia.full}
-            alt={game.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : null}
+          ) : currentMedia ? (
+            <img
+              src={currentMedia.full}
+              alt={game.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : null}
 
-        {/* Loading overlay */}
-        {mediaLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-          </div>
-        )}
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#242424] via-transparent to-transparent pointer-events-none" />
 
-        {/* Fullscreen button — top right */}
-        <button
-          onClick={handleFullscreen}
-          className="absolute top-1.5 right-1.5 p-1.5 rounded-md bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
-          title="Fullscreen gallery"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 3 21 3 21 9" />
-            <polyline points="9 21 3 21 3 15" />
-            <line x1="21" y1="3" x2="14" y2="10" />
-            <line x1="3" y1="21" x2="10" y2="14" />
-          </svg>
-        </button>
+          {/* Loading overlay */}
+          {mediaLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            </div>
+          )}
 
-        {/* Nav arrows */}
-        <button
-          onClick={handlePrev}
-          className="absolute left-1 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
-          title="Previous"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-        <button
-          onClick={handleNext}
-          className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
-          title="Next"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
+          {/* Slide indicator dots */}
+          {totalSlides !== null && totalSlides > 1 && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center space-x-1 z-20">
+              {Array.from({ length: Math.min(totalSlides, 20) }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    i === currentIndex ? 'bg-[var(--primary)]' : 'bg-[#333]'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
 
-        {/* Slide indicator */}
-        {totalSlides !== null && totalSlides > 1 && (
-          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {currentMedia?.type === 'video' ? (
-              <span className="bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
-                Video {currentIndex} / {totalSlides - 1}
-              </span>
-            ) : (
-              <span className="bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
-                {currentIndex + 1} / {totalSlides}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+          {/* Navigation arrows — centered vertically on sides */}
+          <button
+            onClick={handlePrev}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center text-white transition-all"
+            title="Previous"
+          >
+            <i className="fa-solid fa-chevron-left" />
+          </button>
+          <button
+            onClick={handleNext}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center text-white transition-all"
+            title="Next"
+          >
+            <i className="fa-solid fa-chevron-right" />
+          </button>
 
-      <div className="p-4 flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <h2 className="text-xl font-bold leading-tight">{game.name}</h2>
-          <div className="flex items-center gap-0.5 shrink-0">
-            <BookmarkButton gameId={game.id} size={18} />
+          {/* Top-right action row */}
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+            <button
+              onClick={handleFullscreen}
+              className="w-8 h-8 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center text-white/70 hover:text-white transition-all"
+              title="Fullscreen gallery"
+            >
+              <i className="fa-solid fa-expand text-xs" />
+            </button>
+            <BookmarkButton gameId={game.id} size={16} />
             <a
               href={`steam://addtowishlist/${game.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="p-1.5 rounded-lg hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)] hover:text-[oklch(0.72_0.19_142)]"
+              className="w-8 h-8 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center text-white/70 hover:text-[oklch(0.72_0.19_142)] transition-all"
               title="Add to Steam Wishlist"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
+              <i className="fa-solid fa-heart text-xs" />
             </a>
             <a
               href={steamUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="p-1.5 rounded-lg hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+              className="w-8 h-8 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center text-white/70 hover:text-white transition-all"
               title="View on Steam"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
+              <i className="fa-solid fa-arrow-up-right-from-square text-xs" />
             </a>
           </div>
-        </div>
 
-        {/* Reviews */}
-        {(game.reviewScore !== null || (game.reviewCount !== null && game.reviewCount > 0)) && (
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium" style={{ color: reviewColor(game.reviewScore) }}>
-                {reviewLabel(game.reviewScore, game.reviewCount)}
-              </span>
-              {game.reviewCount !== null && game.reviewCount > 0 && (
-                <span className="text-xs text-[var(--muted-foreground)]">
-                  ({game.reviewCount.toLocaleString()} reviews)
-                </span>
-              )}
+          {/* Match badge */}
+          {score != null && score > 0 && (
+            <div className="absolute top-16 right-4 bg-[var(--primary)] text-[#1a1a1a] px-4 py-2 rounded-full font-bold text-sm z-20">
+              <i className="fa-solid fa-star mr-1" />
+              {Math.round(score)}% Match
             </div>
-            {game.reviewScore !== null && (
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-1.5 rounded-full bg-[var(--muted)] overflow-hidden">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${game.reviewScore}%`,
-                      backgroundColor: reviewColor(game.reviewScore),
-                    }}
-                  />
-                </div>
-                <span className="text-xs text-[var(--muted-foreground)] w-8 text-right">
-                  {game.reviewScore}%
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {game.genres.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {game.genres.slice(0, 5).map((genre) => (
-              <span
-                key={genre}
-                className="bg-[var(--secondary)] text-[var(--secondary-foreground)] rounded-full px-2 py-0.5 text-xs"
-              >
-                {genre}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between">
-          <span className="font-semibold">{formatPrice(game.priceCents)}</span>
-          {game.releaseDate && (
-            <span className="text-xs text-[var(--muted-foreground)]">
-              {game.releaseDate}
-            </span>
           )}
         </div>
 
-        {game.shortDesc && (
-          <p className="text-sm text-[var(--muted-foreground)] line-clamp-3">
-            {game.shortDesc}
-          </p>
-        )}
+        {/* Content section */}
+        <div id="card-content-section" className="flex-1 p-6 flex flex-col">
+          {/* Title + Price */}
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl font-bold mb-1 truncate">{game.name}</h2>
+              {(game.developers.length > 0 || releaseYear) && (
+                <div className="flex items-center space-x-3 text-sm text-gray-400">
+                  {game.developers.length > 0 && <span>{game.developers.join(', ')}</span>}
+                  {game.developers.length > 0 && releaseYear && <span>&bull;</span>}
+                  {releaseYear && <span>{releaseYear}</span>}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
+              <div className="text-2xl font-bold text-[var(--primary)]">
+                {formatPrice(game.priceCents)}
+              </div>
+            </div>
+          </div>
 
-        {game.developers.length > 0 && (
-          <p className="text-xs text-[var(--muted-foreground)]">
-            by {game.developers.join(', ')}
-          </p>
-        )}
+          {/* Review badge */}
+          {game.reviewScore !== null && (
+            <div className="flex items-center space-x-2 mb-4">
+              <div className={`flex items-center space-x-1 ${reviewBadgeClasses(game.reviewScore)} px-3 py-1 rounded-full text-xs font-semibold`}>
+                <i className="fa-solid fa-thumbs-up" />
+                <span>{game.reviewScore}%</span>
+              </div>
+              {game.reviewCount !== null && game.reviewCount > 0 && (
+                <div className="flex items-center space-x-1 text-gray-400 text-xs">
+                  <i className="fa-solid fa-users" />
+                  <span>{formatReviewCount(game.reviewCount)}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Genre pills */}
+          {game.genres.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {game.genres.slice(0, 5).map((genre) => (
+                <span
+                  key={genre}
+                  className="bg-[#1a1a1a] px-3 py-1 rounded-full text-xs font-medium"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Description */}
+          {game.shortDesc && (
+            <p className="text-sm text-gray-400 leading-relaxed mb-6 line-clamp-3">
+              {game.shortDesc}
+            </p>
+          )}
+
+          {/* Swipe buttons */}
+          {(onSwipe || onInfo) && (
+            <div className="mt-auto flex items-center justify-center space-x-4">
+              {onSwipe && (
+                <button
+                  onClick={() => onSwipe('no')}
+                  className="group w-16 h-16 bg-red-500/20 hover:bg-red-500 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                  title="Not interested"
+                >
+                  <i className="fa-solid fa-xmark text-2xl text-red-500 group-hover:text-white transition-colors" />
+                </button>
+              )}
+              {onSwipe && (
+                <button
+                  onClick={() => onSwipe('maybe')}
+                  className="group w-14 h-14 bg-yellow-500/20 hover:bg-yellow-500 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                  title="Maybe later"
+                >
+                  <i className="fa-solid fa-question text-xl text-yellow-500 group-hover:text-white transition-colors" />
+                </button>
+              )}
+              {onSwipe && (
+                <button
+                  onClick={() => onSwipe('yes')}
+                  className="group w-20 h-20 bg-[var(--primary)] hover:bg-[var(--primary)]/80 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-lg shadow-[var(--primary)]/30"
+                  title="Interested!"
+                >
+                  <i className="fa-solid fa-heart text-3xl text-white transition-colors" />
+                </button>
+              )}
+              {onInfo && (
+                <button
+                  onClick={onInfo}
+                  className="group w-14 h-14 bg-blue-500/20 hover:bg-blue-500 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                  title="More info"
+                >
+                  <i className="fa-solid fa-info text-xl text-blue-500 group-hover:text-white transition-colors" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Fullscreen gallery portal */}
