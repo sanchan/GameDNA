@@ -142,7 +142,7 @@ export default function DataManagement() {
       <div className="flex flex-wrap gap-3">
         <button
           onClick={handleExportDb}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-xl text-sm font-medium hover:bg-blue-500/30 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors"
         >
           <i className="fa-solid fa-database" />
           Export Database (.db)
@@ -150,7 +150,7 @@ export default function DataManagement() {
         <button
           onClick={handleExportJson}
           disabled={!userId}
-          className="flex items-center gap-2 px-4 py-2.5 bg-green-500/20 border border-green-500/30 text-green-400 rounded-xl text-sm font-medium hover:bg-green-500/30 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors disabled:opacity-50"
         >
           <i className="fa-solid fa-file-export" />
           Export as JSON
@@ -159,12 +159,12 @@ export default function DataManagement() {
 
       {/* Import */}
       <div className="flex flex-wrap gap-3">
-        <label className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-xl text-sm font-medium hover:bg-amber-500/30 transition-colors cursor-pointer">
+        <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors cursor-pointer">
           <i className={`fa-solid ${importing ? 'fa-spinner fa-spin' : 'fa-upload'}`} />
           Import Database (.db)
           <input type="file" accept=".db,.sqlite" onChange={handleImportDb} className="hidden" />
         </label>
-        <label className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-xl text-sm font-medium hover:bg-amber-500/30 transition-colors cursor-pointer">
+        <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors cursor-pointer">
           <i className={`fa-solid ${importing ? 'fa-spinner fa-spin' : 'fa-file-import'}`} />
           Import JSON
           <input type="file" accept=".json" onChange={handleImportJson} className="hidden" />
@@ -179,7 +179,7 @@ export default function DataManagement() {
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
             confirmClear
               ? 'bg-red-500 text-white hover:bg-red-600'
-              : 'bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30'
+              : 'bg-[#1a1a1a] border border-red-500/30 text-red-400 hover:bg-red-500/10'
           } disabled:opacity-50`}
         >
           <i className={`fa-solid ${clearing ? 'fa-spinner fa-spin' : 'fa-trash'}`} />

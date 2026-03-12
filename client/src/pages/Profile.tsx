@@ -279,7 +279,7 @@ export default function Profile() {
                   <button
                     onClick={() => triggerSync()}
                     disabled={syncStatus === 'syncing'}
-                    className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] hover:bg-[var(--primary)]/90 rounded-lg text-sm font-bold transition-all disabled:opacity-50"
+                    className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)] rounded-lg text-sm font-bold transition-all disabled:opacity-50"
                   >
                     <i className="fa-solid fa-arrows-rotate" />
                     <span>{syncStatus === 'syncing' ? t('common.syncing') : t('common.syncLibrary')}</span>
@@ -598,7 +598,7 @@ export default function Profile() {
               <button
                 onClick={() => triggerSync()}
                 disabled={anyCategorySyncing}
-                className="flex items-center space-x-1.5 px-3 py-1.5 bg-[var(--primary)] hover:bg-[var(--primary)]/90 rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)] rounded-lg text-xs font-bold transition-all disabled:opacity-50"
               >
                 <i className={`fa-solid fa-arrows-rotate text-xs ${anyCategorySyncing ? 'animate-spin' : ''}`} />
                 <span>{anyCategorySyncing ? t('common.syncing') : t('profile.syncAll', 'Sync All')}</span>

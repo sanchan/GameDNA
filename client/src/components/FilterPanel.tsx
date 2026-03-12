@@ -239,7 +239,7 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
             <div className="flex gap-3">
               <button
                 onClick={handleApply}
-                className="flex-1 bg-[var(--primary)] hover:bg-[var(--primary)]/80 text-[#1a1a1a] font-semibold py-3 rounded-lg transition-opacity"
+                className="flex-1 bg-[var(--primary)] hover:bg-[var(--primary)]/80 text-[var(--primary-foreground)] font-semibold py-3 rounded-lg transition-opacity"
               >
                 {t('filterPanel.applyFilters')}
               </button>

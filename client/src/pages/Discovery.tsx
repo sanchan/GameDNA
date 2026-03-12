@@ -280,7 +280,7 @@ export default function Discovery() {
               <i className="fa-solid fa-filter" />
               <span>{t('common.filters')}</span>
               {filterCount > 0 && (
-                <span className="px-1.5 py-0.5 text-xs font-medium bg-[var(--primary)] text-[#1a1a1a] rounded-full">
+                <span className="px-1.5 py-0.5 text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full">
                   {filterCount}
                 </span>
               )}

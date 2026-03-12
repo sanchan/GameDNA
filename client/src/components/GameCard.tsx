@@ -166,7 +166,7 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
 
         {/* Match score badge — top right */}
         {score != null && score > 0 && (
-          <div className="absolute top-4 right-4 bg-[var(--primary)] text-[#1a1a1a] px-3 py-1.5 rounded-full font-bold text-sm flex items-center space-x-1.5 z-20">
+          <div className="absolute top-4 right-4 bg-[var(--primary)] text-[var(--primary-foreground)] px-3 py-1.5 rounded-full font-bold text-sm flex items-center space-x-1.5 z-20">
             <i className="fa-solid fa-star" />
             <span>{t('common.match', { score: Math.round(score) })}</span>
           </div>

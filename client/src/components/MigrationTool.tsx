@@ -62,7 +62,7 @@ export default function MigrationTool() {
       <button
         onClick={handleImport}
         disabled={importing || !serverUrl.trim()}
-        className="flex items-center gap-2 px-4 py-2.5 bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-xl text-sm font-medium hover:bg-purple-500/30 transition-colors disabled:opacity-50"
+        className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors disabled:opacity-50"
       >
         <i className={`fa-solid ${importing ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-down'}`} />
         {importing ? 'Importing...' : 'Import from Server'}
