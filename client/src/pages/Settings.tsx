@@ -1,59 +1,77 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
-import { api } from '../lib/api';
+import { useDb } from '../contexts/db-context';
+import * as queries from '../db/queries';
 import { useToast } from '../components/Toast';
+import { useAi } from '../hooks/use-ai';
+import WebLLMSetup from '../components/WebLLMSetup';
+import DataManagement from '../components/DataManagement';
+import MigrationTool from '../components/MigrationTool';
+import type { AiProvider } from '../services/ai-engine';
 import type { UserSettings } from '../../../shared/types';
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
+  const { userId, config: dbConfig, refreshConfig } = useDb();
   const { toast } = useToast();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [backingUp, setBackingUp] = useState(false);
-  const [ollamaHealthy, setOllamaHealthy] = useState<boolean | null>(null);
+  const [aiProvider, setAiProvider] = useState<AiProvider | null>(null);
+  const [webllmModel, setWebllmModel] = useState('Llama-3.2-1B-Instruct-q4f16_1-MLC');
+  const ai = useAi();
 
   useEffect(() => {
-    if (!user) return;
-    api.get<UserSettings>('/settings')
-      .then(setSettings)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [user]);
+    if (!user || !userId) return;
+    try {
+      const s = queries.getUserSettings(userId);
+      setSettings(s);
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, [user, userId]);
 
-  // Check Ollama health
+  // Load AI provider from config
   useEffect(() => {
-    fetch('/api/health').then(() => {
-      const url = settings?.ollamaUrl || 'http://localhost:11434';
-      fetch(`${url}/api/tags`).then((r) => setOllamaHealthy(r.ok)).catch(() => setOllamaHealthy(false));
-    }).catch(() => {});
-  }, [settings?.ollamaUrl]);
+    if (!dbConfig) return;
+    setAiProvider((dbConfig.aiProvider as AiProvider) ?? null);
+    if (dbConfig.webllmModel) setWebllmModel(dbConfig.webllmModel);
+  }, [dbConfig]);
 
-  const handleSave = useCallback(async () => {
-    if (!settings) return;
+  // Check health when provider changes
+  useEffect(() => {
+    if (aiProvider) {
+      ai.initEngine(aiProvider, {
+        ollamaUrl: settings?.ollamaUrl ?? undefined,
+        ollamaModel: settings?.ollamaModel ?? undefined,
+        webllmModel,
+      }).catch(() => {});
+    }
+  }, [aiProvider]);
+
+  const handleSave = useCallback(() => {
+    if (!settings || !userId) return;
     setSaving(true);
     try {
-      await api.put('/settings', settings);
+      queries.saveUserSettings(userId, settings);
+      // Persist AI provider config
+      if (aiProvider) {
+        queries.updateConfig({
+          aiProvider,
+          ollamaUrl: settings.ollamaUrl ?? null,
+          ollamaModel: settings.ollamaModel ?? null,
+          webllmModel: aiProvider === 'webllm' ? webllmModel : null,
+        });
+        refreshConfig?.();
+      }
       toast('Settings saved', 'success');
     } catch {
       toast('Failed to save settings', 'error');
     } finally {
       setSaving(false);
     }
-  }, [settings, toast]);
+  }, [settings, userId, toast, aiProvider, webllmModel, refreshConfig]);
 
-  const handleBackup = useCallback(async () => {
-    setBackingUp(true);
-    try {
-      const result = await api.post<{ success: boolean; path: string }>('/settings/backup');
-      toast(`Backup created: ${result.path}`, 'success');
-    } catch {
-      toast('Backup failed', 'error');
-    } finally {
-      setBackingUp(false);
-    }
-  }, [toast]);
 
   if (authLoading) return null;
   if (!user) return <Navigate to="/" />;
@@ -127,31 +145,79 @@ export default function Settings() {
             AI Configuration
           </h2>
           <div className="space-y-4">
+            {/* Provider Toggle */}
             <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">Ollama URL</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={settings.ollamaUrl || ''}
-                  onChange={(e) => setSettings({ ...settings, ollamaUrl: e.target.value || null })}
-                  placeholder="http://localhost:11434"
-                  className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
-                />
-                <div className={`px-3 py-2.5 rounded-lg text-xs font-bold ${ollamaHealthy ? 'bg-green-500/20 text-green-400' : ollamaHealthy === false ? 'bg-red-500/20 text-red-400' : 'bg-[#333] text-gray-400'}`}>
-                  {ollamaHealthy ? 'Connected' : ollamaHealthy === false ? 'Offline' : 'Checking...'}
-                </div>
+              <label className="text-sm font-medium text-gray-300 mb-2 block">AI Provider</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setAiProvider('ollama')}
+                  className={`flex-1 p-4 rounded-xl border transition-all ${aiProvider === 'ollama' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                >
+                  <i className="fa-solid fa-server text-xl mb-2 block" />
+                  <span className="text-sm font-medium block">Ollama</span>
+                  <span className="text-xs text-gray-500 block mt-1">Local server</span>
+                </button>
+                <button
+                  onClick={() => setAiProvider('webllm')}
+                  className={`flex-1 p-4 rounded-xl border transition-all ${aiProvider === 'webllm' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                >
+                  <i className="fa-solid fa-microchip text-xl mb-2 block" />
+                  <span className="text-sm font-medium block">WebLLM</span>
+                  <span className="text-xs text-gray-500 block mt-1">In-browser (WebGPU)</span>
+                </button>
+                <button
+                  onClick={() => setAiProvider(null)}
+                  className={`flex-1 p-4 rounded-xl border transition-all ${!aiProvider ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                >
+                  <i className="fa-solid fa-ban text-xl mb-2 block" />
+                  <span className="text-sm font-medium block">None</span>
+                  <span className="text-xs text-gray-500 block mt-1">Heuristic only</span>
+                </button>
               </div>
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">Ollama Model</label>
-              <input
-                type="text"
-                value={settings.ollamaModel || ''}
-                onChange={(e) => setSettings({ ...settings, ollamaModel: e.target.value || null })}
-                placeholder="llama3.1:8b"
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
+
+            {/* Ollama config */}
+            {aiProvider === 'ollama' && (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-2 block">Ollama URL</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={settings.ollamaUrl || ''}
+                      onChange={(e) => setSettings({ ...settings, ollamaUrl: e.target.value || null })}
+                      placeholder="http://localhost:11434"
+                      className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
+                    />
+                    <div className={`px-3 py-2.5 rounded-lg text-xs font-bold ${ai.healthy ? 'bg-green-500/20 text-green-400' : ai.healthy === false ? 'bg-red-500/20 text-red-400' : 'bg-[#333] text-gray-400'}`}>
+                      {ai.healthy ? 'Connected' : ai.healthy === false ? 'Offline' : 'Checking...'}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-2 block">Ollama Model</label>
+                  <input
+                    type="text"
+                    value={settings.ollamaModel || ''}
+                    onChange={(e) => setSettings({ ...settings, ollamaModel: e.target.value || null })}
+                    placeholder="llama3.1:8b"
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* WebLLM config */}
+            {aiProvider === 'webllm' && (
+              <WebLLMSetup
+                selectedModel={webllmModel}
+                onModelChange={setWebllmModel}
               />
-            </div>
+            )}
+
+            {!aiProvider && (
+              <p className="text-sm text-gray-500">AI features disabled. Recommendations will use heuristic scoring only.</p>
+            )}
           </div>
         </div>
 
@@ -174,41 +240,22 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Backup */}
+        {/* Data Management */}
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
             <i className="fa-solid fa-database text-amber-400" />
-            Backup
+            Data Management
           </h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">Backup Directory</label>
-              <input
-                type="text"
-                value={settings.backupDir || ''}
-                onChange={(e) => setSettings({ ...settings, backupDir: e.target.value || null })}
-                placeholder="./data/backups"
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">Auto-backup Interval (hours)</label>
-              <input
-                type="number"
-                value={settings.backupIntervalHours}
-                onChange={(e) => setSettings({ ...settings, backupIntervalHours: Number(e.target.value) || 24 })}
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--primary)]"
-              />
-            </div>
-            <button
-              onClick={handleBackup}
-              disabled={backingUp}
-              className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-xl text-sm font-medium hover:bg-amber-500/30 transition-colors disabled:opacity-50"
-            >
-              <i className={`fa-solid ${backingUp ? 'fa-spinner fa-spin' : 'fa-download'}`} />
-              {backingUp ? 'Creating Backup...' : 'Backup Now'}
-            </button>
-          </div>
+          <DataManagement />
+        </div>
+
+        {/* Migration */}
+        <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <i className="fa-solid fa-cloud-arrow-down text-indigo-400" />
+            Import from Server
+          </h2>
+          <MigrationTool />
         </div>
 
         {/* Keyboard Shortcuts */}

@@ -186,3 +186,21 @@ export interface ProfileComparison {
   uniqueToUser1: string[];
   uniqueToUser2: string[];
 }
+
+// ── Local-first types ─────────────────────────────────────────────────────
+
+export interface LocalConfig {
+  steamId: string | null;
+  steamApiKey: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  profileUrl: string | null;
+  countryCode: string | null;
+  aiProvider: 'ollama' | 'webllm';
+  ollamaUrl: string;
+  ollamaModel: string;
+  webllmModel: string;
+  setupComplete: boolean;
+}
+
+export type OnboardingStep = 'welcome' | 'steam-id' | 'api-key';

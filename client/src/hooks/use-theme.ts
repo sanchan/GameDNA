@@ -1,5 +1,4 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import { api } from '../lib/api';
 
 type Theme = 'dark' | 'light';
 
@@ -45,8 +44,7 @@ export function useThemeProvider() {
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    // Persist to server if logged in
-    api.put('/settings', { theme: newTheme }).catch(() => {});
+    // Theme is persisted to localStorage only (local-first mode)
   };
 
   return { theme, setTheme };

@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Navigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/use-auth';
-import { api } from '../lib/api';
+import { useDb } from '../contexts/db-context';
+import * as queries from '../db/queries';
+import { generateRecommendations } from '../services/recommendation';
 import GameGrid from '../components/GameGrid';
 import WhyThisGame from '../components/WhyThisGame';
 import type { Recommendation } from '../../../shared/types';
@@ -10,6 +12,7 @@ import type { Recommendation } from '../../../shared/types';
 export default function Recommendations() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus } = useAuth();
+  const { userId } = useDb();
   const [recs, setRecs] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -20,34 +23,38 @@ export default function Recommendations() {
   const [priceFilter, setPriceFilter] = useState('all');
   const prevSyncStatus = useRef(syncStatus);
 
-  const fetchRecs = useCallback(async () => {
+  const fetchRecs = useCallback(() => {
+    if (!userId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (priceFilter !== 'all') {
-        if (priceFilter === 'under10') params.set('maxPrice', '1000');
-        else if (priceFilter === 'under20') params.set('maxPrice', '2000');
-        else if (priceFilter === 'under30') params.set('maxPrice', '3000');
-        else if (priceFilter === 'over30') params.set('minPrice', '3000');
-      }
-      if (genreFilter !== 'all') params.set('genres', genreFilter);
+      const opts: { minPrice?: number; maxPrice?: number; genres?: string[] } = {};
+      if (priceFilter === 'under10') opts.maxPrice = 1000;
+      else if (priceFilter === 'under20') opts.maxPrice = 2000;
+      else if (priceFilter === 'under30') opts.maxPrice = 3000;
+      else if (priceFilter === 'over30') opts.minPrice = 3000;
+      if (genreFilter !== 'all') opts.genres = [genreFilter];
 
-      const qs = params.toString();
-      const data = await api.get<Recommendation[]>(`/recommendations${qs ? '?' + qs : ''}`);
-      setRecs(data);
+      const data = queries.getRecommendations(userId, opts);
+      setRecs(data.map((r) => ({
+        id: r.id,
+        game: r.game,
+        score: r.score,
+        aiExplanation: r.aiExplanation,
+        generatedAt: r.generatedAt,
+        source: r.source as 'ai' | 'heuristic',
+      })));
       setDismissedIds(new Set());
     } catch {
       // ignore
     } finally {
       setLoading(false);
     }
-  }, [genreFilter, priceFilter]);
+  }, [userId, genreFilter, priceFilter]);
 
   useEffect(() => {
-    if (user) fetchRecs();
-  }, [user, fetchRecs]);
+    if (userId) fetchRecs();
+  }, [userId, fetchRecs]);
 
-  // Refetch when sync transitions to 'synced'
   useEffect(() => {
     if (prevSyncStatus.current === 'syncing' && syncStatus === 'synced') {
       fetchRecs();
@@ -56,10 +63,11 @@ export default function Recommendations() {
   }, [syncStatus, fetchRecs]);
 
   const handleGenerate = async (onlyDismissed = false) => {
+    if (!userId) return;
     setGenerating(true);
     try {
-      await api.post<{ count: number }>('/recommendations/generate', { onlyDismissed });
-      await fetchRecs();
+      await generateRecommendations(userId, onlyDismissed);
+      fetchRecs();
     } catch {
       // ignore
     } finally {
@@ -72,16 +80,12 @@ export default function Recommendations() {
     if (rec) setExplainRec(rec);
   };
 
-  const handleDismiss = async (recId: number) => {
-    try {
-      await api.post(`/recommendations/${recId}/dismiss`);
-      setDismissedIds((prev) => new Set(prev).add(recId));
-    } catch {
-      // ignore
-    }
+  const handleDismiss = (recId: number) => {
+    if (!userId) return;
+    queries.dismissRecommendation(recId, userId);
+    setDismissedIds((prev) => new Set(prev).add(recId));
   };
 
-  // Collect unique genres for filter
   const allGenres = useMemo(() => {
     const genres = new Set<string>();
     recs.forEach((r) => r.game.genres.forEach((g) => genres.add(g)));
@@ -110,13 +114,10 @@ export default function Recommendations() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-      {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-8 gap-6">
         <div>
           <h1 className="text-3xl lg:text-4xl font-bold mb-2">{t('recommendations.title')}</h1>
-          <p className="text-[var(--muted-foreground)]">
-            {t('recommendations.subtitle')}
-          </p>
+          <p className="text-[var(--muted-foreground)]">{t('recommendations.subtitle')}</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
           <button
@@ -151,7 +152,6 @@ export default function Recommendations() {
         </div>
       </div>
 
-      {/* Filters */}
       {recs.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <select
@@ -178,7 +178,6 @@ export default function Recommendations() {
         </div>
       )}
 
-      {/* AI Status Banner */}
       {recs.length > 0 && !loading && (
         <div className="bg-gradient-to-r from-purple-600/10 to-[var(--primary)]/10 border border-[var(--primary)]/30 rounded-xl p-4 mb-8 flex items-center justify-between">
           <div className="flex items-center space-x-3">

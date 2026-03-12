@@ -3,22 +3,16 @@ import { Navigate, Link, useSearchParams } from 'react-router';
 import { useTranslation, Trans } from 'react-i18next';
 import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
+import { useDb } from '../contexts/db-context';
 import { useBookmarks } from '../hooks/use-bookmarks';
 import { useToast } from '../components/Toast';
-import { api } from '../lib/api';
+import * as queries from '../db/queries';
 import type { Game, Collection } from '../../../shared/types';
 
 interface LibraryEntry {
   game: Game;
   playtimeMins: number;
   lastPlayed: number | null;
-}
-
-interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  limit: number;
-  offset: number;
 }
 
 function formatPlaytime(mins: number): string {
@@ -87,6 +81,7 @@ type SortKey = 'recent' | 'name-asc' | 'name-desc' | 'price-low' | 'price-high' 
 export default function MyLists() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
+  const { userId } = useDb();
   const { toggle: toggleBookmark } = useBookmarks();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -112,21 +107,21 @@ export default function MyLists() {
     setSortBy('recent');
   };
 
-  const fetchTab = useCallback(async () => {
-    if (!user) return;
+  const fetchTab = useCallback(() => {
+    if (!user || !userId) return;
     setLoading(true);
     try {
       if (activeTab === 'library') {
-        const data = await api.get<PaginatedResponse<LibraryEntry>>('/lists/library?limit=200');
-        setLibrary(data.items);
+        const items = queries.getLibrary(userId, { limit: 200 });
+        setLibrary(items);
       } else if (activeTab === 'bookmarks') {
-        const data = await api.get<PaginatedResponse<Game>>('/lists/bookmarks?limit=200');
-        setBookmarkGames(data.items);
+        const items = queries.getBookmarkedGames(userId);
+        setBookmarkGames(items);
       } else if (activeTab === 'wishlist') {
-        const data = await api.get<PaginatedResponse<Game>>('/lists/wishlist?limit=200');
-        setWishlist(data.items);
+        const items = queries.getWishlistGames(userId);
+        setWishlist(items);
       } else if (activeTab === 'collections') {
-        const data = await api.get<Collection[]>('/collections');
+        const data = queries.getCollections(userId);
         setCollections(data);
       }
     } catch {
@@ -134,7 +129,7 @@ export default function MyLists() {
     } finally {
       setLoading(false);
     }
-  }, [user, activeTab]);
+  }, [user, userId, activeTab]);
 
   useEffect(() => {
     fetchTab();
@@ -292,10 +287,15 @@ export default function MyLists() {
                   placeholder="Collection name..."
                   className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newCollectionName.trim()) {
-                      api.post<Collection>('/collections', { name: newCollectionName.trim() })
-                        .then((c: Collection) => { setCollections((prev) => [c, ...prev]); setNewCollectionName(''); setShowNewCollection(false); toast('Collection created', 'success'); })
-                        .catch(() => toast('Failed to create collection', 'error'));
+                    if (e.key === 'Enter' && newCollectionName.trim() && userId) {
+                      try {
+                        const newId = queries.createCollection(userId, newCollectionName.trim());
+                        const updated = queries.getCollections(userId);
+                        setCollections(updated);
+                        setNewCollectionName('');
+                        setShowNewCollection(false);
+                        toast('Collection created', 'success');
+                      } catch { toast('Failed to create collection', 'error'); }
                     }
                   }}
                 />
@@ -332,10 +332,10 @@ export default function MyLists() {
               {collections.map((col) => (
                 <button
                   key={col.id}
-                  onClick={async () => {
+                  onClick={() => {
                     setSelectedCollection(col.id);
                     try {
-                      const g = await api.get<any[]>(`/collections/${col.id}/games`);
+                      const g = queries.getCollectionGames(col.id);
                       setCollectionGames(g);
                     } catch { setCollectionGames([]); }
                   }}

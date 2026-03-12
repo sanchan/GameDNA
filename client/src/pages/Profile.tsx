@@ -3,7 +3,8 @@ import { Navigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth, type SyncCategory, type CategorySyncState } from '../hooks/use-auth';
 import { useProfile, useGamingDNA } from '../hooks/use-profile';
-import { api } from '../lib/api';
+import { useDb } from '../contexts/db-context';
+import * as queries from '../db/queries';
 import RadarChart from '../components/RadarChart';
 import type { ProfileSnapshot, AiSummaryEntry } from '../../../shared/types';
 
@@ -17,6 +18,7 @@ interface GenreGame {
 export default function Profile() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus, syncProgress, triggerSync } = useAuth();
+  const { userId } = useDb();
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { data: dna, isLoading: dnaLoading, refetch: refetchDna } = useGamingDNA();
   const prevSyncStatus = useRef(syncStatus);
@@ -42,9 +44,10 @@ export default function Profile() {
   const [showSummaryHistory, setShowSummaryHistory] = useState(false);
   const [generatingSummary, setGeneratingSummary] = useState(false);
 
-  const handleExport = useCallback(async () => {
+  const handleExport = useCallback(() => {
+    if (!userId) return;
     try {
-      const data = await api.get<unknown>('/user/export');
+      const data = queries.exportUserData(userId);
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -55,15 +58,16 @@ export default function Profile() {
     } catch {
       // ignore
     }
-  }, []);
+  }, [userId]);
 
   const handleImport = useCallback(async (file: File) => {
+    if (!userId) return;
     setImporting(true);
     setImportResult(null);
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      const result = await api.post<{ importedTags: number; importedSwipes: number }>('/user/import', data);
+      const result = queries.importUserData(userId, data);
       setImportResult(`Imported ${result.importedTags} ignored tags, ${result.importedSwipes} swipes`);
       refetchDna();
     } catch (e) {
@@ -72,7 +76,7 @@ export default function Profile() {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  }, [refetchDna]);
+  }, [userId, refetchDna]);
 
   // Refetch profile data when sync transitions to 'synced'
   useEffect(() => {
@@ -84,7 +88,8 @@ export default function Profile() {
   }, [syncStatus, refetchProfile, refetchDna]);
 
   // Handle genre click on radar chart
-  const handleGenreClick = useCallback(async (genre: string) => {
+  const handleGenreClick = useCallback((genre: string) => {
+    if (!userId) return;
     if (selectedGenre === genre) {
       setSelectedGenre(null);
       setGenreGames([]);
@@ -93,62 +98,76 @@ export default function Profile() {
     setSelectedGenre(genre);
     setLoadingGenreGames(true);
     try {
-      const games = await api.get<GenreGame[]>(`/user/genre-games/${encodeURIComponent(genre)}`);
-      setGenreGames(games);
+      // Get library games matching this genre
+      const lib = queries.getLibrary(userId, { limit: 1000 });
+      const matched = lib
+        .filter((e) => e.game.genres.some((g) => g.toLowerCase() === genre.toLowerCase()))
+        .sort((a, b) => b.playtimeMins - a.playtimeMins)
+        .slice(0, 12)
+        .map((e) => ({
+          id: e.game.id,
+          name: e.game.name,
+          headerImage: e.game.headerImage,
+          playtimeMins: e.playtimeMins,
+        }));
+      setGenreGames(matched);
     } catch {
       setGenreGames([]);
     } finally {
       setLoadingGenreGames(false);
     }
-  }, [selectedGenre]);
+  }, [userId, selectedGenre]);
 
   // Fetch profile snapshots
-  const handleShowEvolution = useCallback(async () => {
+  const handleShowEvolution = useCallback(() => {
+    if (!userId) return;
     if (showEvolution) {
       setShowEvolution(false);
       return;
     }
     try {
-      const data = await api.get<ProfileSnapshot[]>('/user/profile-snapshots');
+      const data = queries.getProfileSnapshots(userId);
       setSnapshots(data);
       setShowEvolution(true);
     } catch {
       setSnapshots([]);
       setShowEvolution(true);
     }
-  }, [showEvolution]);
+  }, [userId, showEvolution]);
 
   // Fetch AI summary history
-  const handleShowSummaryHistory = useCallback(async () => {
+  const handleShowSummaryHistory = useCallback(() => {
+    if (!userId) return;
     if (showSummaryHistory) {
       setShowSummaryHistory(false);
       return;
     }
     try {
-      const data = await api.get<AiSummaryEntry[]>('/user/ai-summaries');
+      const data = queries.getAiSummaries(userId);
       setSummaryHistory(data);
       setShowSummaryHistory(true);
     } catch {
       setSummaryHistory([]);
       setShowSummaryHistory(true);
     }
-  }, [showSummaryHistory]);
+  }, [userId, showSummaryHistory]);
 
-  // Generate new AI summary
-  const handleGenerateSummary = useCallback(async () => {
+  // Generate new AI summary (placeholder — requires AI integration)
+  const handleGenerateSummary = useCallback(() => {
+    if (!userId) return;
     setGeneratingSummary(true);
     try {
-      await api.post<{ summary: string }>('/user/generate-summary');
+      // AI summary generation requires Ollama/WebLLM (Phase 3)
+      queries.saveAiSummary(userId, 'AI summary generation requires Ollama or WebLLM setup. Configure your AI provider in Settings.');
       refetchDna();
-      // Refresh summary history
-      const data = await api.get<AiSummaryEntry[]>('/user/ai-summaries');
+      const data = queries.getAiSummaries(userId);
       setSummaryHistory(data);
     } catch {
       // ignore
     } finally {
       setGeneratingSummary(false);
     }
-  }, [refetchDna]);
+  }, [userId, refetchDna]);
 
   if (authLoading) return null;
   if (!user) return <Navigate to="/" />;
@@ -186,12 +205,13 @@ export default function Profile() {
     ? dna.swipeStats.yes + dna.swipeStats.no + dna.swipeStats.maybe
     : 0;
 
-  const handleToggleTag = async (tagName: string, currentlyIgnored: boolean) => {
+  const handleToggleTag = (tagName: string, currentlyIgnored: boolean) => {
+    if (!userId) return;
     const newIgnored = !currentlyIgnored;
     setIgnoredOverrides((prev) => ({ ...prev, [tagName]: newIgnored }));
     setTogglingTag(tagName);
     try {
-      await api.post('/user/ignored-tags', { tag: tagName, ignored: newIgnored });
+      queries.setTagIgnored(userId, tagName, newIgnored);
     } catch {
       // Revert on error
       setIgnoredOverrides((prev) => ({ ...prev, [tagName]: currentlyIgnored }));

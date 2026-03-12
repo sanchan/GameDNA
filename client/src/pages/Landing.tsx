@@ -1,13 +1,17 @@
+import { useDb } from '../contexts/db-context';
 import { useAuth } from '../hooks/use-auth';
-import { Navigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
 export default function Landing() {
-  const { user, loading, login } = useAuth();
+  const { user, loading } = useAuth();
+  const { config } = useDb();
+  const navigate = useNavigate();
   const { t } = useTranslation();
+  const login = () => navigate('/onboarding');
 
   if (loading) return null;
-  if (user) return <Navigate to="/discover" />;
+  if (user && config?.setupComplete) return <Navigate to="/discover" />;
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">

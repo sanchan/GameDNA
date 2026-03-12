@@ -4,8 +4,9 @@ import { useTranslation, Trans } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
+import { useDb } from '../contexts/db-context';
 import { useToast } from '../components/Toast';
-import { api } from '../lib/api';
+import * as queries from '../db/queries';
 import type { SwipeDecision } from '../../../shared/types';
 import type { Game } from '../../../shared/types';
 
@@ -22,13 +23,6 @@ interface SwipeEntry {
   game: Game;
   decision: string;
   swipedAt: number;
-}
-
-interface HistoryResponse {
-  items: SwipeEntry[];
-  total: number;
-  limit: number;
-  offset: number;
 }
 
 const PAGE_SIZE = 20;
@@ -66,6 +60,7 @@ function timeAgo(unix: number): string {
 export default function History() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
+  const { userId } = useDb();
   const { toast } = useToast();
   const [entries, setEntries] = useState<SwipeEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -93,44 +88,86 @@ export default function History() {
     setPage(0);
   }, [filter, dateRange]);
 
-  const fetchHistory = useCallback(async () => {
-    if (!user) return;
+  const fetchHistory = useCallback(() => {
+    if (!user || !userId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.set('limit', String(PAGE_SIZE));
-      params.set('offset', String(page * PAGE_SIZE));
-      if (filter !== 'all') params.set('decision', filter);
-      if (debouncedSearch) params.set('search', debouncedSearch);
-      if (dateRange !== 'all') params.set('dateRange', dateRange);
+      const opts: { limit?: number; offset?: number; decision?: string; search?: string } = {
+        limit: PAGE_SIZE,
+        offset: page * PAGE_SIZE,
+      };
+      if (filter !== 'all') opts.decision = filter;
+      if (debouncedSearch) opts.search = debouncedSearch;
 
-      const data = await api.get<HistoryResponse>(`/history?${params}`);
-      setEntries(data.items);
-      setTotal(data.total);
+      let items = queries.getSwipeHistory(userId, opts);
+
+      // Apply dateRange filter client-side
+      if (dateRange !== 'all') {
+        const now = Math.floor(Date.now() / 1000);
+        let cutoff = 0;
+        if (dateRange === '7days') cutoff = now - 7 * 24 * 60 * 60;
+        else if (dateRange === '30days') cutoff = now - 30 * 24 * 60 * 60;
+        else if (dateRange === '3months') cutoff = now - 90 * 24 * 60 * 60;
+        else if (dateRange === '6months') cutoff = now - 180 * 24 * 60 * 60;
+        else if (dateRange === 'year') cutoff = now - 365 * 24 * 60 * 60;
+        items = items.filter((e) => e.swipedAt >= cutoff);
+      }
+
+      // Get total count without pagination for this filter set
+      const allItems = queries.getSwipeHistory(userId, {
+        decision: filter !== 'all' ? filter : undefined,
+        search: debouncedSearch || undefined,
+      });
+      let filteredAll = allItems;
+      if (dateRange !== 'all') {
+        const now = Math.floor(Date.now() / 1000);
+        let cutoff = 0;
+        if (dateRange === '7days') cutoff = now - 7 * 24 * 60 * 60;
+        else if (dateRange === '30days') cutoff = now - 30 * 24 * 60 * 60;
+        else if (dateRange === '3months') cutoff = now - 90 * 24 * 60 * 60;
+        else if (dateRange === '6months') cutoff = now - 180 * 24 * 60 * 60;
+        else if (dateRange === 'year') cutoff = now - 365 * 24 * 60 * 60;
+        filteredAll = filteredAll.filter((e) => e.swipedAt >= cutoff);
+      }
+
+      setEntries(items.map((e) => ({ id: e.id, game: e.game, decision: e.decision, swipedAt: e.swipedAt })));
+      setTotal(filteredAll.length);
     } catch {
       setEntries([]);
       setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, [user, filter, debouncedSearch, page, dateRange]);
+  }, [user, userId, filter, debouncedSearch, page, dateRange]);
 
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
 
-  // Fetch daily stats for temporal chart
+  // Compute daily stats for temporal chart from local data
   useEffect(() => {
-    if (!user) return;
-    api.get<DailyStats[]>('/history/stats')
-      .then(setDailyStats)
-      .catch(() => setDailyStats([]));
-  }, [user]);
+    if (!user || !userId) return;
+    try {
+      const allSwipes = queries.getSwipeHistory(userId, { limit: 10000 });
+      const dayMap: Record<string, DailyStats> = {};
+      for (const s of allSwipes) {
+        const date = new Date(s.swipedAt * 1000).toISOString().slice(0, 10);
+        if (!dayMap[date]) dayMap[date] = { date, yes: 0, no: 0, maybe: 0, total: 0 };
+        dayMap[date][s.decision as 'yes' | 'no' | 'maybe']++;
+        dayMap[date].total++;
+      }
+      const stats = Object.values(dayMap).sort((a, b) => a.date.localeCompare(b.date)).slice(-30);
+      setDailyStats(stats);
+    } catch {
+      setDailyStats([]);
+    }
+  }, [user, userId]);
 
-  const handleChangeDecision = async (entryId: number, newDecision: SwipeDecision) => {
+  const handleChangeDecision = (entryId: number, newDecision: SwipeDecision) => {
+    if (!userId) return;
     setUpdatingId(entryId);
     try {
-      await api.post(`/history/${entryId}`, { decision: newDecision });
+      queries.updateSwipeDecision(entryId, userId, newDecision);
       if (filter !== 'all' && newDecision !== filter) {
         setEntries((prev) => prev.filter((e) => e.id !== entryId));
         setTotal((t) => t - 1);
@@ -149,10 +186,11 @@ export default function History() {
     }
   };
 
-  const handleRemoveEntry = async (entryId: number) => {
+  const handleRemoveEntry = (entryId: number) => {
+    if (!userId) return;
     setUpdatingId(entryId);
     try {
-      await api.delete(`/history/${entryId}`);
+      queries.deleteSwipe(entryId, userId);
       setEntries((prev) => prev.filter((e) => e.id !== entryId));
       setTotal((t) => t - 1);
       toast('Entry removed', 'success');
@@ -163,17 +201,29 @@ export default function History() {
     }
   };
 
-  const handleExport = async () => {
+  const handleExport = () => {
+    if (!userId) return;
     try {
-      const params = new URLSearchParams();
-      params.set('limit', '10000');
-      if (filter !== 'all') params.set('decision', filter);
-      if (dateRange !== 'all') params.set('dateRange', dateRange);
+      const opts: { limit?: number; decision?: string } = { limit: 10000 };
+      if (filter !== 'all') opts.decision = filter;
 
-      const data = await api.get<HistoryResponse>(`/history?${params}`);
+      let items = queries.getSwipeHistory(userId, opts);
+
+      // Apply dateRange filter
+      if (dateRange !== 'all') {
+        const now = Math.floor(Date.now() / 1000);
+        let cutoff = 0;
+        if (dateRange === '7days') cutoff = now - 7 * 24 * 60 * 60;
+        else if (dateRange === '30days') cutoff = now - 30 * 24 * 60 * 60;
+        else if (dateRange === '3months') cutoff = now - 90 * 24 * 60 * 60;
+        else if (dateRange === '6months') cutoff = now - 180 * 24 * 60 * 60;
+        else if (dateRange === 'year') cutoff = now - 365 * 24 * 60 * 60;
+        items = items.filter((e) => e.swipedAt >= cutoff);
+      }
+
       const csvRows = [
         ['Game', 'Decision', 'Date'].join(','),
-        ...data.items.map((e) =>
+        ...items.map((e) =>
           [
             `"${e.game.name.replace(/"/g, '""')}"`,
             e.decision,
@@ -188,7 +238,7 @@ export default function History() {
       a.download = `swipe-history-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      toast(`Exported ${data.items.length} entries`, 'success');
+      toast(`Exported ${items.length} entries`, 'success');
     } catch {
       toast('Failed to export history', 'error');
     }

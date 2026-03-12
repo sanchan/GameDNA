@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Navigate, Link } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
-import { api } from '../lib/api';
+import { useDb } from '../contexts/db-context';
+import * as queries from '../db/queries';
 import type { DashboardStats, YearInReview, ProfileComparison } from '../../../shared/types';
 
 function formatPrice(cents: number): string {
@@ -10,6 +11,7 @@ function formatPrice(cents: number): string {
 
 export default function Stats() {
   const { user, loading: authLoading } = useAuth();
+  const { userId } = useDb();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [yearReview, setYearReview] = useState<YearInReview | null>(null);
   const [comparison, setComparison] = useState<ProfileComparison | null>(null);
@@ -19,39 +21,104 @@ export default function Stats() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!user) return;
-    api.get<DashboardStats>('/stats/dashboard')
-      .then(setStats)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [user]);
+    if (!user || !userId) return;
+    try {
+      const s = queries.getDashboardStats(userId);
+      setStats(s);
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, [user, userId]);
 
-  const loadYearReview = useCallback(async (year: number) => {
+  const loadYearReview = useCallback((year: number) => {
+    if (!userId) return;
     setReviewYear(year);
     try {
-      const data = await api.get<YearInReview>(`/stats/year-in-review?year=${year}`);
-      setYearReview(data);
+      // Build year-in-review from local swipe history
+      const allSwipes = queries.getSwipeHistory(userId, { limit: 100000 });
+      const yearStart = new Date(year, 0, 1).getTime() / 1000;
+      const yearEnd = new Date(year + 1, 0, 1).getTime() / 1000;
+      const yearSwipes = allSwipes.filter((s) => s.swipedAt >= yearStart && s.swipedAt < yearEnd);
+
+      const genreSet = new Set<string>();
+      const genreCounts: Record<string, number> = {};
+      for (const s of yearSwipes) {
+        if (s.game) {
+          for (const g of s.game.genres) {
+            genreSet.add(g);
+            genreCounts[g] = (genreCounts[g] || 0) + 1;
+          }
+        }
+      }
+
+      const topGenre = Object.entries(genreCounts).sort(([, a], [, b]) => b - a)[0]?.[0] ?? 'N/A';
+      const discoveries = yearSwipes.filter((s) => s.decision === 'yes').length;
+
+      // Monthly activity
+      const monthlyMap: Record<string, number> = {};
+      for (const s of yearSwipes) {
+        const month = new Date(s.swipedAt * 1000).toISOString().slice(0, 7);
+        monthlyMap[month] = (monthlyMap[month] || 0) + 1;
+      }
+      const monthlyActivity = Object.entries(monthlyMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, swipes]) => ({ month, swipes }));
+
+      // Top played from library for this year
+      const lib = queries.getLibrary(userId, { limit: 1000 });
+      const topPlayedGame = lib.sort((a, b) => b.playtimeMins - a.playtimeMins)[0] ?? null;
+
+      const swipeBreakdown = {
+        yes: yearSwipes.filter((s) => s.decision === 'yes').length,
+        no: yearSwipes.filter((s) => s.decision === 'no').length,
+        maybe: yearSwipes.filter((s) => s.decision === 'maybe').length,
+      };
+
+      const review: YearInReview = {
+        year,
+        totalSwipes: yearSwipes.length,
+        totalDiscoveries: discoveries,
+        genresExplored: genreSet.size,
+        topGenre,
+        topPlayedGame: topPlayedGame ? { game: topPlayedGame.game, playtimeMins: topPlayedGame.playtimeMins } : null,
+        monthlyActivity,
+        swipeBreakdown,
+        profileEvolution: { start: {}, end: {} },
+      };
+      setYearReview(review);
     } catch { setYearReview(null); }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (tab === 'year') loadYearReview(reviewYear);
   }, [tab]);
 
   const handleCompare = useCallback(async (file: File) => {
+    if (!userId) return;
     try {
       const text = await file.text();
       const profile2 = JSON.parse(text);
-      // Export current profile
-      const myDna = await api.get<{ topGenres: { name: string; score: number }[] }>('/user/gaming-dna');
-      const result = await api.post<ProfileComparison>('/stats/compare-profiles', {
-        profile1: { name: user?.displayName || 'You', topGenres: myDna.topGenres },
-        profile2: { name: profile2.name || 'Friend', topGenres: profile2.topGenres || [] },
+      // Get local gaming DNA
+      const myDna = queries.getGamingDNA(userId);
+      const myGenres = myDna.topGenres.map((g) => g.name.toLowerCase());
+      const theirGenres: string[] = (profile2.topGenres || []).map((g: any) => (g.name || g).toLowerCase());
+
+      const sharedGenres = myGenres.filter((g) => theirGenres.includes(g));
+      const uniqueToUser1 = myGenres.filter((g) => !theirGenres.includes(g));
+      const uniqueToUser2 = theirGenres.filter((g: string) => !myGenres.includes(g));
+      const totalGenres = new Set([...myGenres, ...theirGenres]).size;
+      const similarity = totalGenres > 0 ? Math.round((sharedGenres.length / totalGenres) * 100) : 0;
+
+      setComparison({
+        similarity,
+        sharedGenres,
+        uniqueToUser1,
+        uniqueToUser2,
+        user1: { name: user?.displayName || 'You', topGenres: myDna.topGenres },
+        user2: { name: profile2.name || 'Friend', topGenres: profile2.topGenres || [] },
       });
-      setComparison(result);
     } catch { /* ignore */ }
     if (fileRef.current) fileRef.current.value = '';
-  }, [user]);
+  }, [user, userId]);
 
   if (authLoading) return null;
   if (!user) return <Navigate to="/" />;

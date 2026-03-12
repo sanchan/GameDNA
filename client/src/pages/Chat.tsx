@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
-import { api } from '../lib/api';
+import { useDb } from '../contexts/db-context';
+import * as queries from '../db/queries';
 import { useToast } from '../components/Toast';
+import { generateChatResponse } from '../services/ai-features';
 import type { ChatMessage } from '../../../shared/types';
 
 export default function Chat() {
   const { user, loading: authLoading } = useAuth();
+  const { userId } = useDb();
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -17,97 +20,67 @@ export default function Chat() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (!user) return;
-    api.get<ChatMessage[]>('/chat/history')
-      .then(setMessages)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [user]);
+    if (!user || !userId) return;
+    try {
+      const history = queries.getChatHistory(userId);
+      setMessages(history);
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, [user, userId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streaming]);
 
   const handleSend = useCallback(async () => {
-    if (!input.trim() || sending) return;
+    if (!input.trim() || sending || !userId) return;
 
     const userMsg = input.trim();
     setInput('');
     setSending(true);
     setStreaming('');
 
-    // Optimistically add user message
+    // Save user message to local DB
+    const userMsgId = queries.addChatMessage(userId, 'user', userMsg);
     const tempUserMsg: ChatMessage = {
-      id: Date.now(),
+      id: userMsgId,
       role: 'user',
       content: userMsg,
       createdAt: Math.floor(Date.now() / 1000),
     };
     setMessages((prev) => [...prev, tempUserMsg]);
 
+    // Stream AI response
+    let fullResponse = '';
     try {
-      const res = await fetch('/api/chat/message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ message: userMsg }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        toast(err.error || 'Failed to send message', 'error');
-        setSending(false);
-        return;
-      }
-
-      const reader = res.body?.getReader();
-      if (!reader) { setSending(false); return; }
-
-      const decoder = new TextDecoder();
-      let fullResponse = '';
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.chunk) {
-              fullResponse += data.chunk;
-              setStreaming(fullResponse);
-            }
-            if (data.done) {
-              setMessages((prev) => [...prev, {
-                id: Date.now() + 1,
-                role: 'assistant',
-                content: fullResponse,
-                createdAt: Math.floor(Date.now() / 1000),
-              }]);
-              setStreaming('');
-            }
-          } catch { /* ignore */ }
-        }
+      for await (const chunk of generateChatResponse(userId, userMsg)) {
+        fullResponse += chunk;
+        setStreaming(fullResponse);
       }
     } catch {
-      toast('Failed to connect to AI', 'error');
-    } finally {
-      setSending(false);
+      fullResponse = fullResponse || 'An error occurred while generating the response.';
     }
-  }, [input, sending, toast]);
 
-  const handleClear = useCallback(async () => {
+    // Save assistant message
+    const assistantMsgId = queries.addChatMessage(userId, 'assistant', fullResponse);
+    const assistantMsg: ChatMessage = {
+      id: assistantMsgId,
+      role: 'assistant',
+      content: fullResponse,
+      createdAt: Math.floor(Date.now() / 1000),
+    };
+    setMessages((prev) => [...prev, assistantMsg]);
+    setStreaming('');
+    setSending(false);
+  }, [input, sending, userId]);
+
+  const handleClear = useCallback(() => {
+    if (!userId) return;
     try {
-      await api.delete('/chat/history');
+      queries.clearChatHistory(userId);
       setMessages([]);
     } catch { /* ignore */ }
-  }, []);
+  }, [userId]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
