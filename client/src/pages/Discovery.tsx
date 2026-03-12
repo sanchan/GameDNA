@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Navigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -28,11 +28,19 @@ interface HistoryResponse {
 export default function Discovery() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus, syncProgress } = useAuth();
-  const { currentGame, currentScore, swipe, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded } = useDiscovery();
+  const { currentGame, currentScore, swipe, undo, canUndo, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const filterCount = useFilterCount(filters);
   const scrollKeyRef = useRef('discovery-scroll');
+
+  // Touch gesture state
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const touchDeltaRef = useRef({ x: 0, y: 0 });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [dragStyle, setDragStyle] = useState<React.CSSProperties>({});
+  const isDraggingRef = useRef(false);
 
   // Save scroll position before navigating away
   useEffect(() => {
@@ -78,11 +86,83 @@ export default function Discovery() {
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         swipe('yes');
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        if (canUndo) undo();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [currentGame, swipe]);
+  }, [currentGame, swipe, undo, canUndo]);
+
+  // Touch gesture handlers
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (!currentGame || animatingOut) return;
+    touchStartRef.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+    touchDeltaRef.current = { x: 0, y: 0 };
+    isDraggingRef.current = false;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [currentGame, animatingOut]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!touchStartRef.current || animatingOut) return;
+    const dx = e.clientX - touchStartRef.current.x;
+    const dy = e.clientY - touchStartRef.current.y;
+    touchDeltaRef.current = { x: dx, y: dy };
+
+    // Only start dragging after 10px threshold
+    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+      isDraggingRef.current = true;
+    }
+
+    if (isDraggingRef.current) {
+      const rotation = dx * 0.05;
+      const opacity = Math.max(0.3, 1 - Math.abs(dx) / 400);
+      setDragStyle({
+        transform: `translateX(${dx}px) translateY(${Math.max(0, dy * 0.3)}px) rotate(${rotation}deg)`,
+        opacity,
+        transition: 'none',
+      });
+    }
+  }, [animatingOut]);
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (!touchStartRef.current) return;
+
+    const dx = touchDeltaRef.current.x;
+    const dy = touchDeltaRef.current.y;
+    const elapsed = Date.now() - touchStartRef.current.time;
+
+    touchStartRef.current = null;
+    setDragStyle({});
+
+    if (!isDraggingRef.current) {
+      // It was a tap, not a drag — toggle preview
+      if (elapsed < 300 && Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+        setShowPreview((prev) => !prev);
+      }
+      return;
+    }
+
+    isDraggingRef.current = false;
+
+    // Determine swipe threshold (100px or fast velocity)
+    const velocity = Math.abs(dx) / elapsed;
+    const threshold = velocity > 0.5 ? 50 : 100;
+
+    if (dx > threshold) {
+      swipe('yes');
+    } else if (dx < -threshold) {
+      swipe('no');
+    } else if (dy > 80) {
+      swipe('maybe');
+    }
+  }, [swipe]);
+
+  // Reset preview when game changes
+  useEffect(() => {
+    setShowPreview(false);
+  }, [currentGame?.id]);
 
   const handleLoadMore = async () => {
     setLoadingMore(true);
@@ -156,19 +236,27 @@ export default function Discovery() {
             <h1 className="text-3xl lg:text-4xl font-bold mb-2">{t('discovery.title')}</h1>
             <p className="text-gray-400">{t('discovery.subtitle')}</p>
           </div>
-          {/* Mobile filter button */}
-          <button
-            onClick={() => setMobileFiltersOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#242424] border border-[#333] rounded-lg text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors lg:hidden"
-          >
-            <i className="fa-solid fa-filter" />
-            <span>{t('common.filters')}</span>
-            {filterCount > 0 && (
-              <span className="px-1.5 py-0.5 text-xs font-medium bg-[var(--primary)] text-[#1a1a1a] rounded-full">
-                {filterCount}
+          <div className="flex items-center gap-3">
+            {/* Session counter */}
+            {swipedCount > 0 && (
+              <span className="px-3 py-1.5 bg-[var(--primary)]/20 text-[var(--primary)] rounded-full text-sm font-bold">
+                {t('discovery.sessionCounter', { count: swipedCount })}
               </span>
             )}
-          </button>
+            {/* Mobile filter button */}
+            <button
+              onClick={() => setMobileFiltersOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#242424] border border-[#333] rounded-lg text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors lg:hidden"
+            >
+              <i className="fa-solid fa-filter" />
+              <span>{t('common.filters')}</span>
+              {filterCount > 0 && (
+                <span className="px-1.5 py-0.5 text-xs font-medium bg-[var(--primary)] text-[#1a1a1a] rounded-full">
+                  {filterCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Card container */}
@@ -198,9 +286,65 @@ export default function Discovery() {
               )}
             </div>
           ) : currentGame ? (
-            <div key={currentGame.id} className={animationClass}>
-              <GameCard game={currentGame} score={currentScore ? currentScore * 100 : null} />
-            </div>
+            <>
+              <div
+                ref={cardRef}
+                key={currentGame.id}
+                className={animatingOut ? animationClass : 'discovery-swipe-in'}
+                style={!animatingOut ? dragStyle : undefined}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+              >
+                <GameCard game={currentGame} score={currentScore ? currentScore * 100 : null} />
+              </div>
+
+              {/* Preview panel — expanded game details */}
+              {showPreview && (
+                <div className="mt-4 bg-[#242424] border border-[#333] rounded-2xl p-6 discovery-swipe-in">
+                  {currentGame.shortDesc && (
+                    <p className="text-sm text-gray-300 mb-4 leading-relaxed">{currentGame.shortDesc}</p>
+                  )}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {currentGame.releaseDate && (
+                      <div>
+                        <span className="text-gray-500">Release:</span>{' '}
+                        <span className="text-white">{currentGame.releaseDate}</span>
+                      </div>
+                    )}
+                    {currentGame.reviewScore !== null && (
+                      <div>
+                        <span className="text-gray-500">Reviews:</span>{' '}
+                        <span className="text-white">{currentGame.reviewScore}% positive</span>
+                      </div>
+                    )}
+                    {currentGame.developers.length > 0 && (
+                      <div>
+                        <span className="text-gray-500">Developer:</span>{' '}
+                        <span className="text-white">{currentGame.developers[0]}</span>
+                      </div>
+                    )}
+                    {currentGame.priceCents !== null && (
+                      <div>
+                        <span className="text-gray-500">Price:</span>{' '}
+                        <span className="text-white">
+                          {currentGame.priceCents === 0 ? 'Free' : `$${(currentGame.priceCents / 100).toFixed(2)}`}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {currentGame.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-4">
+                      {currentGame.tags.slice(0, 8).map((tag) => (
+                        <span key={tag} className="bg-[#1a1a1a] text-gray-400 px-2 py-0.5 rounded text-xs">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-3 text-center">Tap card again to collapse</p>
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex items-center justify-center text-center text-[var(--muted-foreground)] py-20">
               {syncStatus === 'syncing' ? (
@@ -242,9 +386,22 @@ export default function Discovery() {
             </div>
           )}
 
-          {/* Swipe buttons — outside the card */}
+          {/* Swipe buttons + Undo — outside the card */}
           {currentGame && !isLoading && (
-            <SwipeControls onSwipe={swipe} />
+            <div className="relative">
+              <SwipeControls onSwipe={swipe} />
+              {canUndo && (
+                <button
+                  onClick={undo}
+                  className="absolute -left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-full flex items-center justify-center transition-all text-gray-400 hover:text-[var(--primary)]"
+                  title={t('discovery.undoSwipe')}
+                >
+                  <i className="fa-solid fa-rotate-left text-sm" />
+                </button>
+              )}
+              {/* Swipe hint on mobile */}
+              <p className="text-center text-xs text-gray-500 mt-3 sm:hidden">{t('discovery.swipeHint')}</p>
+            </div>
           )}
         </div>
 

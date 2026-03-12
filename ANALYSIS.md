@@ -88,27 +88,27 @@ Proyecto de ~9,400 lineas de TypeScript, bien estructurado con separacion clara 
 
 | Mejora | Detalle |
 |--------|---------|
-| **Swipe gestures tactiles** | En mobile, no hay soporte para swipe con dedo — solo botones. Implementar touch gestures (pointerdown/pointermove) haria la experiencia mucho mas natural |
-| **Preview antes de swipear** | La GameCard en discovery muestra poca info. Un tap/click en la carta podria expandir detalles sin salir del flujo de swipe |
-| **Undo ultimo swipe** | No hay forma de deshacer un swipe accidental. Un boton "Undo" o Ctrl+Z para el ultimo swipe seria muy util |
-| **Contador de sesion** | Mostrar cuantos juegos se han swiped en la sesion actual para dar sensacion de progreso |
+| ~~**Swipe gestures tactiles**~~ | ~~En mobile, no hay soporte para swipe con dedo — solo botones. Implementar touch gestures (pointerdown/pointermove) haria la experiencia mucho mas natural~~ **DONE** |
+| ~~**Preview antes de swipear**~~ | ~~La GameCard en discovery muestra poca info. Un tap/click en la carta podria expandir detalles sin salir del flujo de swipe~~ **DONE** |
+| ~~**Undo ultimo swipe**~~ | ~~No hay forma de deshacer un swipe accidental. Un boton "Undo" o Ctrl+Z para el ultimo swipe seria muy util~~ **DONE** |
+| ~~**Contador de sesion**~~ | ~~Mostrar cuantos juegos se han swiped en la sesion actual para dar sensacion de progreso~~ **DONE** |
 
 ### 3.2 Recommendations
 
 | Mejora | Detalle |
 |--------|---------|
-| **Feedback loop** | Cuando el usuario dismissea una recomendacion, ese feedback no se usa para mejorar futuras recomendaciones. El dismiss deberia penalizar juegos similares |
-| **Filtros en recomendaciones** | Solo hay sort, no hay filtros por genero/precio como en Discovery |
-| **Indicador de confianza** | Mostrar de que capa viene la recomendacion (AI vs heuristica) para que el usuario sepa cuando Ollama esta activo |
-| **Regeneracion parcial** | "Regenerate" borra todas las recomendaciones. Permitir regenerar solo las dismisseadas mantendria las buenas |
+| ~~**Feedback loop**~~ | ~~Cuando el usuario dismissea una recomendacion, ese feedback no se usa para mejorar futuras recomendaciones. El dismiss deberia penalizar juegos similares~~ **DONE** |
+| ~~**Filtros en recomendaciones**~~ | ~~Solo hay sort, no hay filtros por genero/precio como en Discovery~~ **DONE** |
+| ~~**Indicador de confianza**~~ | ~~Mostrar de que capa viene la recomendacion (AI vs heuristica) para que el usuario sepa cuando Ollama esta activo~~ **DONE** |
+| ~~**Regeneracion parcial**~~ | ~~"Regenerate" borra todas las recomendaciones. Permitir regenerar solo las dismisseadas mantendria las buenas~~ **DONE** |
 
 ### 3.3 Backlog
 
 | Mejora | Detalle |
 |--------|---------|
 | ~~**"Mark as Played" funcional**~~ | ~~El boton existe (`Backlog.tsx:477`) pero no tiene handler — es una feature incompleta~~ **DONE** |
-| **Tiempo estimado de juego** | Integrar datos de HowLongToBeat (o similar) para estimar cuanto tiempo toma completar cada juego |
-| **Prioridad manual** | Permitir al usuario drag-and-drop para reordenar su backlog manualmente, ademas de la prioridad AI |
+| ~~**Tiempo estimado de juego**~~ | ~~Integrar datos de HowLongToBeat (o similar) para estimar cuanto tiempo toma completar cada juego~~ **DONE** |
+| ~~**Prioridad manual**~~ | ~~Permitir al usuario drag-and-drop para reordenar su backlog manualmente, ademas de la prioridad AI~~ **DONE** |
 
 ### 3.4 History
 
@@ -116,15 +116,15 @@ Proyecto de ~9,400 lineas de TypeScript, bien estructurado con separacion clara 
 |--------|---------|
 | ~~**Filtro de fechas funcional**~~ | ~~El UI de date range existe (`History.tsx:189`) pero no filtra realmente — es feature incompleta~~ **DONE** |
 | ~~**Exportar historial**~~ | ~~El boton de export existe (`History.tsx:332`) pero no tiene handler — feature incompleta~~ **DONE** |
-| **Estadisticas temporales** | Grafico de swipes por dia/semana para ver tendencias de actividad |
+| ~~**Estadisticas temporales**~~ | ~~Grafico de swipes por dia/semana para ver tendencias de actividad~~ **DONE** |
 
 ### 3.5 Profile / Gaming DNA
 
 | Mejora | Detalle |
 |--------|---------|
-| **Radar chart interactivo** | El radar chart es estatico. Click en un genero podria mostrar los juegos que contribuyen a ese score |
-| **Evolucion del perfil** | Guardar snapshots del taste profile para mostrar como evoluciona con el tiempo |
-| **Multiples AI summaries** | Permitir regenerar el AI summary y comparar con versiones anteriores |
+| ~~**Radar chart interactivo**~~ | ~~El radar chart es estatico. Click en un genero podria mostrar los juegos que contribuyen a ese score~~ **DONE** |
+| ~~**Evolucion del perfil**~~ | ~~Guardar snapshots del taste profile para mostrar como evoluciona con el tiempo~~ **DONE** |
+| ~~**Multiples AI summaries**~~ | ~~Permitir regenerar el AI summary y comparar con versiones anteriores~~ **DONE** |
 
 ---
 

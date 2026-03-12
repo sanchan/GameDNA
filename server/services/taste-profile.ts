@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { games, swipe_history, user_games, taste_profiles, users } from '../db/schema';
+import { games, swipe_history, user_games, taste_profiles, users, profile_snapshots } from '../db/schema';
 import { getIgnoredTagsSet } from './tag-filter';
 import { config } from '../config';
 
@@ -145,4 +145,36 @@ export async function recalculateTasteProfile(userId: number): Promise<void> {
       },
     })
     .run();
+
+  // Save snapshot (max 1 per hour to avoid spam)
+  const lastSnapshot = db
+    .select({ created_at: profile_snapshots.created_at })
+    .from(profile_snapshots)
+    .where(eq(profile_snapshots.user_id, userId))
+    .orderBy(sql`${profile_snapshots.created_at} DESC`)
+    .limit(1)
+    .get();
+
+  const oneHourAgo = now - 3600;
+  if (!lastSnapshot || (lastSnapshot.created_at ?? 0) < oneHourAgo) {
+    const gameStats = db
+      .select({
+        totalGames: sql<number>`count(*)`,
+        totalPlaytime: sql<number>`coalesce(sum(${user_games.playtime_mins}), 0)`,
+      })
+      .from(user_games)
+      .where(eq(user_games.user_id, userId))
+      .get();
+
+    db.insert(profile_snapshots)
+      .values({
+        user_id: userId,
+        genre_scores: JSON.stringify(genreScores),
+        tag_scores: JSON.stringify(tagScores),
+        total_games: gameStats?.totalGames ?? 0,
+        total_playtime_hours: Math.round((gameStats?.totalPlaytime ?? 0) / 60),
+        created_at: now,
+      })
+      .run();
+  }
 }

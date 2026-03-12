@@ -85,4 +85,28 @@ export const config = {
   defaultPageSize: 50,
   /** Maximum allowed page size */
   maxPageSize: 200,
+
+  // ── Estimated playtime by genre (hours) ──────────────────────────────
+  /** Genre-based estimated playtime in hours for backlog estimation */
+  estimatedPlaytimeByGenre: {
+    'rpg': 50,
+    'strategy': 40,
+    'simulation': 35,
+    'adventure': 25,
+    'action': 15,
+    'indie': 12,
+    'casual': 8,
+    'racing': 10,
+    'sports': 15,
+    'puzzle': 10,
+    'platformer': 10,
+    'shooter': 12,
+    'fighting': 8,
+    'mmo': 100,
+    'massively multiplayer': 100,
+    'free to play': 20,
+    'early access': 15,
+  } as Record<string, number>,
+  /** Default estimated playtime if no genre match */
+  estimatedPlaytimeDefault: 15,
 } as const;

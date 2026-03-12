@@ -49,7 +49,7 @@ function heuristicScore(
   return w.genreWeight * genreMatch + w.tagWeight * tagMatch + w.reviewWeight * reviewNorm + w.recencyWeight * recency;
 }
 
-export async function generateRecommendations(userId: number): Promise<number> {
+export async function generateRecommendations(userId: number, onlyDismissed = false): Promise<number> {
   // Layer 1: Get taste profile
   const profile = db.select().from(taste_profiles).where(eq(taste_profiles.user_id, userId)).get();
   if (!profile) return 0;
@@ -95,6 +95,13 @@ export async function generateRecommendations(userId: number): Promise<number> {
     .from(recommendations)
     .where(and(eq(recommendations.user_id, userId), eq(recommendations.dismissed, 0)))
     .all();
+
+  // For partial regeneration, clear dismissed recs so they get replaced
+  if (onlyDismissed) {
+    db.delete(recommendations)
+      .where(and(eq(recommendations.user_id, userId), eq(recommendations.dismissed, 1)))
+      .run();
+  }
 
   const excludeIds = [
     ...new Set([
@@ -195,6 +202,7 @@ Example: {"games": [{"appid": 123, "score": 0.85, "explanation": "Matches your l
   // Upsert results into recommendations table
   let count = 0;
   for (const result of finalResults) {
+    const source = ollamaAvailable && result.explanation ? 'ai' : 'heuristic';
     db.insert(recommendations)
       .values({
         user_id: userId,
@@ -203,6 +211,7 @@ Example: {"games": [{"appid": 123, "score": 0.85, "explanation": "Matches your l
         ai_explanation: result.explanation || null,
         generated_at: nowUnix,
         dismissed: 0,
+        source,
       })
       .onConflictDoUpdate({
         target: [recommendations.user_id, recommendations.game_id],
@@ -211,6 +220,7 @@ Example: {"games": [{"appid": 123, "score": 0.85, "explanation": "Matches your l
           ai_explanation: result.explanation || null,
           generated_at: nowUnix,
           dismissed: 0,
+          source,
         },
       })
       .run();

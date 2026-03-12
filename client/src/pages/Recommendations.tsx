@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Navigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/use-auth';
@@ -16,12 +16,24 @@ export default function Recommendations() {
   const [explainRec, setExplainRec] = useState<Recommendation | null>(null);
   const [sortBy, setSortBy] = useState('best-match');
   const [dismissedIds, setDismissedIds] = useState<Set<number>>(new Set());
+  const [genreFilter, setGenreFilter] = useState('all');
+  const [priceFilter, setPriceFilter] = useState('all');
   const prevSyncStatus = useRef(syncStatus);
 
   const fetchRecs = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.get<Recommendation[]>('/recommendations');
+      const params = new URLSearchParams();
+      if (priceFilter !== 'all') {
+        if (priceFilter === 'under10') params.set('maxPrice', '1000');
+        else if (priceFilter === 'under20') params.set('maxPrice', '2000');
+        else if (priceFilter === 'under30') params.set('maxPrice', '3000');
+        else if (priceFilter === 'over30') params.set('minPrice', '3000');
+      }
+      if (genreFilter !== 'all') params.set('genres', genreFilter);
+
+      const qs = params.toString();
+      const data = await api.get<Recommendation[]>(`/recommendations${qs ? '?' + qs : ''}`);
       setRecs(data);
       setDismissedIds(new Set());
     } catch {
@@ -29,13 +41,13 @@ export default function Recommendations() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [genreFilter, priceFilter]);
 
   useEffect(() => {
     if (user) fetchRecs();
   }, [user, fetchRecs]);
 
-  // Refetch when sync transitions to 'synced' (recommendations are auto-generated during sync)
+  // Refetch when sync transitions to 'synced'
   useEffect(() => {
     if (prevSyncStatus.current === 'syncing' && syncStatus === 'synced') {
       fetchRecs();
@@ -43,10 +55,10 @@ export default function Recommendations() {
     prevSyncStatus.current = syncStatus;
   }, [syncStatus, fetchRecs]);
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (onlyDismissed = false) => {
     setGenerating(true);
     try {
-      await api.post<{ count: number }>('/recommendations/generate');
+      await api.post<{ count: number }>('/recommendations/generate', { onlyDismissed });
       await fetchRecs();
     } catch {
       // ignore
@@ -68,6 +80,15 @@ export default function Recommendations() {
       // ignore
     }
   };
+
+  // Collect unique genres for filter
+  const allGenres = useMemo(() => {
+    const genres = new Set<string>();
+    recs.forEach((r) => r.game.genres.forEach((g) => genres.add(g)));
+    return Array.from(genres).sort();
+  }, [recs]);
+
+  const hasDismissed = dismissedIds.size > 0;
 
   const sortedRecs = [...recs].sort((a, b) => {
     switch (sortBy) {
@@ -99,13 +120,23 @@ export default function Recommendations() {
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
           <button
-            onClick={handleGenerate}
+            onClick={() => handleGenerate(false)}
             disabled={generating || syncStatus === 'syncing'}
             className="flex items-center justify-center space-x-2 px-6 py-3 bg-[var(--primary)] hover:opacity-80 text-[var(--primary-foreground)] rounded-lg font-semibold transition-all disabled:opacity-50"
           >
             <i className="fa-solid fa-rotate-right" />
             <span>{generating ? t('recommendations.generating') : t('recommendations.regenerate')}</span>
           </button>
+          {hasDismissed && (
+            <button
+              onClick={() => handleGenerate(true)}
+              disabled={generating}
+              className="flex items-center justify-center space-x-2 px-5 py-3 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg font-semibold transition-all disabled:opacity-50"
+            >
+              <i className="fa-solid fa-arrows-rotate" />
+              <span>{t('recommendations.regenerateDismissed')}</span>
+            </button>
+          )}
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -119,6 +150,33 @@ export default function Recommendations() {
           </select>
         </div>
       </div>
+
+      {/* Filters */}
+      {recs.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <select
+            value={genreFilter}
+            onChange={(e) => setGenreFilter(e.target.value)}
+            className="px-4 py-2 bg-[#242424] border border-[#333] rounded-lg text-sm focus:outline-none focus:border-[var(--primary)] transition-colors"
+          >
+            <option value="all">{t('common.allGenres')}</option>
+            {allGenres.map((genre) => (
+              <option key={genre} value={genre}>{genre}</option>
+            ))}
+          </select>
+          <select
+            value={priceFilter}
+            onChange={(e) => setPriceFilter(e.target.value)}
+            className="px-4 py-2 bg-[#242424] border border-[#333] rounded-lg text-sm focus:outline-none focus:border-[var(--primary)] transition-colors"
+          >
+            <option value="all">{t('recommendations.allPrices')}</option>
+            <option value="under10">{t('recommendations.under10')}</option>
+            <option value="under20">{t('recommendations.under20')}</option>
+            <option value="under30">{t('recommendations.under30')}</option>
+            <option value="over30">{t('recommendations.over30')}</option>
+          </select>
+        </div>
+      )}
 
       {/* AI Status Banner */}
       {recs.length > 0 && !loading && (
@@ -193,7 +251,7 @@ export default function Recommendations() {
           <p className="text-sm mb-6 max-w-md mx-auto">{t('recommendations.noRecsDescription')}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={handleGenerate}
+              onClick={() => handleGenerate(false)}
               disabled={generating}
               className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] hover:opacity-80 text-[var(--primary-foreground)] rounded-lg font-semibold transition-all disabled:opacity-50"
             >

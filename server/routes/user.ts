@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { eq, and, sql } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 import { db } from '../db';
-import { users, user_games, games, swipe_history, taste_profiles } from '../db/schema';
+import { users, user_games, games, swipe_history, taste_profiles, profile_snapshots, ai_summary_history } from '../db/schema';
 import { getOwnedGames, getWishlist, getPopularGameIds } from '../services/steam-api';
 import { ensureGamesCached } from '../services/game-cache';
 import { recalculateTasteProfile } from '../services/taste-profile';
@@ -522,6 +522,145 @@ user.post('/ignored-tags', async (c) => {
   recalculateTasteProfile(userId).catch(() => {});
 
   return c.json({ ignoredTags: updated });
+});
+
+// GET /api/user/profile-snapshots — get taste profile evolution
+user.get('/profile-snapshots', async (c) => {
+  const userId = c.get('userId');
+
+  const snapshots = db
+    .select()
+    .from(profile_snapshots)
+    .where(eq(profile_snapshots.user_id, userId))
+    .orderBy(desc(profile_snapshots.created_at))
+    .limit(20)
+    .all();
+
+  return c.json(snapshots.map((s) => ({
+    id: s.id,
+    topGenres: s.genre_scores ? Object.entries(JSON.parse(s.genre_scores) as Record<string, number>)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 8)
+      .map(([name, score]) => ({ name, score })) : [],
+    topTags: s.tag_scores ? Object.entries(JSON.parse(s.tag_scores) as Record<string, number>)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 8)
+      .map(([name, score]) => ({ name, score })) : [],
+    totalGames: s.total_games ?? 0,
+    totalPlaytimeHours: s.total_playtime_hours ?? 0,
+    createdAt: s.created_at,
+  })));
+});
+
+// GET /api/user/ai-summaries — get AI summary history
+user.get('/ai-summaries', async (c) => {
+  const userId = c.get('userId');
+
+  const summaries = db
+    .select()
+    .from(ai_summary_history)
+    .where(eq(ai_summary_history.user_id, userId))
+    .orderBy(desc(ai_summary_history.created_at))
+    .limit(10)
+    .all();
+
+  return c.json(summaries.map((s) => ({
+    id: s.id,
+    summary: s.summary,
+    createdAt: s.created_at,
+  })));
+});
+
+// POST /api/user/generate-summary — generate a new AI summary and save to history
+user.post('/generate-summary', async (c) => {
+  const userId = c.get('userId');
+
+  const tasteProfile = db
+    .select()
+    .from(taste_profiles)
+    .where(eq(taste_profiles.user_id, userId))
+    .get();
+
+  if (!tasteProfile) return c.json({ error: 'No taste profile found' }, 404);
+
+  const genreScores: Record<string, number> = tasteProfile.genre_scores ? JSON.parse(tasteProfile.genre_scores) : {};
+  const tagScores: Record<string, number> = tasteProfile.tag_scores ? JSON.parse(tasteProfile.tag_scores) : {};
+
+  const topGenres = Object.entries(genreScores).sort(([, a], [, b]) => b - a).slice(0, 5).map(([n]) => n);
+  const topTags = Object.entries(tagScores).sort(([, a], [, b]) => b - a).slice(0, 8).map(([n]) => n);
+
+  const { generateText, checkOllamaHealth } = await import('../services/ollama');
+  const healthy = await checkOllamaHealth();
+
+  if (!healthy) {
+    return c.json({ error: 'Ollama is not available' }, 503);
+  }
+
+  const gameStats = db
+    .select({
+      totalGames: sql<number>`count(*)`,
+      totalPlaytime: sql<number>`coalesce(sum(${user_games.playtime_mins}), 0)`,
+    })
+    .from(user_games)
+    .where(eq(user_games.user_id, userId))
+    .get();
+
+  const prompt = `Write a brief, engaging 2-3 sentence gaming personality summary for a player with these preferences:
+Top genres: ${topGenres.join(', ')}
+Top tags: ${topTags.join(', ')}
+Games owned: ${gameStats?.totalGames ?? 0}
+Total playtime: ${Math.round((gameStats?.totalPlaytime ?? 0) / 60)} hours
+
+Be specific and insightful about what kind of gamer they are. Reference their specific preferences.`;
+
+  const summary = await generateText(prompt, 0.7);
+
+  if (summary) {
+    // Save to history
+    const nowUnix = Math.floor(Date.now() / 1000);
+    db.insert(ai_summary_history)
+      .values({ user_id: userId, summary, created_at: nowUnix })
+      .run();
+
+    // Update taste profile
+    db.update(taste_profiles)
+      .set({ ai_summary: summary, updated_at: nowUnix })
+      .where(eq(taste_profiles.user_id, userId))
+      .run();
+
+    return c.json({ summary });
+  }
+
+  return c.json({ error: 'Failed to generate summary' }, 500);
+});
+
+// GET /api/user/genre-games/:genre — get games that contribute to a genre score
+user.get('/genre-games/:genre', async (c) => {
+  const userId = c.get('userId');
+  const genre = decodeURIComponent(c.req.param('genre'));
+
+  const rows = db
+    .select({ game: games, playtime_mins: user_games.playtime_mins })
+    .from(user_games)
+    .innerJoin(games, eq(user_games.game_id, games.id))
+    .where(eq(user_games.user_id, userId))
+    .all();
+
+  const matchingGames = rows
+    .filter((row) => {
+      const gameGenres: string[] = row.game.genres ? JSON.parse(row.game.genres) : [];
+      return gameGenres.some((g) => g.toLowerCase() === genre.toLowerCase());
+    })
+    .sort((a, b) => (b.playtime_mins ?? 0) - (a.playtime_mins ?? 0))
+    .slice(0, 20)
+    .map((row) => ({
+      id: row.game.id,
+      name: row.game.name,
+      headerImage: row.game.header_image,
+      playtimeMins: row.playtime_mins ?? 0,
+    }));
+
+  return c.json(matchingGames);
 });
 
 // Export user data as JSON

@@ -1,12 +1,21 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Navigate, Link } from 'react-router';
 import { useTranslation, Trans } from 'react-i18next';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
 import { useToast } from '../components/Toast';
 import { api } from '../lib/api';
 import type { SwipeDecision } from '../../../shared/types';
 import type { Game } from '../../../shared/types';
+
+interface DailyStats {
+  date: string;
+  yes: number;
+  no: number;
+  maybe: number;
+  total: number;
+}
 
 interface SwipeEntry {
   id: number;
@@ -68,6 +77,7 @@ export default function History() {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState('newest');
   const [dateRange, setDateRange] = useState('all');
+  const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
 
   // Debounce search input
   useEffect(() => {
@@ -108,6 +118,14 @@ export default function History() {
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
+
+  // Fetch daily stats for temporal chart
+  useEffect(() => {
+    if (!user) return;
+    api.get<DailyStats[]>('/history/stats')
+      .then(setDailyStats)
+      .catch(() => setDailyStats([]));
+  }, [user]);
 
   const handleChangeDecision = async (entryId: number, newDecision: SwipeDecision) => {
     setUpdatingId(entryId);
@@ -373,6 +391,45 @@ export default function History() {
           </button>
         </div>
       </div>
+
+      {/* Temporal Statistics Chart */}
+      {dailyStats.some((d) => d.total > 0) && (
+        <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
+          <h2 className="text-2xl font-bold mb-2">{t('history.swipeActivity')}</h2>
+          <p className="text-sm text-[var(--muted-foreground)] mb-6">{t('history.swipeActivitySubtitle')}</p>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dailyStats} barCategoryGap="20%">
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(d: string) => {
+                    const date = new Date(d + 'T00:00:00');
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                  }}
+                  tick={{ fill: '#6b7280', fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={{ stroke: '#333' }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tick={{ fill: '#6b7280', fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', fontSize: '12px' }}
+                  labelFormatter={(d: string) => new Date(d + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                />
+                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Bar dataKey="yes" name="Liked" fill="#22c55e" stackId="a" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="maybe" name="Maybe" fill="#eab308" stackId="a" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="no" name="Passed" fill="#ef4444" stackId="a" radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Results count */}
       {!loading && (

@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import { eq, and, lt, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { games, user_games, taste_profiles } from '../db/schema';
+import { games, user_games, taste_profiles, backlog_order } from '../db/schema';
 import { requireAuth } from '../middleware/auth';
 import { generateJSON } from '../services/ollama';
+import { config } from '../config';
 import type { Game } from '../../shared/types';
 
 type AuthEnv = {
@@ -31,6 +32,16 @@ function dbGameToGame(row: typeof games.$inferSelect): Game {
     publishers: row.publishers ? JSON.parse(row.publishers) : [],
     platforms: row.platforms ? JSON.parse(row.platforms) : { windows: false, mac: false, linux: false },
   };
+}
+
+function estimatePlaytimeHours(genres: string[]): number {
+  for (const genre of genres) {
+    const key = genre.toLowerCase();
+    if (key in config.estimatedPlaytimeByGenre) {
+      return config.estimatedPlaytimeByGenre[key];
+    }
+  }
+  return config.estimatedPlaytimeDefault;
 }
 
 backlog.use('*', requireAuth);
@@ -86,10 +97,24 @@ backlog.get('/', async (c) => {
     )
     .all();
 
+  // Load manual order
+  const orderRows = db
+    .select({ game_id: backlog_order.game_id, position: backlog_order.position })
+    .from(backlog_order)
+    .where(eq(backlog_order.user_id, userId))
+    .all();
+  const manualOrder = new Map(orderRows.map((r) => [r.game_id, r.position]));
+
   if (!hasProfile) {
     // No taste profile — fall back to review_score ordering
     const sorted = rows
       .sort((a, b) => {
+        // Manual order takes precedence
+        const aOrder = manualOrder.get(a.game.id);
+        const bOrder = manualOrder.get(b.game.id);
+        if (aOrder !== undefined && bOrder !== undefined) return aOrder - bOrder;
+        if (aOrder !== undefined) return -1;
+        if (bOrder !== undefined) return 1;
         // Games with some playtime first
         const aHasPlaytime = (a.playtime_mins ?? 0) > 0 ? 0 : 1;
         const bHasPlaytime = (b.playtime_mins ?? 0) > 0 ? 0 : 1;
@@ -98,11 +123,16 @@ backlog.get('/', async (c) => {
       })
       .slice(offset, offset + limit);
 
-    return c.json(sorted.map((row) => ({
-      game: dbGameToGame(row.game),
-      playtimeMins: row.playtime_mins ?? 0,
-      fromWishlist: row.from_wishlist === 1,
-    })));
+    return c.json(sorted.map((row) => {
+      const gameObj = dbGameToGame(row.game);
+      return {
+        game: gameObj,
+        playtimeMins: row.playtime_mins ?? 0,
+        fromWishlist: row.from_wishlist === 1,
+        estimatedHours: estimatePlaytimeHours(gameObj.genres),
+        manualPosition: manualOrder.get(row.game.id) ?? null,
+      };
+    }));
   }
 
   // Score each backlog game by taste match
@@ -122,15 +152,28 @@ backlog.get('/', async (c) => {
     return { row, score };
   });
 
-  scored.sort((a, b) => b.score - a.score);
+  scored.sort((a, b) => {
+    // Manual order takes precedence
+    const aOrder = manualOrder.get(a.row.game.id);
+    const bOrder = manualOrder.get(b.row.game.id);
+    if (aOrder !== undefined && bOrder !== undefined) return aOrder - bOrder;
+    if (aOrder !== undefined) return -1;
+    if (bOrder !== undefined) return 1;
+    return b.score - a.score;
+  });
 
   const result = scored
     .slice(offset, offset + limit)
-    .map((s) => ({
-      game: dbGameToGame(s.row.game),
-      playtimeMins: s.row.playtime_mins ?? 0,
-      fromWishlist: s.row.from_wishlist === 1,
-    }));
+    .map((s) => {
+      const gameObj = dbGameToGame(s.row.game);
+      return {
+        game: gameObj,
+        playtimeMins: s.row.playtime_mins ?? 0,
+        fromWishlist: s.row.from_wishlist === 1,
+        estimatedHours: estimatePlaytimeHours(gameObj.genres),
+        manualPosition: manualOrder.get(s.row.game.id) ?? null,
+      };
+    });
 
   return c.json(result);
 });
@@ -155,6 +198,54 @@ backlog.post('/:gameId/mark-played', async (c) => {
     .set({ playtime_mins: newPlaytime })
     .where(and(eq(user_games.user_id, userId), eq(user_games.game_id, gameId)))
     .run();
+
+  return c.json({ success: true });
+});
+
+// POST /api/backlog/reorder — set manual priority order
+backlog.post('/reorder', async (c) => {
+  const userId = c.get('userId');
+  const body = await c.req.json<{ gameId: number; direction: 'up' | 'down' }>();
+
+  if (!body.gameId || !['up', 'down'].includes(body.direction)) {
+    return c.json({ error: 'Invalid request: gameId and direction (up/down) required' }, 400);
+  }
+
+  // Get current order for this user
+  const existing = db
+    .select()
+    .from(backlog_order)
+    .where(eq(backlog_order.user_id, userId))
+    .all();
+
+  const orderMap = new Map(existing.map((r) => [r.game_id, r.position]));
+
+  const currentPos = orderMap.get(body.gameId);
+  const newPos = body.direction === 'up'
+    ? (currentPos !== undefined ? currentPos - 1 : 0)
+    : (currentPos !== undefined ? currentPos + 1 : orderMap.size);
+
+  // Shift other items
+  for (const [gameId, pos] of orderMap) {
+    if (gameId === body.gameId) continue;
+    if (body.direction === 'up' && pos >= newPos && pos < (currentPos ?? orderMap.size)) {
+      orderMap.set(gameId, pos + 1);
+    } else if (body.direction === 'down' && pos <= newPos && pos > (currentPos ?? -1)) {
+      orderMap.set(gameId, pos - 1);
+    }
+  }
+  orderMap.set(body.gameId, Math.max(0, newPos));
+
+  // Upsert all positions
+  for (const [gameId, position] of orderMap) {
+    db.insert(backlog_order)
+      .values({ user_id: userId, game_id: gameId, position })
+      .onConflictDoUpdate({
+        target: [backlog_order.user_id, backlog_order.game_id],
+        set: { position },
+      })
+      .run();
+  }
 
   return c.json({ success: true });
 });

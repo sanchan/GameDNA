@@ -35,6 +35,7 @@ export function useDiscovery() {
   const [swipedCount, setSwipedCount] = useState(0);
   const [totalLoaded, setTotalLoaded] = useState(0);
   const [animatingOut, setAnimatingOut] = useState<'left' | 'right' | 'down' | null>(null);
+  const [lastSwipedGame, setLastSwipedGame] = useState<{ game: Game; score: number } | null>(null);
   const prevSyncStatus = useRef(syncStatus);
 
   const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
@@ -88,6 +89,23 @@ export function useDiscovery() {
     },
   });
 
+  const undoMutation = useMutation({
+    mutationFn: () => api.post<{ success: boolean; undone: { gameId: number; decision: string; game: Game | null } }>('/discovery/undo'),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['gaming-dna'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-swipes'] });
+      if (data.undone?.game) {
+        // Re-insert the game at the front of the queue
+        setQueue((prev) => [{ game: data.undone.game!, score: 0 }, ...prev]);
+        setSwipedCount((c) => Math.max(0, c - 1));
+        toast(`Undid swipe on "${data.undone.game.name}"`, 'success');
+      }
+    },
+    onError: () => {
+      toast('No swipes to undo', 'error');
+    },
+  });
+
   const current = queue[0] ?? undefined;
   const currentGame = current?.game;
   const currentScore = current?.score ?? null;
@@ -95,6 +113,9 @@ export function useDiscovery() {
   const swipe = useCallback(
     (decision: SwipeDecision) => {
       if (!currentGame) return;
+
+      // Save last swiped game for undo
+      setLastSwipedGame({ game: currentGame, score: currentScore ?? 0 });
 
       const direction = decision === 'no' ? 'left' : decision === 'yes' ? 'right' : 'down';
       setAnimatingOut(direction);
@@ -107,8 +128,12 @@ export function useDiscovery() {
         swipeMutation.mutate({ gameId: currentGame.id, decision });
       }, 300);
     },
-    [currentGame, swipeMutation],
+    [currentGame, currentScore, swipeMutation],
   );
+
+  const undo = useCallback(() => {
+    undoMutation.mutate();
+  }, [undoMutation]);
 
   const refetchQueue = useCallback(() => {
     setQueue([]);
@@ -122,6 +147,8 @@ export function useDiscovery() {
     currentGame,
     currentScore,
     swipe,
+    undo,
+    canUndo: swipedCount > 0,
     isLoading: isLoading && queue.length === 0,
     filters,
     setFilters,
