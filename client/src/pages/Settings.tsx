@@ -10,6 +10,7 @@ import DataManagement from '../components/DataManagement';
 import MigrationTool from '../components/MigrationTool';
 import type { AiProvider } from '../services/ai-engine';
 import type { UserSettings } from '../../../shared/types';
+import { DEFAULT_EXPLANATION_TEMPLATE } from '../services/ai-features';
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
@@ -217,6 +218,33 @@ export default function Settings() {
 
             {!aiProvider && (
               <p className="text-sm text-gray-500">AI features disabled. Recommendations will use heuristic scoring only.</p>
+            )}
+
+            {/* Explanation Template */}
+            {aiProvider && (
+              <div className="border-t border-[#333] pt-4 mt-4">
+                <label className="text-sm font-medium text-gray-300 mb-2 block">
+                  "Why this game?" Prompt Template
+                </label>
+                <textarea
+                  value={settings.explanationTemplate || ''}
+                  onChange={(e) => setSettings({ ...settings, explanationTemplate: e.target.value || null })}
+                  placeholder={DEFAULT_EXPLANATION_TEMPLATE}
+                  rows={8}
+                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)] font-mono resize-y"
+                />
+                <p className="text-xs text-gray-500 mt-1.5">
+                  Available variables: <code className="text-gray-400">{'{{game_name}}'}</code> <code className="text-gray-400">{'{{game_genres}}'}</code> <code className="text-gray-400">{'{{game_tags}}'}</code> <code className="text-gray-400">{'{{game_description}}'}</code> <code className="text-gray-400">{'{{game_reviews}}'}</code> <code className="text-gray-400">{'{{game_price}}'}</code> <code className="text-gray-400">{'{{player_genres}}'}</code> <code className="text-gray-400">{'{{player_tags}}'}</code> <code className="text-gray-400">{'{{player_budget}}'}</code> <code className="text-gray-400">{'{{player_playtime}}'}</code>
+                </p>
+                {settings.explanationTemplate && (
+                  <button
+                    onClick={() => setSettings({ ...settings, explanationTemplate: null })}
+                    className="text-xs text-[var(--primary)] hover:underline mt-1"
+                  >
+                    Reset to default
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

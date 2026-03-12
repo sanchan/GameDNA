@@ -163,6 +163,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
   cache_ttl_seconds INTEGER,
   language TEXT DEFAULT 'en',
   keyboard_shortcuts TEXT,
+  explanation_template TEXT,
   updated_at INTEGER DEFAULT (unixepoch())
 );
 
@@ -228,3 +229,8 @@ CREATE TABLE IF NOT EXISTS local_config (
   updated_at INTEGER DEFAULT (unixepoch())
 );
 `;
+
+// Incremental migrations for existing databases (ALTER TABLE is safe to retry — SQLite errors on duplicate columns)
+export const MIGRATIONS_SQL = [
+  `ALTER TABLE user_settings ADD COLUMN explanation_template TEXT`,
+];

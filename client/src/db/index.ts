@@ -3,7 +3,7 @@
 // Exports persistDb() (debounced 500ms) and resetDb().
 
 import initSqlJs, { type Database } from 'sql.js';
-import { CREATE_TABLES_SQL } from './schema';
+import { CREATE_TABLES_SQL, MIGRATIONS_SQL } from './schema';
 
 let db: Database | null = null;
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -48,6 +48,10 @@ export async function initDb(): Promise<Database> {
     db = new SQL.Database(existing);
     // Run CREATE IF NOT EXISTS to add any new tables from schema updates
     db.run(CREATE_TABLES_SQL);
+    // Run incremental migrations (ALTER TABLE etc.) — ignore errors for already-applied ones
+    for (const sql of MIGRATIONS_SQL) {
+      try { db.run(sql); } catch { /* column already exists */ }
+    }
   } else {
     db = new SQL.Database();
     db.run('PRAGMA journal_mode=WAL;');

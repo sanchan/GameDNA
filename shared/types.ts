@@ -120,6 +120,7 @@ export interface UserSettings {
   cacheTtlSeconds: number | null;
   language: string;
   keyboardShortcuts: Record<string, string> | null;
+  explanationTemplate: string | null;
 }
 
 export interface ChatMessage {
