@@ -111,17 +111,17 @@ export default function Settings() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setSettings({ ...settings, theme: 'dark' })}
-                  className={`flex-1 p-4 rounded-xl border transition-all ${settings.theme === 'dark' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${settings.theme === 'dark' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
                 >
-                  <i className="fa-solid fa-moon text-xl mb-2 block" />
-                  <span className="text-sm font-medium">Dark</span>
+                  <i className="fa-solid fa-moon text-xl mb-2" />
+                  <span className="text-sm font-medium block">Dark</span>
                 </button>
                 <button
                   onClick={() => setSettings({ ...settings, theme: 'light' })}
-                  className={`flex-1 p-4 rounded-xl border transition-all ${settings.theme === 'light' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${settings.theme === 'light' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
                 >
-                  <i className="fa-solid fa-sun text-xl mb-2 block" />
-                  <span className="text-sm font-medium">Light</span>
+                  <i className="fa-solid fa-sun text-xl mb-2" />
+                  <span className="text-sm font-medium block">Light</span>
                 </button>
               </div>
             </div>
@@ -151,25 +151,25 @@ export default function Settings() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setAiProvider('ollama')}
-                  className={`flex-1 p-4 rounded-xl border transition-all ${aiProvider === 'ollama' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'ollama' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
                 >
-                  <i className="fa-solid fa-server text-xl mb-2 block" />
+                  <i className="fa-solid fa-server text-xl mb-2" />
                   <span className="text-sm font-medium block">Ollama</span>
                   <span className="text-xs text-gray-500 block mt-1">Local server</span>
                 </button>
                 <button
                   onClick={() => setAiProvider('webllm')}
-                  className={`flex-1 p-4 rounded-xl border transition-all ${aiProvider === 'webllm' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'webllm' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
                 >
-                  <i className="fa-solid fa-microchip text-xl mb-2 block" />
+                  <i className="fa-solid fa-microchip text-xl mb-2" />
                   <span className="text-sm font-medium block">WebLLM</span>
                   <span className="text-xs text-gray-500 block mt-1">In-browser (WebGPU)</span>
                 </button>
                 <button
                   onClick={() => setAiProvider(null)}
-                  className={`flex-1 p-4 rounded-xl border transition-all ${!aiProvider ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${!aiProvider ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
                 >
-                  <i className="fa-solid fa-ban text-xl mb-2 block" />
+                  <i className="fa-solid fa-ban text-xl mb-2" />
                   <span className="text-sm font-medium block">None</span>
                   <span className="text-xs text-gray-500 block mt-1">Heuristic only</span>
                 </button>
@@ -181,7 +181,7 @@ export default function Settings() {
               <>
                 <div>
                   <label className="text-sm font-medium text-gray-300 mb-2 block">Ollama URL</label>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <input
                       type="text"
                       value={settings.ollamaUrl || ''}
@@ -189,7 +189,7 @@ export default function Settings() {
                       placeholder="http://localhost:11434"
                       className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
                     />
-                    <div className={`px-3 py-2.5 rounded-lg text-xs font-bold ${ai.healthy ? 'bg-green-500/20 text-green-400' : ai.healthy === false ? 'bg-red-500/20 text-red-400' : 'bg-[#333] text-gray-400'}`}>
+                    <div className={`px-3 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap ${ai.healthy ? 'bg-green-500/20 text-green-400' : ai.healthy === false ? 'bg-red-500/20 text-red-400' : 'bg-[#333] text-gray-400'}`}>
                       {ai.healthy ? 'Connected' : ai.healthy === false ? 'Offline' : 'Checking...'}
                     </div>
                   </div>
