@@ -16,6 +16,7 @@ import MyLists from './pages/MyLists';
 import Settings from './pages/Settings';
 import Stats from './pages/Stats';
 import Chat from './pages/Chat';
+import Legal from './pages/Legal';
 import Onboarding from './pages/Onboarding';
 
 function KeyboardShortcutsProvider({ children }: { children: React.ReactNode }) {
@@ -64,6 +65,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/onboarding" element={isSetup ? <Navigate to="/" replace /> : <Onboarding />} />
+      <Route path="/legal" element={<Legal />} />
       {!isSetup ? (
         <Route path="*" element={<Navigate to="/onboarding" replace />} />
       ) : (

@@ -1,6 +1,6 @@
 import { useDb } from '../contexts/db-context';
 import { useAuth } from '../hooks/use-auth';
-import { Navigate, useNavigate } from 'react-router';
+import { Navigate, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
 export default function Landing() {
@@ -125,6 +125,15 @@ export default function Landing() {
             </div>
           </div>
         </div>
+      </div>
+      {/* Footer */}
+      <div className="absolute bottom-0 left-0 right-0 py-4 text-center z-10">
+        <p className="text-xs text-gray-500">
+          GameDNA is not affiliated with Valve or Steam.{' '}
+          <Link to="/legal" className="text-gray-400 hover:text-white transition-colors underline">
+            Privacy & Legal
+          </Link>
+        </p>
       </div>
     </div>
   );
