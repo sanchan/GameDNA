@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface MediaItem {
@@ -19,6 +19,8 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
   const [index, setIndex] = useState(initialIndex);
   const [playingVideo, setPlayingVideo] = useState(false);
   const [closing, setClosing] = useState(false);
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const current = items[index];
 
@@ -37,7 +39,7 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
     setIndex((i) => (i - 1 + items.length) % items.length);
   }, [items.length]);
 
-  // Keyboard navigation
+  // Keyboard navigation + focus trap
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -52,22 +54,50 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
         e.preventDefault();
         e.stopPropagation();
         goNext();
+      } else if (e.key === 'Tab' && galleryRef.current) {
+        const focusable = galleryRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), video'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       }
     };
     window.addEventListener('keydown', handler, true);
     return () => window.removeEventListener('keydown', handler, true);
   }, [close, goNext, goPrev]);
 
-  // Lock body scroll
+  // Lock body scroll + manage focus
   useEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement;
     document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => {
+      const closeBtn = galleryRef.current?.querySelector<HTMLElement>('button');
+      closeBtn?.focus();
+    });
     return () => {
       document.body.style.overflow = '';
+      previousFocusRef.current?.focus();
     };
   }, []);
 
   return (
     <div
+      ref={galleryRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('mediaGallery.counter', { current: index + 1, total: items.length })}
       className={`fixed inset-0 z-50 flex items-center justify-center ${
         closing ? 'gallery-zoom-out' : 'gallery-zoom-in'
       }`}

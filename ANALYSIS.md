@@ -54,31 +54,31 @@ Proyecto de ~9,400 lineas de TypeScript, bien estructurado con separacion clara 
 | **Alta** | ~~Toast de confirmacion en swipes~~ | ~~Al swipear un juego, la carta desaparece sin feedback. Un toast breve ("Added to Yes list") confirmaria la accion~~ **DONE** |
 | **Alta** | ~~Toast en acciones de bookmark~~ | ~~Agregar/quitar bookmark es silencioso — el usuario no sabe si funciono~~ **DONE** |
 | **Alta** | ~~Errores visibles al usuario~~ | ~~Muchos errores van solo a console.log. Los errores de API deberian mostrarse como toast de error~~ **DONE** |
-| **Media** | Animacion del toast | `Toast.tsx` referencia `animate-slide-up` pero la animacion CSS no funciona correctamente |
+| **Media** | ~~Animacion del toast~~ | ~~`Toast.tsx` referencia `animate-slide-up` pero la animacion CSS no funciona correctamente~~ **DONE** |
 
 ### 2.2 Estados y Loading
 
 | Prioridad | Mejora | Detalle |
 |-----------|--------|---------|
-| **Alta** | Mensaje claro durante sync | El skeleton durante sync no explica que esta pasando. Mostrar "Syncing your Steam library..." con progreso |
-| **Media** | Empty state con next steps | Cuando no hay recomendaciones/historial, el empty state no sugiere que hacer. Ej: "Swipe some games first to get recommendations" |
-| **Media** | Skeleton en WhyThisGame | El modal de explicacion AI muestra solo spinner, un skeleton con lineas seria mas profesional |
+| **Alta** | ~~Mensaje claro durante sync~~ | ~~El skeleton durante sync no explica que esta pasando. Mostrar "Syncing your Steam library..." con progreso~~ **DONE** |
+| **Media** | ~~Empty state con next steps~~ | ~~Cuando no hay recomendaciones/historial, el empty state no sugiere que hacer. Ej: "Swipe some games first to get recommendations"~~ **DONE** |
+| **Media** | ~~Skeleton en WhyThisGame~~ | ~~El modal de explicacion AI muestra solo spinner, un skeleton con lineas seria mas profesional~~ **DONE** |
 
 ### 2.3 Navegacion y Responsividad
 
 | Prioridad | Mejora | Detalle |
 |-----------|--------|---------|
-| **Media** | Highlight de pagina activa en mobile | Los nav links no marcan la pagina actual en el menu hamburguesa |
-| **Media** | Filtros no se resetean entre tabs | En MyLists y History, cambiar de tab mantiene filtros del tab anterior — confuso |
-| **Baja** | Scroll position en discovery | Al volver de GameDetail, el discovery queue no mantiene la posicion |
+| **Media** | ~~Highlight de pagina activa en mobile~~ | ~~Los nav links no marcan la pagina actual en el menu hamburguesa~~ **DONE** |
+| **Media** | ~~Filtros no se resetean entre tabs~~ | ~~En MyLists y History, cambiar de tab mantiene filtros del tab anterior — confuso~~ **DONE** |
+| **Baja** | ~~Scroll position en discovery~~ | ~~Al volver de GameDetail, el discovery queue no mantiene la posicion~~ **DONE** |
 
 ### 2.4 Accesibilidad
 
 | Prioridad | Mejora | Detalle |
 |-----------|--------|---------|
-| **Media** | Focus trap en modales | WhyThisGame y MediaGallery no atrapan el foco — Tab puede navegar detras del modal |
-| **Media** | Labels en botones de swipe | SwipeControls tiene iconos sin texto visible ni aria-label descriptivo |
-| **Baja** | Skip-to-content link | No hay link para saltar al contenido principal |
+| **Media** | ~~Focus trap en modales~~ | ~~WhyThisGame y MediaGallery no atrapan el foco — Tab puede navegar detras del modal~~ **DONE** |
+| **Media** | ~~Labels en botones de swipe~~ | ~~SwipeControls tiene iconos sin texto visible ni aria-label descriptivo~~ **DONE** |
+| **Baja** | ~~Skip-to-content link~~ | ~~No hay link para saltar al contenido principal~~ **DONE** |
 
 ---
 

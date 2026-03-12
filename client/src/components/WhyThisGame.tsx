@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 
@@ -27,16 +27,52 @@ export default function WhyThisGame({
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  // Escape key handler
+  // Focus trap
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+      return;
+    }
+    if (e.key !== 'Tab' || !modalRef.current) return;
+    const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }, [onClose]);
+
+  // Manage focus on open/close
   useEffect(() => {
     if (!open) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    previousFocusRef.current = document.activeElement as HTMLElement;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+    // Focus the modal after render
+    requestAnimationFrame(() => {
+      const closeBtn = modalRef.current?.querySelector<HTMLElement>('button');
+      closeBtn?.focus();
+    });
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+      previousFocusRef.current?.focus();
     };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [open, onClose]);
+  }, [open, handleKeyDown]);
 
   useEffect(() => {
     if (!open) {
@@ -106,12 +142,12 @@ export default function WhyThisGame({
   const isHighConfidence = matchScore != null && matchScore >= 0.7;
 
   const modal = (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={gameName}>
       {/* Backdrop click */}
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-[#242424] border-2 border-[var(--primary)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+      <div ref={modalRef} className="relative bg-[#242424] border-2 border-[var(--primary)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-[fadeIn_0.2s_ease-out]">
         {/* Header */}
         <div className="bg-[#1a1a1a] border-b border-[#333] p-6">
           <div className="flex items-start gap-4">
@@ -164,6 +200,15 @@ export default function WhyThisGame({
             <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-5">
               {error ? (
                 <p className="text-red-400">{error}</p>
+              ) : loading && !text ? (
+                <div className="space-y-3">
+                  <div className="h-4 w-full bg-[#333] rounded animate-pulse" />
+                  <div className="h-4 w-11/12 bg-[#333] rounded animate-pulse" />
+                  <div className="h-4 w-4/5 bg-[#333] rounded animate-pulse" />
+                  <div className="h-4 w-full bg-[#333] rounded animate-pulse" />
+                  <div className="h-4 w-3/4 bg-[#333] rounded animate-pulse" />
+                  <div className="h-4 w-5/6 bg-[#333] rounded animate-pulse" />
+                </div>
               ) : (
                 <div className="text-sm leading-relaxed whitespace-pre-wrap">
                   {text}

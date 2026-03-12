@@ -99,20 +99,24 @@ export default function Navbar() {
       {/* Mobile nav dropdown */}
       {user && mobileOpen && (
         <div className="lg:hidden border-t border-[#333] bg-[#242424] px-4 py-3">
-          {navLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              onClick={() => setMobileOpen(false)}
-              className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                location.pathname === link.to
-                  ? 'bg-[#1a1a1a] text-[var(--primary)]'
-                  : 'text-[var(--muted-foreground)] hover:bg-[#1a1a1a] hover:text-[var(--foreground)]'
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.to;
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setMobileOpen(false)}
+                aria-current={isActive ? 'page' : undefined}
+                className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-[var(--primary)]/10 text-[var(--primary)] border-l-3 border-[var(--primary)]'
+                    : 'text-[var(--muted-foreground)] hover:bg-[#1a1a1a] hover:text-[var(--foreground)]'
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
       )}
 

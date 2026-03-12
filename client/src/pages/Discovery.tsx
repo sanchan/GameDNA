@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Navigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -27,11 +27,32 @@ interface HistoryResponse {
 
 export default function Discovery() {
   const { t } = useTranslation();
-  const { user, loading: authLoading, syncStatus } = useAuth();
+  const { user, loading: authLoading, syncStatus, syncProgress } = useAuth();
   const { currentGame, currentScore, swipe, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const filterCount = useFilterCount(filters);
+  const scrollKeyRef = useRef('discovery-scroll');
+
+  // Save scroll position before navigating away
+  useEffect(() => {
+    const saveScroll = () => {
+      sessionStorage.setItem(scrollKeyRef.current, String(window.scrollY));
+    };
+    window.addEventListener('beforeunload', saveScroll);
+    return () => {
+      saveScroll();
+      window.removeEventListener('beforeunload', saveScroll);
+    };
+  }, []);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem(scrollKeyRef.current);
+    if (saved) {
+      requestAnimationFrame(() => window.scrollTo(0, parseInt(saved, 10)));
+    }
+  }, []);
 
   // Fetch swipe stats from GamingDNA
   const { data: dna } = useGamingDNA();
@@ -183,10 +204,28 @@ export default function Discovery() {
           ) : (
             <div className="flex items-center justify-center text-center text-[var(--muted-foreground)] py-20">
               {syncStatus === 'syncing' ? (
-                <div>
-                  <p className="text-lg mb-2">{t('discovery.settingUpQueue')}</p>
-                  <p className="text-sm">{t('discovery.syncingLibrary')}</p>
-                  <div className="mt-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)]" />
+                <div className="max-w-sm mx-auto">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--primary)]/20 flex items-center justify-center">
+                    <i className="fa-brands fa-steam text-3xl text-[var(--primary)] animate-pulse" />
+                  </div>
+                  <p className="text-lg font-semibold text-[var(--foreground)] mb-2">{t('discovery.syncingLibrary')}</p>
+                  {syncProgress && (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm text-[var(--muted-foreground)]">{syncProgress.detail}</span>
+                        <span className="text-sm font-medium text-[var(--primary)]">{syncProgress.progress}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-[var(--muted)] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[var(--primary)] rounded-full transition-all duration-500"
+                          style={{ width: `${syncProgress.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {!syncProgress && (
+                    <div className="mt-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)]" />
+                  )}
                 </div>
               ) : (
                 <div>
