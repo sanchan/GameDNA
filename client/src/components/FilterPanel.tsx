@@ -27,7 +27,6 @@ const RELEASE_DATE_OPTIONS = [
 
 export default function FilterPanel({ filters, onApply, className = '' }: FilterPanelProps) {
   const { t } = useTranslation();
-  const [collapsed, setCollapsed] = useState(false);
   const [minPrice, setMinPrice] = useState<string>(filters.minPrice?.toString() ?? '');
   const [maxPrice, setMaxPrice] = useState<string>(filters.maxPrice?.toString() ?? '');
   const [minReviewScore, setMinReviewScore] = useState<number>(
@@ -98,23 +97,8 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
 
   return (
     <div
-      className={`bg-[#242424] border-r border-[#333] transition-[width] duration-300 ease-in-out overflow-hidden ${
-        collapsed ? 'w-12' : 'w-80'
-      } ${className?.replace(/w-80\b/, '') ?? ''}`}
-      style={{ minWidth: collapsed ? '3rem' : '20rem' }}
+      className={`bg-[#242424] w-80 overflow-y-auto ${className}`}
     >
-      {collapsed ? (
-        <div className="flex flex-col items-center pt-6 gap-4">
-          <button
-            onClick={() => setCollapsed(false)}
-            className="text-gray-400 hover:text-white transition-colors p-2 cursor-pointer"
-            title={t('filterPanel.expandFilters')}
-          >
-            <i className="fa-solid fa-chevron-right" />
-          </button>
-          <i className="fa-solid fa-filter text-[var(--primary)] text-sm" />
-        </div>
-      ) : (
       <div className="p-6 w-80">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -122,13 +106,6 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
             <i className="fa-solid fa-filter text-[var(--primary)]" />
             <span>{t('common.filters')}</span>
           </h2>
-          <button
-            onClick={() => setCollapsed(true)}
-            className="text-gray-400 hover:text-white transition-colors cursor-pointer"
-            title={t('filterPanel.collapseFilters')}
-          >
-            <i className="fa-solid fa-chevron-left" />
-          </button>
         </div>
 
         <div className="flex flex-col gap-0">
@@ -258,7 +235,6 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
             </div>
           </div>
       </div>
-      )}
     </div>
   );
 }

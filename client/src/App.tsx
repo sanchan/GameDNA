@@ -5,6 +5,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import { ThemeContext, useThemeProvider } from './hooks/use-theme';
 import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
+import { useAuth } from './hooks/use-auth';
 import Landing from './pages/Landing';
 import Discovery from './pages/Discovery';
 import Backlog from './pages/Backlog';
@@ -103,9 +104,7 @@ export default function App() {
                       Skip to content
                     </a>
                     <AppNavbar />
-                    <main id="main-content">
-                      <AppRoutes />
-                    </main>
+                    <AppMain />
                   </div>
                 </DbGate>
               </KeyboardShortcutsProvider>
@@ -122,4 +121,15 @@ function AppNavbar() {
   // Only show navbar after setup is complete
   if (!config?.setupComplete) return null;
   return <Navbar />;
+}
+
+function AppMain() {
+  const { config } = useDb();
+  const { user } = useAuth();
+  const hasSidebar = config?.setupComplete && user;
+  return (
+    <main id="main-content" className={hasSidebar ? 'xl:ml-64' : ''}>
+      <AppRoutes />
+    </main>
+  );
 }
