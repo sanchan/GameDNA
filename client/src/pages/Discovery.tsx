@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Navigate } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/use-auth';
+import { useDb } from '../contexts/db-context';
 import { useDiscovery } from '../hooks/use-discovery';
 import { useGamingDNA } from '../hooks/use-profile';
-import { api } from '../lib/api';
+import * as queries from '../db/queries';
 import GameCard from '../components/GameCard';
 import SwipeControls from '../components/SwipeControls';
 import FilterPanel, { useFilterCount } from '../components/FilterPanel';
@@ -18,16 +18,10 @@ interface HistoryItem {
   swipedAt: number;
 }
 
-interface HistoryResponse {
-  items: HistoryItem[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
 export default function Discovery() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus, syncProgress } = useAuth();
+  const { userId } = useDb();
   const { currentGame, currentScore, swipe, undo, canUndo, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded, discoveryMode, setDiscoveryMode, maxHours, setMaxHours } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -66,12 +60,22 @@ export default function Discovery() {
   const { data: dna } = useGamingDNA();
   const swipeStats = dna?.swipeStats;
 
-  // Fetch recent swipes
-  const { data: recentSwipesData } = useQuery({
-    queryKey: ['recent-swipes'],
-    queryFn: () => api.get<HistoryResponse>('/history?limit=8'),
-    staleTime: 30_000,
-  });
+  // Fetch recent swipes from local DB
+  const [recentSwipesData, setRecentSwipesData] = useState<{ items: HistoryItem[] } | null>(null);
+  useEffect(() => {
+    if (!userId) return;
+    try {
+      const items = queries.getSwipeHistory(userId, { limit: 8 });
+      setRecentSwipesData({
+        items: items.map((e) => ({
+          id: e.id,
+          game: e.game,
+          decision: e.decision as SwipeDecision,
+          swipedAt: e.swipedAt,
+        })),
+      });
+    } catch { /* ignore */ }
+  }, [userId, swipedCount]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -164,13 +168,11 @@ export default function Discovery() {
     setShowPreview(false);
   }, [currentGame?.id]);
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = () => {
+    // In local-first mode, just refetch the queue with current filters
     setLoadingMore(true);
     try {
-      const result = await api.post<{ added: number }>('/discovery/load-more');
-      if (result.added > 0) {
-        refetchQueue();
-      }
+      refetchQueue();
     } catch {
       // ignore
     } finally {

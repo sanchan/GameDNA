@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../lib/api';
+import { useDb } from '../contexts/db-context';
+import * as queries from '../db/queries';
 import type { GamingDNA, User } from '../../../shared/types';
 
 interface ProfileResponse {
@@ -12,17 +13,29 @@ interface ProfileResponse {
 }
 
 export function useProfile() {
+  const { userId } = useDb();
+
   return useQuery({
-    queryKey: ['user-profile'],
-    queryFn: () => api.get<ProfileResponse>('/user/profile'),
-    staleTime: 0, // Always refetch - data may change after sync
+    queryKey: ['user-profile', userId],
+    queryFn: (): ProfileResponse | null => {
+      if (!userId) return null;
+      return queries.getUserProfile(userId);
+    },
+    enabled: !!userId,
+    staleTime: 0,
   });
 }
 
 export function useGamingDNA() {
+  const { userId } = useDb();
+
   return useQuery({
-    queryKey: ['gaming-dna'],
-    queryFn: () => api.get<GamingDNA>('/user/gaming-dna'),
-    staleTime: 0, // Always refetch - data may change after sync
+    queryKey: ['gaming-dna', userId],
+    queryFn: (): GamingDNA | null => {
+      if (!userId) return null;
+      return queries.getGamingDNA(userId);
+    },
+    enabled: !!userId,
+    staleTime: 0,
   });
 }

@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import type { Game } from '../../../shared/types';
 import BookmarkButton from './BookmarkButton';
 import MediaGallery from './MediaGallery';
-import { api } from '../lib/api';
 import i18n from '../i18n';
 
 function formatPrice(cents: number | null, currency?: string | null): string | null {
@@ -38,17 +37,6 @@ export interface MediaItem {
   videoSrc?: string;
 }
 
-interface MediaResponse {
-  screenshots: Array<{ id: number; thumbnail: string; full: string }>;
-  movies: Array<{
-    id: number;
-    name: string;
-    thumbnail: string;
-    mp4480: string | null;
-    mp4Max: string | null;
-  }>;
-}
-
 interface GameCardProps {
   game: Game;
   score?: number | null;
@@ -71,28 +59,10 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
   const loadMedia = useCallback(async () => {
     if (mediaItems !== null || mediaLoading) return mediaItems;
     setMediaLoading(true);
-    try {
-      const data = await api.get<MediaResponse>(`/games/${game.id}/media`);
-      const items: MediaItem[] = [];
-      for (const m of data.movies) {
-        items.push({
-          type: 'video',
-          thumbnail: m.thumbnail,
-          full: m.thumbnail,
-          videoSrc: m.mp4480 || m.mp4Max || undefined,
-        });
-      }
-      for (const s of data.screenshots) {
-        items.push({ type: 'image', thumbnail: s.thumbnail, full: s.full });
-      }
-      setMediaItems(items);
-      setMediaLoading(false);
-      return items;
-    } catch {
-      setMediaItems([]);
-      setMediaLoading(false);
-      return [];
-    }
+    // Media data is not stored locally; return empty (no server API available)
+    setMediaItems([]);
+    setMediaLoading(false);
+    return [];
   }, [game.id, mediaItems, mediaLoading]);
 
   const handlePrev = async (e: React.MouseEvent) => {

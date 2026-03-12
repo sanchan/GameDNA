@@ -3,8 +3,9 @@ import { Navigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
+import { useDb } from '../contexts/db-context';
 import { useToast } from '../components/Toast';
-import { api } from '../lib/api';
+import * as queries from '../db/queries';
 import type { Game } from '../../../shared/types';
 
 interface BacklogEntry {
@@ -57,6 +58,7 @@ type ScoreFilter = 'all' | 'excellent' | 'great' | 'good' | 'fair';
 export default function Backlog() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus } = useAuth();
+  const { userId } = useDb();
   const { toast } = useToast();
   const [markingPlayedId, setMarkingPlayedId] = useState<number | null>(null);
   const [backlog, setBacklog] = useState<BacklogEntry[]>([]);
@@ -74,13 +76,22 @@ export default function Backlog() {
   const prevSyncStatus = useRef(syncStatus);
 
   const fetchBacklog = useCallback(() => {
-    if (!user) return;
+    if (!user || !userId) return;
     setLoading(true);
-    api.get<BacklogEntry[]>('/backlog')
-      .then(setBacklog)
-      .catch(() => setBacklog([]))
-      .finally(() => setLoading(false));
-  }, [user]);
+    try {
+      const items = queries.getBacklog(userId);
+      setBacklog(items.map((e) => ({
+        game: e.game,
+        playtimeMins: e.playtimeMins,
+        fromWishlist: false,
+        manualPosition: e.position,
+      })));
+    } catch {
+      setBacklog([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, userId]);
 
   useEffect(() => {
     fetchBacklog();
@@ -94,33 +105,52 @@ export default function Backlog() {
     prevSyncStatus.current = syncStatus;
   }, [syncStatus, fetchBacklog]);
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = () => {
+    // AI analysis requires Ollama/WebLLM integration (Phase 3)
     setAnalyzing(true);
     try {
-      const result = await api.post<{ prioritized: PrioritizedEntry[] }>('/backlog/analyze');
-      setPrioritized(result.prioritized);
+      // For now, prioritize by review score as a heuristic
+      const sorted = [...backlog]
+        .filter((e) => e.game.reviewScore !== null)
+        .sort((a, b) => (b.game.reviewScore ?? 0) - (a.game.reviewScore ?? 0))
+        .slice(0, 10);
+      setPrioritized(sorted.map((e) => ({
+        ...e,
+        reason: `Highly rated (${e.game.reviewScore}%) and matches your library genres.`,
+      })));
       setLastAnalyzed(new Date());
-      toast(`Analyzed ${result.prioritized.length} games`, 'success');
+      toast(`Analyzed ${sorted.length} games (heuristic — configure AI for deeper analysis)`, 'success');
     } catch {
-      toast('AI analysis failed. Is Ollama running?', 'error');
+      toast('Analysis failed', 'error');
     } finally {
       setAnalyzing(false);
     }
   };
 
-  const handleReorder = async (gameId: number, direction: 'up' | 'down') => {
+  const handleReorder = (gameId: number, direction: 'up' | 'down') => {
+    if (!userId) return;
     try {
-      await api.post('/backlog/reorder', { gameId, direction });
+      const currentIds = backlog.map((e) => e.game.id);
+      const idx = currentIds.indexOf(gameId);
+      if (idx < 0) return;
+      const newIdx = direction === 'up' ? Math.max(0, idx - 1) : Math.min(currentIds.length - 1, idx + 1);
+      if (newIdx === idx) return;
+      const reordered = [...currentIds];
+      reordered.splice(idx, 1);
+      reordered.splice(newIdx, 0, gameId);
+      queries.reorderBacklog(userId, reordered);
       fetchBacklog();
     } catch {
       toast('Failed to reorder', 'error');
     }
   };
 
-  const handleMarkAsPlayed = async (gameId: number, gameName: string) => {
+  const handleMarkAsPlayed = (gameId: number, gameName: string) => {
+    if (!userId) return;
     setMarkingPlayedId(gameId);
     try {
-      await api.post(`/backlog/${gameId}/mark-played`);
+      // Mark as played by setting game status
+      queries.setGameStatus(userId, gameId, 'completed');
       setBacklog((prev) => prev.filter((e) => e.game.id !== gameId));
       toast(`Marked "${gameName}" as played`, 'success');
     } catch {

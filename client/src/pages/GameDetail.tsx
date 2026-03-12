@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
-import { api } from '../lib/api';
+import { useDb } from '../contexts/db-context';
+import * as queries from '../db/queries';
 import { useBookmarks } from '../hooks/use-bookmarks';
 import { useToast } from '../components/Toast';
 import MediaGallery from '../components/MediaGallery';
@@ -15,11 +16,6 @@ interface MediaItem {
   thumbnail: string;
   full: string;
   videoSrc?: string;
-}
-
-interface MediaResponse {
-  screenshots: Array<{ id: number; thumbnail: string; full: string }>;
-  movies: Array<{ id: number; name: string; thumbnail: string; mp4480: string | null; mp4Max: string | null }>;
 }
 
 function formatPrice(cents: number | null, currency?: string | null): string {
@@ -57,29 +53,6 @@ function reviewLabel(score: number | null): string {
   return i18n.t('gameDetail.reviewLabels.overwhelminglyNegative');
 }
 
-// The games API returns raw DB rows (snake_case), so we need to handle both formats
-function normalizeGame(raw: any): Game {
-  if (raw.headerImage !== undefined || raw.shortDesc !== undefined) {
-    return raw as Game;
-  }
-  return {
-    id: raw.id,
-    name: raw.name,
-    shortDesc: raw.short_desc ?? null,
-    headerImage: raw.header_image ?? null,
-    genres: raw.genres ? (typeof raw.genres === 'string' ? JSON.parse(raw.genres) : raw.genres) : [],
-    tags: raw.tags ? (typeof raw.tags === 'string' ? JSON.parse(raw.tags) : raw.tags) : [],
-    releaseDate: raw.release_date ?? null,
-    priceCents: raw.price_cents ?? null,
-    priceCurrency: raw.price_currency ?? null,
-    reviewScore: raw.review_score ?? null,
-    reviewCount: raw.review_count ?? null,
-    developers: raw.developers ? (typeof raw.developers === 'string' ? JSON.parse(raw.developers) : raw.developers) : [],
-    publishers: raw.publishers ? (typeof raw.publishers === 'string' ? JSON.parse(raw.publishers) : raw.publishers) : [],
-    platforms: raw.platforms ? (typeof raw.platforms === 'string' ? JSON.parse(raw.platforms) : raw.platforms) : { windows: false, mac: false, linux: false },
-  };
-}
-
 function getReleaseYear(releaseDate: string | null): string | null {
   if (!releaseDate) return null;
   const match = releaseDate.match(/(\d{4})/);
@@ -90,6 +63,7 @@ export default function GameDetail() {
   const { t } = useTranslation();
   const { appid } = useParams<{ appid: string }>();
   const { user } = useAuth();
+  const { userId } = useDb();
   const { isBookmarked, toggle: toggleBookmark } = useBookmarks();
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,36 +103,38 @@ export default function GameDetail() {
     if (!appid) return;
     setLoading(true);
     setError(null);
-    api.get<any>(`/games/${appid}`)
-      .then((raw) => setGame(normalizeGame(raw)))
-      .catch((err) => setError(err.message || 'Failed to load game'))
-      .finally(() => setLoading(false));
+    try {
+      const g = queries.getGame(Number(appid));
+      if (g) {
+        setGame(g);
+      } else {
+        setError('Game not found in local database');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to load game');
+    } finally {
+      setLoading(false);
+    }
   }, [appid]);
 
   const loadMedia = useCallback(async () => {
     if (mediaItems !== null || mediaLoading || !appid) return mediaItems;
     setMediaLoading(true);
     try {
-      const data = await api.get<MediaResponse>(`/games/${appid}/media`);
+      // Media is not stored locally; use Steam CDN screenshots as fallback
       const items: MediaItem[] = [];
-      for (const m of data.movies) {
-        items.push({
-          type: 'video',
-          thumbnail: m.thumbnail,
-          full: m.thumbnail,
-          videoSrc: m.mp4480 || m.mp4Max || undefined,
-        });
-      }
-      for (const s of data.screenshots) {
+      // Steam provides standard screenshot URLs for known games
+      for (let i = 0; i < 5; i++) {
         items.push({
           type: 'image',
-          thumbnail: s.thumbnail,
-          full: s.full,
+          thumbnail: `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/ss_${i}.600x338.jpg`,
+          full: `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/ss_${i}.1920x1080.jpg`,
         });
       }
-      setMediaItems(items);
+      // Just use empty array since we can't reliably enumerate screenshots without the API
+      setMediaItems([]);
       setMediaLoading(false);
-      return items;
+      return [];
     } catch {
       setMediaItems([]);
       setMediaLoading(false);
@@ -175,79 +151,87 @@ export default function GameDetail() {
 
   // Load similar games
   useEffect(() => {
-    if (!game || !user) return;
+    if (!game || !user || !userId) return;
     setLoadingSimilar(true);
-    api.get<{ game: Game; similarity: number }[]>(`/similar/${game.id}`)
-      .then(setSimilarGames)
-      .catch(() => {})
-      .finally(() => setLoadingSimilar(false));
-  }, [game?.id, user]);
+    try {
+      const similar = queries.getSimilarGames(game.id, userId);
+      setSimilarGames(similar.map((s) => ({ game: s.game, similarity: Math.round(s.similarity * 100) })));
+    } catch { /* ignore */ }
+    finally { setLoadingSimilar(false); }
+  }, [game?.id, user, userId]);
 
   // Load personal note
   useEffect(() => {
-    if (!game || !user) return;
-    api.get<{ content: string }>(`/notes/${game.id}`)
-      .then((data) => { setNote(data.content || ''); setNoteLoaded(true); })
-      .catch(() => setNoteLoaded(true));
-  }, [game?.id, user]);
+    if (!game || !user || !userId) return;
+    try {
+      const noteData = queries.getGameNote(userId, game.id);
+      setNote(noteData?.content || '');
+    } catch { /* ignore */ }
+    setNoteLoaded(true);
+  }, [game?.id, user, userId]);
 
   // Load game status
   useEffect(() => {
-    if (!game || !user) return;
-    api.get<{ status: GameStatusType | null }>(`/game-status/${game.id}`)
-      .then((data) => { setGameStatus(data.status); setStatusLoaded(true); })
-      .catch(() => setStatusLoaded(true));
-  }, [game?.id, user]);
+    if (!game || !user || !userId) return;
+    try {
+      const statuses = queries.getGameStatuses(userId, undefined);
+      const entry = statuses.find((s) => s.gameId === game.id);
+      setGameStatus(entry?.status ?? null);
+    } catch { /* ignore */ }
+    setStatusLoaded(true);
+  }, [game?.id, user, userId]);
 
   // Load collections
   useEffect(() => {
-    if (!user) return;
-    api.get<Collection[]>('/collections').then(setCollections).catch(() => {});
-  }, [user]);
+    if (!user || !userId) return;
+    try {
+      setCollections(queries.getCollections(userId));
+    } catch { /* ignore */ }
+  }, [user, userId]);
 
-  const handleSaveNote = useCallback(async () => {
-    if (!game) return;
+  const handleSaveNote = useCallback(() => {
+    if (!game || !userId) return;
     setNoteSaving(true);
     try {
-      await api.put(`/notes/${game.id}`, { content: note });
+      queries.saveGameNote(userId, game.id, note);
       toast('Note saved', 'success');
     } catch { toast('Failed to save note', 'error'); }
     finally { setNoteSaving(false); }
-  }, [game, note, toast]);
+  }, [game, userId, note, toast]);
 
-  const handleSetStatus = useCallback(async (status: GameStatusType | null) => {
-    if (!game) return;
+  const handleSetStatus = useCallback((status: GameStatusType | null) => {
+    if (!game || !userId) return;
     try {
-      await api.put(`/game-status/${game.id}`, { status });
+      if (status) {
+        queries.setGameStatus(userId, game.id, status);
+      }
       setGameStatus(status);
       toast(status ? `Marked as ${status.replace('_', ' ')}` : 'Status cleared', 'success');
     } catch { toast('Failed to update status', 'error'); }
-  }, [game, toast]);
+  }, [game, userId, toast]);
 
-  const handleLoadReviewSummary = useCallback(async () => {
+  const handleLoadReviewSummary = useCallback(() => {
     if (!game) return;
     setLoadingReviewSummary(true);
-    try {
-      const data = await api.post<{ summary: string }>(`/ai/summarize-reviews/${game.id}`);
-      setReviewSummary(data.summary);
-    } catch { setReviewSummary('AI review summary not available.'); }
-    finally { setLoadingReviewSummary(false); }
+    // AI review summary requires Ollama/WebLLM integration (Phase 3)
+    setReviewSummary('AI review summary requires Ollama or WebLLM setup.');
+    setLoadingReviewSummary(false);
   }, [game]);
 
-  const handleAddToCollection = useCallback(async (collectionId: number) => {
+  const handleAddToCollection = useCallback((collectionId: number) => {
     if (!game) return;
     try {
-      await api.post(`/collections/${collectionId}/games`, { gameId: game.id });
+      queries.addGameToCollection(collectionId, game.id);
       toast('Added to collection', 'success');
       setShowCollections(false);
     } catch { toast('Failed to add to collection', 'error'); }
   }, [game, toast]);
 
-  const handleSwipe = async (decision: SwipeDecision) => {
-    if (!game || swiping) return;
+  const handleSwipe = (decision: SwipeDecision) => {
+    if (!game || swiping || !userId) return;
     setSwiping(true);
     try {
-      await api.post('/discovery/swipe', { gameId: game.id, decision });
+      queries.recordSwipe(userId, game.id, decision);
       setSwiped(decision);
     } catch {
       // ignore
