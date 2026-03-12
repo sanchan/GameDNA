@@ -227,7 +227,9 @@ const en = {
     viewGame: 'View Game',
     noMatchingSwipes: 'No matching swipes found.',
     tryDifferentSearch: 'Try a different search or filter.',
-    noSwipeHistory: 'No swipe history yet.',
+    noSwipeHistory: 'No swipe history yet',
+    noSwipeHistoryDescription: 'Your swipe decisions will appear here. Start discovering games to build your history and refine your recommendations.',
+    startDiscovering: 'Start Discovering',
     headToDiscover: 'Head to <link>Discover</link> to start swiping!',
     timeAgo: {
       justNow: 'Just now',
@@ -350,9 +352,12 @@ const en = {
     },
     aiAnalysisComplete: 'AI Analysis Complete',
     gamesFoundByDNA: '{{count}} games found based on your gaming DNA',
-    syncingRecommendations: 'Recommendations will be generated after sync completes...',
-    noRecommendations: 'No recommendations yet.',
+    syncingRecommendations: 'Generating recommendations...',
+    syncingSubtext: 'Your personalized picks will appear once library sync completes.',
+    noRecommendations: 'No recommendations yet',
     hitRegenerate: 'Hit "Regenerate" to get personalized suggestions!',
+    noRecsDescription: 'Swipe through some games in Discovery first, then generate recommendations based on your taste profile.',
+    goToDiscovery: 'Go to Discovery',
   },
 
   // GameGrid component

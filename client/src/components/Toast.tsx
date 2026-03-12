@@ -4,6 +4,7 @@ interface Toast {
   id: number;
   message: string;
   type: 'success' | 'error' | 'info';
+  exiting?: boolean;
 }
 
 interface ToastContextType {
@@ -21,8 +22,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const id = nextId++;
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+      setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, exiting: true } : t)));
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 300);
+    }, 3700);
   }, []);
 
   return createElement(
@@ -32,13 +36,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     toasts.length > 0 &&
       createElement(
         'div',
-        { className: 'fixed bottom-4 right-4 z-50 flex flex-col gap-2' },
+        { className: 'fixed bottom-4 right-4 z-50 flex flex-col gap-2', role: 'status', 'aria-live': 'polite' },
         toasts.map((t) =>
           createElement(
             'div',
             {
               key: t.id,
-              className: `px-4 py-3 rounded-lg shadow-lg text-sm font-medium animate-slide-up ${
+              className: `px-4 py-3 rounded-lg shadow-lg text-sm font-medium ${
+                t.exiting ? 'toast-exit' : 'toast-enter'
+              } ${
                 t.type === 'success'
                   ? 'bg-emerald-900 text-emerald-100 border border-emerald-700'
                   : t.type === 'error'

@@ -405,11 +405,18 @@ export default function History() {
             </>
           ) : (
             <>
-              <i className="fa-solid fa-clock-rotate-left text-4xl mb-4 block opacity-30" />
-              <p className="text-lg mb-2">{t('history.noSwipeHistory')}</p>
-              <p className="text-sm">
-                <Trans i18nKey="history.headToDiscover" components={{ link: <Link to="/discover" className="text-[var(--primary)] hover:underline" /> }} />
-              </p>
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[var(--primary)]/10 flex items-center justify-center">
+                <i className="fa-solid fa-clock-rotate-left text-3xl text-[var(--primary)]" />
+              </div>
+              <p className="text-xl font-semibold text-[var(--foreground)] mb-2">{t('history.noSwipeHistory')}</p>
+              <p className="text-sm mb-6 max-w-md mx-auto">{t('history.noSwipeHistoryDescription')}</p>
+              <Link
+                to="/discover"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--primary)] hover:opacity-80 text-[var(--primary-foreground)] rounded-lg font-semibold transition-all"
+              >
+                <i className="fa-solid fa-compass" />
+                <span>{t('history.startDiscovering')}</span>
+              </Link>
             </>
           )}
         </div>

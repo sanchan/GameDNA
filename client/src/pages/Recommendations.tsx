@@ -145,8 +145,11 @@ export default function Recommendations() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {syncStatus === 'syncing' && (
             <div className="col-span-full text-center py-8 text-[var(--muted-foreground)]">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--muted)] border-t-[var(--primary)] mb-3" />
-              <p className="text-sm">{t('recommendations.syncingRecommendations')}</p>
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-[var(--primary)]/20 flex items-center justify-center">
+                <i className="fa-solid fa-brain text-2xl text-[var(--primary)] animate-pulse" />
+              </div>
+              <p className="text-sm font-medium text-[var(--foreground)] mb-1">{t('recommendations.syncingRecommendations')}</p>
+              <p className="text-xs">{t('recommendations.syncingSubtext')}</p>
             </div>
           )}
           {Array.from({ length: 6 }).map((_, i) => (
@@ -183,9 +186,28 @@ export default function Recommendations() {
         />
       ) : (
         <div className="text-center py-20 text-[var(--muted-foreground)]">
-          <i className="fa-solid fa-wand-magic-sparkles text-4xl mb-4 block opacity-40" />
-          <p className="text-lg mb-2">{t('recommendations.noRecommendations')}</p>
-          <p className="text-sm">{t('recommendations.hitRegenerate')}</p>
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[var(--primary)]/10 flex items-center justify-center">
+            <i className="fa-solid fa-wand-magic-sparkles text-3xl text-[var(--primary)]" />
+          </div>
+          <p className="text-xl font-semibold text-[var(--foreground)] mb-2">{t('recommendations.noRecommendations')}</p>
+          <p className="text-sm mb-6 max-w-md mx-auto">{t('recommendations.noRecsDescription')}</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] hover:opacity-80 text-[var(--primary-foreground)] rounded-lg font-semibold transition-all disabled:opacity-50"
+            >
+              <i className="fa-solid fa-rotate-right" />
+              <span>{t('recommendations.regenerate')}</span>
+            </button>
+            <a
+              href="/discover"
+              className="flex items-center gap-2 px-6 py-3 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg font-semibold transition-all"
+            >
+              <i className="fa-solid fa-compass" />
+              <span>{t('recommendations.goToDiscovery')}</span>
+            </a>
+          </div>
         </div>
       )}
 

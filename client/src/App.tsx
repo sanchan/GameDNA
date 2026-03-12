@@ -19,8 +19,11 @@ export default function App() {
         <AuthProvider>
           <ToastProvider>
             <div className="min-h-screen bg-[var(--background)]">
+              <a href="#main-content" className="skip-to-content">
+                Skip to content
+              </a>
               <Navbar />
-              <main>
+              <main id="main-content">
                 <Routes>
                   <Route path="/" element={<Landing />} />
                   <Route path="/discover" element={<Discovery />} />
