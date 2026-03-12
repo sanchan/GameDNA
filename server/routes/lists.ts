@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { bookmarks, games, user_games } from '../db/schema';
 import { requireAuth } from '../middleware/auth';
+import { config } from '../config';
 import type { Game } from '../../shared/types';
 
 type AuthEnv = {
@@ -34,9 +35,27 @@ function dbGameToGame(row: typeof games.$inferSelect): Game {
   };
 }
 
-// GET /api/lists/library — all owned games
+function parsePagination(c: { req: { query: (k: string) => string | undefined } }) {
+  const limit = Math.min(
+    parseInt(c.req.query('limit') ?? String(config.defaultPageSize), 10) || config.defaultPageSize,
+    config.maxPageSize,
+  );
+  const offset = Math.max(parseInt(c.req.query('offset') ?? '0', 10) || 0, 0);
+  return { limit, offset };
+}
+
+// GET /api/lists/library — owned games (paginated)
 lists.get('/library', async (c) => {
   const userId = c.get('userId');
+  const { limit, offset } = parsePagination(c);
+
+  const whereClause = and(eq(user_games.user_id, userId), eq(user_games.from_wishlist, 0));
+
+  const countRow = db
+    .select({ count: sql<number>`count(*)` })
+    .from(user_games)
+    .where(whereClause)
+    .get();
 
   const rows = db
     .select({
@@ -45,22 +64,36 @@ lists.get('/library', async (c) => {
     })
     .from(user_games)
     .innerJoin(games, eq(user_games.game_id, games.id))
-    .where(and(eq(user_games.user_id, userId), eq(user_games.from_wishlist, 0)))
+    .where(whereClause)
     .orderBy(desc(user_games.last_played))
+    .limit(limit)
+    .offset(offset)
     .all();
 
-  return c.json(
-    rows.map((r) => ({
+  return c.json({
+    items: rows.map((r) => ({
       game: dbGameToGame(r.game),
       playtimeMins: r.userGame.playtime_mins ?? 0,
       lastPlayed: r.userGame.last_played ?? null,
     })),
-  );
+    total: countRow?.count ?? 0,
+    limit,
+    offset,
+  });
 });
 
-// GET /api/lists/wishlist — Steam wishlist games
+// GET /api/lists/wishlist — Steam wishlist games (paginated)
 lists.get('/wishlist', async (c) => {
   const userId = c.get('userId');
+  const { limit, offset } = parsePagination(c);
+
+  const whereClause = and(eq(user_games.user_id, userId), eq(user_games.from_wishlist, 1));
+
+  const countRow = db
+    .select({ count: sql<number>`count(*)` })
+    .from(user_games)
+    .where(whereClause)
+    .get();
 
   const rows = db
     .select({
@@ -69,16 +102,32 @@ lists.get('/wishlist', async (c) => {
     })
     .from(user_games)
     .innerJoin(games, eq(user_games.game_id, games.id))
-    .where(and(eq(user_games.user_id, userId), eq(user_games.from_wishlist, 1)))
+    .where(whereClause)
     .orderBy(desc(user_games.synced_at))
+    .limit(limit)
+    .offset(offset)
     .all();
 
-  return c.json(rows.map((r) => dbGameToGame(r.game)));
+  return c.json({
+    items: rows.map((r) => dbGameToGame(r.game)),
+    total: countRow?.count ?? 0,
+    limit,
+    offset,
+  });
 });
 
-// GET /api/lists/bookmarks — bookmarked games
+// GET /api/lists/bookmarks — bookmarked games (paginated)
 lists.get('/bookmarks', async (c) => {
   const userId = c.get('userId');
+  const { limit, offset } = parsePagination(c);
+
+  const whereClause = eq(bookmarks.user_id, userId);
+
+  const countRow = db
+    .select({ count: sql<number>`count(*)` })
+    .from(bookmarks)
+    .where(whereClause)
+    .get();
 
   const rows = db
     .select({
@@ -87,11 +136,18 @@ lists.get('/bookmarks', async (c) => {
     })
     .from(bookmarks)
     .innerJoin(games, eq(bookmarks.game_id, games.id))
-    .where(eq(bookmarks.user_id, userId))
+    .where(whereClause)
     .orderBy(desc(bookmarks.created_at))
+    .limit(limit)
+    .offset(offset)
     .all();
 
-  return c.json(rows.map((r) => dbGameToGame(r.game)));
+  return c.json({
+    items: rows.map((r) => dbGameToGame(r.game)),
+    total: countRow?.count ?? 0,
+    limit,
+    offset,
+  });
 });
 
 // GET /api/lists/bookmarks/ids — all bookmarked game IDs (for UI state)

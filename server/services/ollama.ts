@@ -27,8 +27,15 @@ export async function generateJSON<T>(prompt: string, temperature = 0.3): Promis
     if (!res.ok) return null;
 
     const data = await res.json();
-    return JSON.parse(data.response) as T;
-  } catch {
+    const raw = data.response;
+    if (typeof raw !== 'string' || !raw.trim()) return null;
+
+    const parsed = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== 'object') return null;
+
+    return parsed as T;
+  } catch (e) {
+    console.warn('[ollama] Failed to parse JSON response:', e instanceof SyntaxError ? e.message : e);
     return null;
   }
 }

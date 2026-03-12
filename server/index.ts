@@ -12,6 +12,8 @@ import recommendationRoutes from './routes/recommendations';
 import historyRoutes from './routes/history';
 import listsRoutes from './routes/lists';
 import { recacheGamesWithoutCurrency } from './services/game-cache';
+import { startSessionCleanup } from './lib/session';
+import { cleanupSyncStates } from './services/sync-manager';
 import { db } from './db';
 import { users } from './db/schema';
 import { desc } from 'drizzle-orm';
@@ -63,6 +65,12 @@ if (process.env.NODE_ENV === 'production') {
 const port = Number(process.env.PORT) || 3000;
 console.log(`Server running on http://localhost:${port}`);
 serve({ fetch: app.fetch, port });
+
+// Start periodic cleanup of expired sessions
+startSessionCleanup();
+
+// Clean up stale sync states from memory
+cleanupSyncStates();
 
 // Background: re-cache games missing currency info with the most recent user's country code
 setTimeout(async () => {

@@ -11,7 +11,12 @@ const sqlite = new Database(dbPath);
 sqlite.exec('PRAGMA journal_mode = WAL');
 sqlite.exec('PRAGMA foreign_keys = ON');
 
-// Auto-create tables on startup
+// ──────────────────────────────────────────────────────────────────────────────
+// Auto-create tables on startup.
+// IMPORTANT: keep this SQL in sync with server/db/schema.ts (Drizzle source of
+// truth). Any new column must be added here AND as an ALTER TABLE migration
+// below so that existing databases are updated.
+// ──────────────────────────────────────────────────────────────────────────────
 sqlite.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,6 +24,7 @@ sqlite.exec(`
     display_name TEXT,
     avatar_url TEXT,
     profile_url TEXT,
+    country_code TEXT,
     last_login INTEGER,
     ignored_tags TEXT,
     created_at INTEGER DEFAULT (unixepoch())
@@ -33,6 +39,7 @@ sqlite.exec(`
     tags TEXT,
     release_date TEXT,
     price_cents INTEGER,
+    price_currency TEXT,
     review_score INTEGER,
     review_count INTEGER,
     developers TEXT,
@@ -102,14 +109,22 @@ sqlite.exec(`
     user_id INTEGER NOT NULL REFERENCES users(id),
     expires_at INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS sync_states (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id),
+    state TEXT NOT NULL,
+    started_at INTEGER,
+    completed_at INTEGER
+  );
 `);
 
-// Migrations for existing databases
-try {
-  sqlite.exec(`ALTER TABLE users ADD COLUMN ignored_tags TEXT`);
-} catch {
-  // Column already exists
-}
+// ── Migrations for existing databases ────────────────────────────────────────
+const safeAlter = (sql: string) => {
+  try { sqlite.exec(sql); } catch { /* column/table already exists */ }
+};
+safeAlter('ALTER TABLE users ADD COLUMN ignored_tags TEXT');
+safeAlter('ALTER TABLE users ADD COLUMN country_code TEXT');
+safeAlter('ALTER TABLE games ADD COLUMN price_currency TEXT');
 
 export const db = drizzle(sqlite, { schema });
 export { schema };

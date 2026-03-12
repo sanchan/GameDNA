@@ -13,6 +13,13 @@ interface LibraryEntry {
   lastPlayed: number | null;
 }
 
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 function formatPlaytime(mins: number): string {
   if (mins === 0) return i18n.t('myLists.playtime.neverPlayed');
   if (mins < 60) return i18n.t('myLists.playtime.minutesPlayed', { count: mins });
@@ -103,14 +110,14 @@ export default function MyLists() {
     setLoading(true);
     try {
       if (activeTab === 'library') {
-        const data = await api.get<LibraryEntry[]>('/lists/library');
-        setLibrary(data);
+        const data = await api.get<PaginatedResponse<LibraryEntry>>('/lists/library?limit=200');
+        setLibrary(data.items);
       } else if (activeTab === 'bookmarks') {
-        const data = await api.get<Game[]>('/lists/bookmarks');
-        setBookmarkGames(data);
+        const data = await api.get<PaginatedResponse<Game>>('/lists/bookmarks?limit=200');
+        setBookmarkGames(data.items);
       } else if (activeTab === 'wishlist') {
-        const data = await api.get<Game[]>('/lists/wishlist');
-        setWishlist(data);
+        const data = await api.get<PaginatedResponse<Game>>('/lists/wishlist?limit=200');
+        setWishlist(data.items);
       }
     } catch {
       // ignore

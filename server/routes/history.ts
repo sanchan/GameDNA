@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, and, desc, like, sql, gte } from 'drizzle-orm';
+import { eq, and, desc, sql, gte } from 'drizzle-orm';
 import { db } from '../db';
 import { swipe_history, games } from '../db/schema';
 import { requireAuth } from '../middleware/auth';
@@ -49,7 +49,9 @@ history.get('/', async (c) => {
     conditions.push(eq(swipe_history.decision, filterDecision));
   }
   if (search) {
-    conditions.push(like(games.name, `%${search}%`));
+    // Escape LIKE special characters to prevent unintended wildcards
+    const escapedSearch = search.replace(/[%_]/g, '\\$&');
+    conditions.push(sql`${games.name} LIKE ${'%' + escapedSearch + '%'} ESCAPE '\\'`);
   }
   if (dateRange && dateRange !== 'all') {
     const now = Math.floor(Date.now() / 1000);

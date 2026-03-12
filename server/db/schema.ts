@@ -93,3 +93,10 @@ export const sessions = sqliteTable('sessions', {
   user_id: integer('user_id').references(() => users.id).notNull(),
   expires_at: integer('expires_at').notNull(),
 });
+
+export const sync_states = sqliteTable('sync_states', {
+  user_id: integer('user_id').primaryKey().references(() => users.id),
+  state: text('state').notNull(), // JSON-serialized SyncState
+  started_at: integer('started_at'),
+  completed_at: integer('completed_at'),
+});
