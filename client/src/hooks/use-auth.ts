@@ -1,7 +1,7 @@
 // Auth hook — now a thin wrapper over local-first DB context.
 // Maintains the same interface so all existing pages work unchanged.
 
-import { type ReactNode, createElement, Fragment } from 'react';
+import { type ReactNode, createElement, Fragment, useMemo, useCallback } from 'react';
 import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
 import type { User } from '../../../shared/types';
@@ -35,16 +35,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const { config, userId, syncStatus, syncState, triggerSync } = useDb();
 
-  const user: User | null = userId ? queries.getUser(userId) : null;
+  const user: User | null = useMemo(
+    () => userId ? queries.getUser(userId) : null,
+    [userId],
+  );
 
-  const syncProgress: SyncProgress | null = syncState ? {
+  const syncProgress: SyncProgress | null = useMemo(() => syncState ? {
     step: syncState.step,
     progress: syncState.progress,
     detail: syncState.detail,
     gamesCount: syncState.gamesCount,
     wishlistCount: syncState.wishlistCount,
     categories: syncState.categories,
-  } : null;
+  } : null, [syncState]);
+
+  const wrappedTriggerSync = useCallback(async (categories?: SyncCategory[]) => {
+    await triggerSync(categories);
+  }, [triggerSync]);
 
   return {
     user,
@@ -53,8 +60,6 @@ export function useAuth() {
     syncProgress,
     login: () => { /* local mode — setup via onboarding */ },
     logout: () => { /* local mode — use settings to reset */ },
-    triggerSync: async (categories?: SyncCategory[]) => {
-      await triggerSync(categories);
-    },
+    triggerSync: wrappedTriggerSync,
   };
 }
