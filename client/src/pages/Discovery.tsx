@@ -24,7 +24,7 @@ export default function Discovery() {
   const { userId } = useDb();
   const { currentGame, currentScore, swipe, undo, canUndo, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded, discoveryMode, setDiscoveryMode, maxHours, setMaxHours } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const filterCount = useFilterCount(filters);
   const scrollKeyRef = useRef('discovery-scroll');
@@ -206,32 +206,8 @@ export default function Discovery() {
 
   return (
     <div className="flex min-h-[calc(100vh-5rem)]">
-      {/* Sidebar filter panel - desktop */}
-      <FilterPanel
-        filters={filters}
-        onApply={setFilters}
-        className="hidden lg:block h-screen sticky top-20"
-      />
-
-      {/* Mobile filter overlay */}
-      {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileFiltersOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-80 max-w-[85vw]">
-            <FilterPanel
-              filters={filters}
-              onApply={(f) => {
-                setFilters(f);
-                setMobileFiltersOpen(false);
-              }}
-              className="h-full"
-            />
-          </div>
-        </div>
-      )}
-
       {/* Main content */}
-      <div className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
@@ -272,13 +248,18 @@ export default function Discovery() {
               <option value="20">Under 20h</option>
               <option value="50">Under 50h</option>
             </select>
-            {/* Mobile filter button */}
+
+            {/* Filter toggle button */}
             <button
-              onClick={() => setMobileFiltersOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#242424] border border-[#333] rounded-lg text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors lg:hidden"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition-colors cursor-pointer ${
+                filtersOpen
+                  ? 'bg-[var(--primary)]/15 border-[var(--primary)] text-[var(--primary)]'
+                  : 'bg-[#242424] border-[#333] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[#444]'
+              }`}
             >
               <i className="fa-solid fa-filter" />
-              <span>{t('common.filters')}</span>
+              <span className="hidden sm:inline">{t('common.filters')}</span>
               {filterCount > 0 && (
                 <span className="px-1.5 py-0.5 text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full">
                   {filterCount}
@@ -508,6 +489,34 @@ export default function Discovery() {
           </div>
         </div>
       </div>
+
+      {/* Right-side filter panel */}
+      {filtersOpen && (
+        <div className="hidden md:block shrink-0">
+          <FilterPanel
+            filters={filters}
+            onApply={setFilters}
+            className="h-screen sticky top-0 xl:top-0 border-l border-[#333]"
+          />
+        </div>
+      )}
+
+      {/* Mobile/tablet filter overlay */}
+      {filtersOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setFiltersOpen(false)} />
+          <div className="absolute right-0 top-0 h-full w-80 max-w-[85vw]">
+            <FilterPanel
+              filters={filters}
+              onApply={(f) => {
+                setFilters(f);
+                setFiltersOpen(false);
+              }}
+              className="h-full"
+            />
+          </div>
+        </div>
+      )}
 
       <style>{`
         .discovery-swipe-in {
