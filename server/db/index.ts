@@ -116,6 +116,125 @@ sqlite.exec(`
     started_at INTEGER,
     completed_at INTEGER
   );
+
+  CREATE TABLE IF NOT EXISTS profile_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    genre_scores TEXT,
+    tag_scores TEXT,
+    total_games INTEGER DEFAULT 0,
+    total_playtime_hours INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (unixepoch())
+  );
+  CREATE INDEX IF NOT EXISTS profile_snapshots_user_idx ON profile_snapshots (user_id);
+
+  CREATE TABLE IF NOT EXISTS ai_summary_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    summary TEXT NOT NULL,
+    created_at INTEGER DEFAULT (unixepoch())
+  );
+  CREATE INDEX IF NOT EXISTS ai_summary_history_user_idx ON ai_summary_history (user_id);
+
+  CREATE TABLE IF NOT EXISTS backlog_order (
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    game_id INTEGER NOT NULL REFERENCES games(id),
+    position INTEGER NOT NULL,
+    PRIMARY KEY (user_id, game_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS collections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    name TEXT NOT NULL,
+    description TEXT,
+    color TEXT DEFAULT '#8b5cf6',
+    icon TEXT DEFAULT 'fa-folder',
+    created_at INTEGER DEFAULT (unixepoch())
+  );
+  CREATE INDEX IF NOT EXISTS collections_user_idx ON collections (user_id);
+
+  CREATE TABLE IF NOT EXISTS collection_games (
+    collection_id INTEGER NOT NULL REFERENCES collections(id),
+    game_id INTEGER NOT NULL REFERENCES games(id),
+    added_at INTEGER DEFAULT (unixepoch()),
+    PRIMARY KEY (collection_id, game_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS game_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    game_id INTEGER NOT NULL REFERENCES games(id),
+    content TEXT NOT NULL,
+    updated_at INTEGER DEFAULT (unixepoch())
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS game_notes_user_game_idx ON game_notes (user_id, game_id);
+
+  CREATE TABLE IF NOT EXISTS game_status (
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    game_id INTEGER NOT NULL REFERENCES games(id),
+    status TEXT NOT NULL,
+    started_at INTEGER,
+    completed_at INTEGER,
+    updated_at INTEGER DEFAULT (unixepoch()),
+    PRIMARY KEY (user_id, game_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS user_settings (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id),
+    theme TEXT DEFAULT 'dark',
+    backup_dir TEXT,
+    backup_interval_hours INTEGER DEFAULT 24,
+    last_backup_at INTEGER,
+    ollama_url TEXT,
+    ollama_model TEXT,
+    cache_ttl_seconds INTEGER,
+    language TEXT DEFAULT 'en',
+    keyboard_shortcuts TEXT,
+    updated_at INTEGER DEFAULT (unixepoch())
+  );
+
+  CREATE TABLE IF NOT EXISTS chat_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at INTEGER DEFAULT (unixepoch())
+  );
+  CREATE INDEX IF NOT EXISTS chat_messages_user_idx ON chat_messages (user_id);
+
+  CREATE TABLE IF NOT EXISTS auto_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    game_id INTEGER NOT NULL REFERENCES games(id),
+    category TEXT NOT NULL,
+    confidence REAL,
+    categorized_at INTEGER DEFAULT (unixepoch())
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS auto_cat_user_game_idx ON auto_categories (user_id, game_id);
+  CREATE INDEX IF NOT EXISTS auto_cat_user_idx ON auto_categories (user_id);
+
+  CREATE TABLE IF NOT EXISTS price_alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    game_id INTEGER NOT NULL REFERENCES games(id),
+    target_price_cents INTEGER,
+    current_price_cents INTEGER,
+    last_checked INTEGER,
+    alerted INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (unixepoch())
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS price_alert_user_game_idx ON price_alerts (user_id, game_id);
+  CREATE INDEX IF NOT EXISTS price_alerts_user_idx ON price_alerts (user_id);
+
+  CREATE TABLE IF NOT EXISTS publisher_blacklist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    name TEXT NOT NULL,
+    type TEXT DEFAULT 'publisher',
+    created_at INTEGER DEFAULT (unixepoch())
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS blacklist_user_name_idx ON publisher_blacklist (user_id, name);
 `);
 
 // ── Migrations for existing databases ────────────────────────────────────────
@@ -125,6 +244,7 @@ const safeAlter = (sql: string) => {
 safeAlter('ALTER TABLE users ADD COLUMN ignored_tags TEXT');
 safeAlter('ALTER TABLE users ADD COLUMN country_code TEXT');
 safeAlter('ALTER TABLE games ADD COLUMN price_currency TEXT');
+safeAlter("ALTER TABLE recommendations ADD COLUMN source TEXT DEFAULT 'heuristic'");
 
 export const db = drizzle(sqlite, { schema });
 export { schema };
