@@ -838,17 +838,19 @@ export function getUserSettings(userId: number): UserSettings {
     cacheTtlSeconds: (row?.cache_ttl_seconds as number) ?? null,
     language: (row?.language as string) ?? 'en',
     keyboardShortcuts: parseJson(row?.keyboard_shortcuts, null),
+    explanationTemplate: (row?.explanation_template as string) ?? null,
   };
 }
 
 export function saveUserSettings(userId: number, settings: Partial<UserSettings>): void {
   const row = get('SELECT user_id FROM user_settings WHERE user_id = ?', [userId]);
   if (!row) {
-    run(`INSERT INTO user_settings (user_id, theme, ollama_url, ollama_model, cache_ttl_seconds, language, keyboard_shortcuts, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    run(`INSERT INTO user_settings (user_id, theme, ollama_url, ollama_model, cache_ttl_seconds, language, keyboard_shortcuts, explanation_template, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [userId, settings.theme ?? 'dark', settings.ollamaUrl ?? null, settings.ollamaModel ?? null,
        settings.cacheTtlSeconds ?? null, settings.language ?? 'en',
-       settings.keyboardShortcuts ? JSON.stringify(settings.keyboardShortcuts) : null, nowUnix()]);
+       settings.keyboardShortcuts ? JSON.stringify(settings.keyboardShortcuts) : null,
+       settings.explanationTemplate ?? null, nowUnix()]);
   } else {
     const sets: string[] = [];
     const vals: unknown[] = [];
@@ -858,6 +860,7 @@ export function saveUserSettings(userId: number, settings: Partial<UserSettings>
     if (settings.cacheTtlSeconds !== undefined) { sets.push('cache_ttl_seconds = ?'); vals.push(settings.cacheTtlSeconds); }
     if (settings.language !== undefined) { sets.push('language = ?'); vals.push(settings.language); }
     if (settings.keyboardShortcuts !== undefined) { sets.push('keyboard_shortcuts = ?'); vals.push(JSON.stringify(settings.keyboardShortcuts)); }
+    if (settings.explanationTemplate !== undefined) { sets.push('explanation_template = ?'); vals.push(settings.explanationTemplate); }
     if (sets.length === 0) return;
     sets.push('updated_at = ?'); vals.push(nowUnix());
     vals.push(userId);

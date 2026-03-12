@@ -2,6 +2,7 @@ const en = {
   // Common
   common: {
     signInWithSteam: 'Sign in with Steam',
+    signOut: 'Sign Out',
     openInSteam: 'Open in Steam',
     viewDetails: 'View Details',
     back: 'Back',

@@ -326,6 +326,27 @@ Respond helpfully and concisely. If asked for game recommendations, suggest spec
 
 // ── Explain recommendation ──────────────────────────────────────────────────
 
+export const DEFAULT_EXPLANATION_TEMPLATE = `Explain in 3-5 short bullet points why "{{game_name}}" is a good match for this player. Each bullet should be one direct sentence — no filler, no fluff. Focus on concrete connections between the player's tastes and the game's strengths.
+
+Player profile:
+- Genres: {{player_genres}}
+- Tags: {{player_tags}}
+- Budget: {{player_budget}}
+- Avg playtime: {{player_playtime}}
+
+Game: {{game_name}}
+- Genres: {{game_genres}}
+- Tags: {{game_tags}}
+- Description: {{game_description}}
+- Reviews: {{game_reviews}}
+- Price: {{game_price}}
+
+Use "•" for bullets. No intro or closing sentence — just the bullets.`;
+
+function buildExplanationPrompt(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
+}
+
 export async function* explainRecommendation(
   userId: number,
   gameId: number,
@@ -355,23 +376,32 @@ export async function* explainRecommendation(
 
   const engine = getAiEngine();
   if (!engine || !(await engine.checkHealth())) {
-    yield `"${game.name}" looks like a great match for you! It features ${gameGenres.slice(0, 3).join(', ')} gameplay with elements like ${gameTags.slice(0, 4).join(', ')} that align well with your gaming preferences.`;
+    const bullets = [
+      gameGenres.length > 0 ? `• Matches your taste in ${gameGenres.slice(0, 3).join(', ')} games` : null,
+      gameTags.length > 0 ? `• Features tags you enjoy: ${gameTags.slice(0, 4).join(', ')}` : null,
+      game.review_score ? `• ${game.review_score}% positive reviews` : null,
+    ].filter(Boolean).join('\n');
+    yield bullets || `• "${game.name}" aligns with your gaming preferences.`;
     return;
   }
 
-  const prompt = `You are a helpful gaming advisor. Explain why "${game.name}" is a good match for this player in 2-3 paragraphs. Be specific about what aspects of the game align with their preferences. Keep it conversational and enthusiastic.
+  const userSettings = queries.getUserSettings(userId);
+  const template = userSettings.explanationTemplate || DEFAULT_EXPLANATION_TEMPLATE;
 
-Player's favorite genres: ${topGenresList.join(', ')}
-Player's favorite tags: ${topTagsList.join(', ')}
-Player's price range: $${(profile.pricePref.min / 100).toFixed(0)}-$${(profile.pricePref.max / 100).toFixed(0)}
-Player's avg playtime: ${profile.playtimePref.avgHours} hours
+  const vars: Record<string, string> = {
+    game_name: game.name as string,
+    game_genres: gameGenres.join(', '),
+    game_tags: gameTags.join(', '),
+    game_description: (game.short_desc as string) || 'N/A',
+    game_reviews: `${game.review_score ?? 'N/A'}%`,
+    game_price: `$${((game.price_cents as number ?? 0) / 100).toFixed(2)}`,
+    player_genres: topGenresList.join(', '),
+    player_tags: topTagsList.join(', '),
+    player_budget: `$${(profile.pricePref.min / 100).toFixed(0)}-$${(profile.pricePref.max / 100).toFixed(0)}`,
+    player_playtime: `${profile.playtimePref.avgHours}h`,
+  };
 
-Game: ${game.name}
-Genres: ${gameGenres.join(', ')}
-Tags: ${gameTags.join(', ')}
-Description: ${(game.short_desc as string) || 'No description available'}
-Review score: ${game.review_score ?? 'N/A'}%
-Price: $${((game.price_cents as number ?? 0) / 100).toFixed(2)}`;
+  const prompt = buildExplanationPrompt(template, vars);
 
   for await (const chunk of engine.generateStream(prompt, 0.7)) {
     yield chunk;
