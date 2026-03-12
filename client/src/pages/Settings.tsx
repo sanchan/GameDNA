@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, Link } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
@@ -310,6 +310,24 @@ export default function Settings() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Legal */}
+        <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <i className="fa-solid fa-scale-balanced text-gray-400" />
+            Legal
+          </h2>
+          <p className="text-sm text-gray-400 mb-3">
+            Privacy policy, terms of use, and Steam API attribution.
+          </p>
+          <Link
+            to="/legal"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors"
+          >
+            <i className="fa-solid fa-arrow-up-right-from-square" />
+            View Privacy & Legal
+          </Link>
         </div>
 
         {/* Save button */}

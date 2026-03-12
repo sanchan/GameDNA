@@ -4,6 +4,25 @@
 import { config } from './config';
 
 const PROXY_BASE = '/api/steam';
+const DAILY_LIMIT = 100_000;
+const DAILY_KEY = 'gamedna_api_calls';
+
+/** Track daily API call count to respect the Steam 100K/day limit. */
+function checkDailyLimit(count: number = 1): boolean {
+  const today = new Date().toISOString().slice(0, 10);
+  const raw = localStorage.getItem(DAILY_KEY);
+  let data: { date: string; count: number } = { date: today, count: 0 };
+  if (raw) {
+    try {
+      data = JSON.parse(raw);
+      if (data.date !== today) data = { date: today, count: 0 };
+    } catch { data = { date: today, count: 0 }; }
+  }
+  if (data.count + count > DAILY_LIMIT) return false;
+  data.count += count;
+  localStorage.setItem(DAILY_KEY, JSON.stringify(data));
+  return true;
+}
 
 // Token bucket rate limiter (client-side version)
 class RateLimiter {
@@ -77,6 +96,7 @@ export interface PlayerSummary {
 
 /** Fetch game details via proxy → Steam Store API + reviews. */
 async function fetchWithProxy(url: string, apiKey?: string): Promise<Response> {
+  if (!checkDailyLimit()) throw new Error('Steam API daily limit (100,000 calls) reached. Try again tomorrow.');
   const headers: Record<string, string> = {};
   if (apiKey) headers['x-steam-api-key'] = apiKey;
   return fetch(url, { headers });
@@ -117,6 +137,7 @@ export async function getWishlist(steamId: string, apiKey: string): Promise<numb
 export async function getAppDetails(appid: number, cc?: string): Promise<GameDetails | null> {
   try {
     await storeApiLimiter.acquire(2);
+    if (!checkDailyLimit(2)) throw new Error('Steam API daily limit reached');
     const ccParam = cc ? `&cc=${cc}` : '';
 
     const [detailsRes, reviewsRes] = await Promise.all([
@@ -195,6 +216,7 @@ export async function getPopularGameIds(): Promise<number[]> {
 
   try {
     await storeApiLimiter.acquire();
+    if (!checkDailyLimit()) throw new Error('Steam API daily limit reached');
     const res = await fetch(`${PROXY_BASE}/store/featured`);
     if (res.ok) {
       const data = await res.json() as {
@@ -225,6 +247,7 @@ export async function fetchMoreGameIds(exclude: Set<number>): Promise<number[]> 
   for (const url of endpoints) {
     try {
       await storeApiLimiter.acquire();
+      if (!checkDailyLimit()) break;
       const res = await fetch(url);
       if (!res.ok) continue;
       const data = await res.json() as Record<string, unknown>;
