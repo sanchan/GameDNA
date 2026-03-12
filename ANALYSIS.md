@@ -13,35 +13,35 @@ Proyecto de ~9,400 lineas de TypeScript, bien estructurado con separacion clara 
 | Prioridad | Mejora | Detalle |
 |-----------|--------|---------|
 | **Alta** | ~~Agregar indices en FK~~ | ~~`user_games(user_id)`, `swipe_history(user_id)`, `recommendations(user_id, score)` — sin estos, queries con muchos juegos hacen full table scan~~ **DONE** |
-| **Alta** | Unificar definicion de schema | Hay schema duplicado: Drizzle `schema.ts` y SQL raw en `db/index.ts`. Pueden divergir silenciosamente. Usar solo Drizzle push |
-| **Media** | Limpieza de sesiones expiradas | Las sesiones expiradas nunca se borran de la DB. Agregar cleanup periodico (ej. al iniciar el servidor o cada 24h) |
-| **Media** | Paginacion en library/wishlist | `lists.ts` endpoints devuelven TODOS los juegos sin paginar — problematico con bibliotecas de 1000+ juegos |
-| **Baja** | Hacer configurable el cache TTL | El threshold de 7 dias en `game-cache.ts:6` esta hardcodeado. Un env var lo haria ajustable |
+| **Alta** | ~~Unificar definicion de schema~~ | ~~Hay schema duplicado: Drizzle `schema.ts` y SQL raw en `db/index.ts`. Pueden divergir silenciosamente. Usar solo Drizzle push~~ **DONE** |
+| **Media** | ~~Limpieza de sesiones expiradas~~ | ~~Las sesiones expiradas nunca se borran de la DB. Agregar cleanup periodico (ej. al iniciar el servidor o cada 24h)~~ **DONE** |
+| **Media** | ~~Paginacion en library/wishlist~~ | ~~`lists.ts` endpoints devuelven TODOS los juegos sin paginar — problematico con bibliotecas de 1000+ juegos~~ **DONE** |
+| **Baja** | ~~Hacer configurable el cache TTL~~ | ~~El threshold de 7 dias en `game-cache.ts:6` esta hardcodeado. Un env var lo haria ajustable~~ **DONE** |
 
 ### 1.2 Sync y Background Tasks
 
 | Prioridad | Mejora | Detalle |
 |-----------|--------|---------|
 | **Alta** | ~~Timeout para sync~~ | ~~`user.ts:70` — el sync de fondo no tiene timeout, puede quedar colgado indefinidamente~~ **DONE** |
-| **Alta** | Estado de sync persistente | `sync-manager.ts` guarda estado en memoria — se pierde al reiniciar el server. Persistir en SQLite |
-| **Media** | Limpieza del sync manager | El mapa de estados crece indefinidamente con cada usuario nuevo, sin cleanup |
-| **Media** | Retry con backoff exponencial | `game-cache.ts` no tiene retry — si un fetch falla, el juego queda sin cachear |
+| **Alta** | ~~Estado de sync persistente~~ | ~~`sync-manager.ts` guarda estado en memoria — se pierde al reiniciar el server. Persistir en SQLite~~ **DONE** |
+| **Media** | ~~Limpieza del sync manager~~ | ~~El mapa de estados crece indefinidamente con cada usuario nuevo, sin cleanup~~ **DONE** |
+| **Media** | ~~Retry con backoff exponencial~~ | ~~`game-cache.ts` no tiene retry — si un fetch falla, el juego queda sin cachear~~ **DONE** |
 
 ### 1.3 Calidad de Codigo
 
 | Prioridad | Mejora | Detalle |
 |-----------|--------|---------|
-| **Media** | Extraer magic numbers a config | Pesos del scoring (`0.4/0.3/0.2/0.1`), batch sizes (`3`, `10`), thresholds — estan hardcodeados en multiples archivos |
-| **Media** | Rate limiter consistente | `steam-api.ts` — wishlist no usa rate limiter, y `getAppDetails` hace 2 requests pero solo adquiere 1 token |
+| **Media** | ~~Extraer magic numbers a config~~ | ~~Pesos del scoring (`0.4/0.3/0.2/0.1`), batch sizes (`3`, `10`), thresholds — estan hardcodeados en multiples archivos~~ **DONE** |
+| **Media** | ~~Rate limiter consistente~~ | ~~`steam-api.ts` — wishlist no usa rate limiter, y `getAppDetails` hace 2 requests pero solo adquiere 1 token~~ **DONE** |
 | **Baja** | Agregar Vitest | No hay test framework. Funciones criticas como `taste-profile.ts` y `recommendation.ts` se beneficiarian de unit tests |
-| **Baja** | Request timeout en api client | `client/src/lib/api.ts` no tiene timeout ni retry — requests colgados bloquean la UI sin feedback |
+| **Baja** | ~~Request timeout en api client~~ | ~~`client/src/lib/api.ts` no tiene timeout ni retry — requests colgados bloquean la UI sin feedback~~ **DONE** |
 
 ### 1.4 Seguridad (nivel local)
 
 | Prioridad | Mejora | Detalle |
 |-----------|--------|---------|
-| **Media** | Validar JSON parsing de Ollama | `ollama.ts:30` — `generateJSON()` no valida el JSON. Si Ollama devuelve texto malformado, crashea |
-| **Baja** | Sanitizar LIKE queries | `history.ts:51` — el search usa LIKE directo. Aunque es SQLite local, caracteres como `%` y `_` no se escapan |
+| **Media** | ~~Validar JSON parsing de Ollama~~ | ~~`ollama.ts:30` — `generateJSON()` no valida el JSON. Si Ollama devuelve texto malformado, crashea~~ **DONE** |
+| **Baja** | ~~Sanitizar LIKE queries~~ | ~~`history.ts:51` — el search usa LIKE directo. Aunque es SQLite local, caracteres como `%` y `_` no se escapan~~ **DONE** |
 
 ---
 

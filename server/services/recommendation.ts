@@ -3,6 +3,7 @@ import { db } from '../db';
 import { games, user_games, swipe_history, taste_profiles, recommendations, users } from '../db/schema';
 import { checkOllamaHealth, generateJSON } from './ollama';
 import { getIgnoredTagsSet, DEFAULT_IGNORED_TAGS } from './tag-filter';
+import { config } from '../config';
 import type { TasteProfile } from '../../shared/types';
 
 interface AIScoredGame {
@@ -44,7 +45,8 @@ function heuristicScore(
     }
   }
 
-  return 0.4 * genreMatch + 0.3 * tagMatch + 0.2 * reviewNorm + 0.1 * recency;
+  const w = config.scoring;
+  return w.genreWeight * genreMatch + w.tagWeight * tagMatch + w.reviewWeight * reviewNorm + w.recencyWeight * recency;
 }
 
 export async function generateRecommendations(userId: number): Promise<number> {
@@ -62,7 +64,7 @@ export async function generateRecommendations(userId: number): Promise<number> {
   const topGenres = new Set(
     Object.entries(taste.genreScores)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
+      .slice(0, config.recTopGenresCount)
       .map(([name]) => name.toLowerCase()),
   );
 
@@ -70,7 +72,7 @@ export async function generateRecommendations(userId: number): Promise<number> {
     Object.entries(taste.tagScores)
       .filter(([name]) => !ignoredSet.has(name.toLowerCase()))
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 15)
+      .slice(0, config.recTopTagsCount)
       .map(([name]) => name.toLowerCase()),
   );
 
@@ -109,17 +111,17 @@ export async function generateRecommendations(userId: number): Promise<number> {
     .from(games)
     .where(whereClause)
     .orderBy(desc(games.review_count))
-    .limit(200)
+    .limit(config.recCandidatePoolSize)
     .all();
 
-  // Score and take top 50
+  // Score and take top N for AI layer
   const scored = candidates
     .map((game) => ({
       game,
       hScore: heuristicScore(game, topGenres, topTags),
     }))
     .sort((a, b) => b.hScore - a.hScore)
-    .slice(0, 50);
+    .slice(0, config.recHeuristicTopN);
 
   if (scored.length === 0) return 0;
 
@@ -144,8 +146,8 @@ export async function generateRecommendations(userId: number): Promise<number> {
 
     finalResults = [];
 
-    // Process in batches of 10
-    const batchSize = 10;
+    // Process in batches
+    const batchSize = config.recAiBatchSize;
     for (let i = 0; i < scored.length; i += batchSize) {
       const batch = scored.slice(i, i + batchSize);
       const gameList = batch

@@ -1,3 +1,8 @@
+import { eq } from 'drizzle-orm';
+import { db } from '../db';
+import { sync_states } from '../db/schema';
+import { config } from '../config';
+
 export type SyncCategory = 'library' | 'wishlist' | 'backlog' | 'tags';
 
 export const ALL_CATEGORIES: SyncCategory[] = ['library', 'wishlist', 'backlog', 'tags'];
@@ -30,9 +35,9 @@ export type SyncStep =
   | 'complete'
   | 'error';
 
-const syncStates = new Map<number, SyncState>();
-
-const RECENT_THRESHOLD_MS = 5 * 60 * 1000;
+// In-memory cache to avoid hitting DB on every status poll.
+// The DB is the source of truth; this cache is synced on every write.
+const memCache = new Map<number, SyncState>();
 
 function defaultCategoryState(): Record<SyncCategory, CategorySyncState> {
   return {
@@ -43,8 +48,48 @@ function defaultCategoryState(): Record<SyncCategory, CategorySyncState> {
   };
 }
 
+// ── Persistence helpers ──────────────────────────────────────────────────────
+
+function persistState(userId: number, state: SyncState): void {
+  memCache.set(userId, state);
+  db.insert(sync_states)
+    .values({
+      user_id: userId,
+      state: JSON.stringify(state),
+      started_at: state.startedAt,
+      completed_at: state.completedAt,
+    })
+    .onConflictDoUpdate({
+      target: sync_states.user_id,
+      set: {
+        state: JSON.stringify(state),
+        started_at: state.startedAt,
+        completed_at: state.completedAt,
+      },
+    })
+    .run();
+}
+
+function loadState(userId: number): SyncState | null {
+  const cached = memCache.get(userId);
+  if (cached) return cached;
+
+  const row = db.select().from(sync_states).where(eq(sync_states.user_id, userId)).get();
+  if (!row) return null;
+
+  try {
+    const state = JSON.parse(row.state) as SyncState;
+    memCache.set(userId, state);
+    return state;
+  } catch {
+    return null;
+  }
+}
+
+// ── Public API ───────────────────────────────────────────────────────────────
+
 export function getSyncStatus(userId: number): SyncState | null {
-  return syncStates.get(userId) ?? null;
+  return loadState(userId);
 }
 
 /** Returns overall step derived from category states (for legacy polling compat) */
@@ -72,7 +117,7 @@ export function getOverallProgress(state: SyncState, activeCategories: SyncCateg
 }
 
 export function startSync(userId: number, categories: SyncCategory[]): boolean {
-  const existing = syncStates.get(userId);
+  const existing = loadState(userId);
   // Check if any of the requested categories are currently syncing
   if (existing) {
     const anySyncing = categories.some((c) => existing.categories[c].status === 'syncing');
@@ -84,65 +129,85 @@ export function startSync(userId: number, categories: SyncCategory[]): boolean {
     cats[cat] = { status: 'syncing', progress: 0, detail: 'Starting...' };
   }
 
-  syncStates.set(userId, {
+  const state: SyncState = {
     categories: cats,
     gamesCount: existing?.gamesCount ?? 0,
     wishlistCount: existing?.wishlistCount ?? 0,
     startedAt: Date.now(),
     completedAt: null,
-  });
+  };
 
+  persistState(userId, state);
   return true;
 }
 
 export function updateCategory(userId: number, category: SyncCategory, partial: Partial<CategorySyncState>): void {
-  const existing = syncStates.get(userId);
+  const existing = loadState(userId);
   if (!existing) return;
   existing.categories[category] = { ...existing.categories[category], ...partial };
+  persistState(userId, existing);
 }
 
 export function updateSyncCounts(userId: number, counts: { gamesCount?: number; wishlistCount?: number }): void {
-  const existing = syncStates.get(userId);
+  const existing = loadState(userId);
   if (!existing) return;
   if (counts.gamesCount !== undefined) existing.gamesCount = counts.gamesCount;
   if (counts.wishlistCount !== undefined) existing.wishlistCount = counts.wishlistCount;
+  persistState(userId, existing);
 }
 
 export function markCategoryComplete(userId: number, category: SyncCategory): void {
-  updateCategory(userId, category, { status: 'complete', progress: 100, detail: 'Complete' });
+  const existing = loadState(userId);
+  if (!existing) return;
+  existing.categories[category] = { status: 'complete', progress: 100, detail: 'Complete' };
   // Check if all active categories are done
-  const state = syncStates.get(userId);
-  if (!state) return;
-  const allDone = ALL_CATEGORIES.every((c) => state.categories[c].status !== 'syncing');
+  const allDone = ALL_CATEGORIES.every((c) => existing.categories[c].status !== 'syncing');
   if (allDone) {
-    state.completedAt = Date.now();
+    existing.completedAt = Date.now();
   }
+  persistState(userId, existing);
 }
 
 export function markCategoryError(userId: number, category: SyncCategory, detail: string): void {
-  updateCategory(userId, category, { status: 'error', detail });
-  const state = syncStates.get(userId);
-  if (!state) return;
-  const allDone = ALL_CATEGORIES.every((c) => state.categories[c].status !== 'syncing');
+  const existing = loadState(userId);
+  if (!existing) return;
+  existing.categories[category] = { ...existing.categories[category], status: 'error', detail };
+  const allDone = ALL_CATEGORIES.every((c) => existing.categories[c].status !== 'syncing');
   if (allDone) {
-    state.completedAt = Date.now();
+    existing.completedAt = Date.now();
   }
+  persistState(userId, existing);
 }
 
 export function isSyncRecent(userId: number): boolean {
-  const existing = syncStates.get(userId);
+  const existing = loadState(userId);
   if (!existing) return false;
   const step = getOverallStep(existing);
   if (step !== 'complete') return false;
   if (!existing.completedAt) return false;
-  return Date.now() - existing.completedAt < RECENT_THRESHOLD_MS;
+  return Date.now() - existing.completedAt < config.syncRecentThresholdMs;
+}
+
+/** Remove sync states older than the recent threshold to prevent unbounded growth. */
+export function cleanupSyncStates(): void {
+  const cutoff = Date.now() - config.syncRecentThresholdMs;
+  // Only clean completed syncs that are no longer "recent"
+  const rows = db.select().from(sync_states).all();
+  for (const row of rows) {
+    if (row.completed_at && row.completed_at < cutoff) {
+      memCache.delete(row.user_id);
+      // Don't delete from DB — keep last sync state for reference.
+      // Just clear from memory cache so it doesn't grow unbounded.
+    }
+  }
 }
 
 // Legacy compat helpers
 export function updateSync(userId: number, partial: { step?: SyncStep; progress?: number; detail?: string; gamesCount?: number; wishlistCount?: number; completedAt?: number | null }): void {
-  const existing = syncStates.get(userId);
+  const existing = loadState(userId);
   if (!existing) return;
   if (partial.gamesCount !== undefined) existing.gamesCount = partial.gamesCount;
   if (partial.wishlistCount !== undefined) existing.wishlistCount = partial.wishlistCount;
   if (partial.completedAt !== undefined) existing.completedAt = partial.completedAt;
+  persistState(userId, existing);
 }

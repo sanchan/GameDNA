@@ -1,6 +1,8 @@
+import { config } from '../config';
+
 const STEAM_API_KEY = process.env.STEAM_API_KEY || '';
 
-// Token bucket rate limiter: 200 requests per 5 minutes
+// Token bucket rate limiter
 class RateLimiter {
   private tokens: number;
   private lastRefill: number;
@@ -13,14 +15,16 @@ class RateLimiter {
     this.lastRefill = Date.now();
   }
 
-  async acquire(): Promise<void> {
-    this.refill();
-    if (this.tokens <= 0) {
-      const waitMs = this.refillMs - (Date.now() - this.lastRefill);
-      await new Promise((r) => setTimeout(r, waitMs));
+  async acquire(count: number = 1): Promise<void> {
+    for (let i = 0; i < count; i++) {
       this.refill();
+      if (this.tokens <= 0) {
+        const waitMs = this.refillMs - (Date.now() - this.lastRefill);
+        await new Promise((r) => setTimeout(r, waitMs));
+        this.refill();
+      }
+      this.tokens--;
     }
-    this.tokens--;
   }
 
   private refill() {
@@ -33,8 +37,8 @@ class RateLimiter {
 }
 
 // Separate rate limiters for different Steam API endpoints
-const webApiLimiter = new RateLimiter(200, 300000); // Steam Web API: 200 req/5min
-export const storeApiLimiter = new RateLimiter(30, 30000); // Steam Store API: 30 req/30s (conservative to avoid blocks)
+const webApiLimiter = new RateLimiter(config.webApiMaxTokens, config.webApiRefillMs);
+export const storeApiLimiter = new RateLimiter(config.storeApiMaxTokens, config.storeApiRefillMs);
 
 export interface OwnedGame {
   appid: number;
@@ -96,6 +100,7 @@ export async function getOwnedGames(steamId: string): Promise<OwnedGame[]> {
 
 export async function getWishlist(steamId: string): Promise<number[]> {
   try {
+    await webApiLimiter.acquire();
     const url = `https://api.steampowered.com/IWishlistService/GetWishlist/v1/?steamid=${steamId}&key=${STEAM_API_KEY}`;
     const res = await fetch(url);
 
@@ -120,7 +125,8 @@ export async function getAppDetails(
   cc?: string,
 ): Promise<GameDetails | null> {
   try {
-    await storeApiLimiter.acquire();
+    // Acquire 2 tokens: one for details, one for reviews (both are store API)
+    await storeApiLimiter.acquire(2);
 
     const ccParam = cc ? `&cc=${cc}` : '';
 

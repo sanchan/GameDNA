@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { games, swipe_history, user_games, taste_profiles, users } from '../db/schema';
 import { getIgnoredTagsSet } from './tag-filter';
+import { config } from '../config';
 
 export async function recalculateTasteProfile(userId: number): Promise<void> {
   // Load user's ignored tags
@@ -40,7 +41,8 @@ export async function recalculateTasteProfile(userId: number): Promise<void> {
 
   for (const row of userGamesRows) {
     const playtime = row.playtime_mins ?? 0;
-    const weight = playtime > 600 ? 1.0 : playtime >= 60 ? 0.5 : 0.1;
+    const tw = config.tasteWeights;
+    const weight = playtime > 600 ? tw.highPlaytime : playtime >= 60 ? tw.mediumPlaytime : tw.lowPlaytime;
 
     const genres: string[] = row.genres ? JSON.parse(row.genres) : [];
     for (const g of genres) {
@@ -56,7 +58,8 @@ export async function recalculateTasteProfile(userId: number): Promise<void> {
   }
 
   for (const row of swipeRows) {
-    const weight = row.decision === 'yes' ? 1.0 : row.decision === 'maybe' ? 0.3 : -0.5;
+    const sw = config.tasteWeights;
+    const weight = row.decision === 'yes' ? sw.swipeYes : row.decision === 'maybe' ? sw.swipeMaybe : sw.swipeNo;
 
     const genres: string[] = row.genres ? JSON.parse(row.genres) : [];
     for (const g of genres) {
