@@ -102,7 +102,7 @@ export default function Settings() {
         {/* Appearance */}
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <i className="fa-solid fa-palette text-purple-400" />
+            <i className="fa-solid fa-palette text-gray-400" />
             Appearance
           </h2>
           <div className="space-y-4">
@@ -111,14 +111,14 @@ export default function Settings() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setSettings({ ...settings, theme: 'dark' })}
-                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${settings.theme === 'dark' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${settings.theme === 'dark' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-moon text-xl mb-2" />
                   <span className="text-sm font-medium block">Dark</span>
                 </button>
                 <button
                   onClick={() => setSettings({ ...settings, theme: 'light' })}
-                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${settings.theme === 'light' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${settings.theme === 'light' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-sun text-xl mb-2" />
                   <span className="text-sm font-medium block">Light</span>
@@ -141,7 +141,7 @@ export default function Settings() {
         {/* AI Configuration */}
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <i className="fa-solid fa-brain text-blue-400" />
+            <i className="fa-solid fa-brain text-gray-400" />
             AI Configuration
           </h2>
           <div className="space-y-4">
@@ -151,7 +151,7 @@ export default function Settings() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setAiProvider('ollama')}
-                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'ollama' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'ollama' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-server text-xl mb-2" />
                   <span className="text-sm font-medium block">Ollama</span>
@@ -159,7 +159,7 @@ export default function Settings() {
                 </button>
                 <button
                   onClick={() => setAiProvider('webllm')}
-                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'webllm' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'webllm' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-microchip text-xl mb-2" />
                   <span className="text-sm font-medium block">WebLLM</span>
@@ -167,7 +167,7 @@ export default function Settings() {
                 </button>
                 <button
                   onClick={() => setAiProvider(null)}
-                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${!aiProvider ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[#333] hover:border-[#444]'}`}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${!aiProvider ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-ban text-xl mb-2" />
                   <span className="text-sm font-medium block">None</span>
@@ -224,7 +224,7 @@ export default function Settings() {
         {/* Cache & Performance */}
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <i className="fa-solid fa-gauge-high text-green-400" />
+            <i className="fa-solid fa-gauge-high text-gray-400" />
             Cache & Performance
           </h2>
           <div>
@@ -243,7 +243,7 @@ export default function Settings() {
         {/* Data Management */}
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <i className="fa-solid fa-database text-amber-400" />
+            <i className="fa-solid fa-database text-gray-400" />
             Data Management
           </h2>
           <DataManagement />
@@ -252,7 +252,7 @@ export default function Settings() {
         {/* Migration */}
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <i className="fa-solid fa-cloud-arrow-down text-indigo-400" />
+            <i className="fa-solid fa-cloud-arrow-down text-gray-400" />
             Import from Server
           </h2>
           <MigrationTool />
@@ -261,7 +261,7 @@ export default function Settings() {
         {/* Keyboard Shortcuts */}
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <i className="fa-solid fa-keyboard text-cyan-400" />
+            <i className="fa-solid fa-keyboard text-gray-400" />
             Keyboard Shortcuts
           </h2>
           <div className="space-y-3">

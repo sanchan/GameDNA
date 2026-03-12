@@ -207,7 +207,7 @@ export default function MyLists() {
               onClick={() => setTab(key)}
               className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                 activeTab === key
-                  ? 'bg-[var(--primary)] text-[#1a1a1a]'
+                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
                   : 'hover:bg-[#1a1a1a] text-gray-400'
               }`}
             >
