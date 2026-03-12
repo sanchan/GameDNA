@@ -28,7 +28,7 @@ interface HistoryResponse {
 export default function Discovery() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus, syncProgress } = useAuth();
-  const { currentGame, currentScore, swipe, undo, canUndo, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded } = useDiscovery();
+  const { currentGame, currentScore, swipe, undo, canUndo, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded, discoveryMode, setDiscoveryMode, maxHours, setMaxHours } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -243,6 +243,33 @@ export default function Discovery() {
                 {t('discovery.sessionCounter', { count: swipedCount })}
               </span>
             )}
+
+            {/* Discovery Mode selector */}
+            <select
+              value={discoveryMode}
+              onChange={(e) => { setDiscoveryMode(e.target.value as any); refetchQueue(); }}
+              className="bg-[#242424] border border-[#333] rounded-lg px-3 py-2 text-xs text-gray-300 cursor-pointer focus:outline-none focus:border-[var(--primary)]"
+            >
+              <option value="default">All Games</option>
+              <option value="hidden_gems">Hidden Gems</option>
+              <option value="new_releases">New Releases</option>
+              <option value="genre_deep_dive">Genre Deep Dive</option>
+              <option value="contrarian">Contrarian</option>
+            </select>
+
+            {/* Time filter */}
+            <select
+              value={maxHours ?? ''}
+              onChange={(e) => { setMaxHours(e.target.value ? Number(e.target.value) : undefined); refetchQueue(); }}
+              className="bg-[#242424] border border-[#333] rounded-lg px-3 py-2 text-xs text-gray-300 cursor-pointer focus:outline-none focus:border-[var(--primary)]"
+            >
+              <option value="">Any Length</option>
+              <option value="2">Under 2h</option>
+              <option value="5">Under 5h</option>
+              <option value="10">Under 10h</option>
+              <option value="20">Under 20h</option>
+              <option value="50">Under 50h</option>
+            </select>
             {/* Mobile filter button */}
             <button
               onClick={() => setMobileFiltersOpen(true)}

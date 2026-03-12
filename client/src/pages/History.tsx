@@ -419,7 +419,7 @@ export default function History() {
                 />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', fontSize: '12px' }}
-                  labelFormatter={(d: string) => new Date(d + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  labelFormatter={(d) => new Date(String(d) + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px' }} />
                 <Bar dataKey="yes" name="Liked" fill="#22c55e" stackId="a" radius={[0, 0, 0, 0]} />

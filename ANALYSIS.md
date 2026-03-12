@@ -134,48 +134,48 @@ Proyecto de ~9,400 lineas de TypeScript, bien estructurado con separacion clara 
 
 ### 4.1 Descubrimiento Avanzado
 
-| Feature | Descripcion |
-|---------|-------------|
-| **"Similar a este juego"** | Dado un juego que el usuario ama, buscar juegos con generos/tags similares en el catalogo. Util para explorar a partir de un punto de referencia |
-| **Modos de Discovery** | Diferentes modos de descubrimiento: "Hidden Gems" (alto review, bajo review count), "New Releases" (ultimo mes), "Genre Deep Dive" (un genero especifico), "Contrarian" (generos que el usuario no suele jugar) |
-| **Blacklist de publishers/developers** | Permitir excluir publishers especificos (ej. juegos asset-flip) del discovery y recomendaciones |
-| **Discovery por tiempo disponible** | "Tengo 2 horas libres" — mostrar juegos cortos que encajen con el perfil |
+| Feature | Descripcion | Estado |
+|---------|-------------|--------|
+| ~~**"Similar a este juego"**~~ | ~~Dado un juego que el usuario ama, buscar juegos con generos/tags similares en el catalogo. Util para explorar a partir de un punto de referencia~~ | **DONE** |
+| ~~**Modos de Discovery**~~ | ~~Diferentes modos de descubrimiento: "Hidden Gems" (alto review, bajo review count), "New Releases" (ultimo mes), "Genre Deep Dive" (un genero especifico), "Contrarian" (generos que el usuario no suele jugar)~~ | **DONE** |
+| ~~**Blacklist de publishers/developers**~~ | ~~Permitir excluir publishers especificos (ej. juegos asset-flip) del discovery y recomendaciones~~ | **DONE** |
+| ~~**Discovery por tiempo disponible**~~ | ~~"Tengo 2 horas libres" — mostrar juegos cortos que encajen con el perfil~~ | **DONE** |
 
 ### 4.2 Gestion de Biblioteca
 
-| Feature | Descripcion |
-|---------|-------------|
-| **Colecciones/Tags personales** | Crear colecciones como "Para jugar en verano", "Cozy games", "Juegos dificiles" — organizacion manual que complementa la automatica |
-| **Notas personales por juego** | Campo de texto libre en GameDetail para anotar por que quieres jugar un juego, o notas de progreso |
-| **Tracking de progreso** | Marcar juegos como "Playing", "Completed", "Abandoned" con fecha. Historial de que estas jugando actualmente |
-| **Importar de otras fuentes** | Importar listas de GOG, Epic, o incluso un CSV manual para tener un catalogo unificado |
+| Feature | Descripcion | Estado |
+|---------|-------------|--------|
+| ~~**Colecciones/Tags personales**~~ | ~~Crear colecciones como "Para jugar en verano", "Cozy games", "Juegos dificiles" — organizacion manual que complementa la automatica~~ | **DONE** |
+| ~~**Notas personales por juego**~~ | ~~Campo de texto libre en GameDetail para anotar por que quieres jugar un juego, o notas de progreso~~ | **DONE** |
+| ~~**Tracking de progreso**~~ | ~~Marcar juegos como "Playing", "Completed", "Abandoned" con fecha. Historial de que estas jugando actualmente~~ | **DONE** |
+| ~~**Importar de otras fuentes**~~ | ~~Importar listas de GOG, Epic, o incluso un CSV manual para tener un catalogo unificado~~ | **DONE** |
 
 ### 4.3 Analisis y Datos
 
-| Feature | Descripcion |
-|---------|-------------|
-| **Dashboard de estadisticas** | Pagina dedicada con: valor total de biblioteca, juegos por genero/ano, ratio jugado/no-jugado, horas por mes, top 10 juegos mas jugados |
-| **"Year in Review"** | Resumen estilo Spotify Wrapped: genero del ano, juego mas jugado, cantidad de descubrimientos, evolucion del perfil |
-| **Deals tracker** | Monitorear precios de juegos en wishlist/bookmarks usando datos de Steam. Notificacion cuando un juego deseado baja de precio (sin third-party, solo Steam Store API) |
-| **Comparacion de taste profiles** | Exportar tu perfil y comparar con otro perfil exportado (sin necesidad de servidor compartido — ambos exportan JSON y se comparan localmente) |
+| Feature | Descripcion | Estado |
+|---------|-------------|--------|
+| ~~**Dashboard de estadisticas**~~ | ~~Pagina dedicada con: valor total de biblioteca, juegos por genero/ano, ratio jugado/no-jugado, horas por mes, top 10 juegos mas jugados~~ | **DONE** |
+| ~~**"Year in Review"**~~ | ~~Resumen estilo Spotify Wrapped: genero del ano, juego mas jugado, cantidad de descubrimientos, evolucion del perfil~~ | **DONE** |
+| ~~**Deals tracker**~~ | ~~Monitorear precios de juegos en wishlist/bookmarks usando datos de Steam. Notificacion cuando un juego deseado baja de precio (sin third-party, solo Steam Store API)~~ | **DONE** |
+| ~~**Comparacion de taste profiles**~~ | ~~Exportar tu perfil y comparar con otro perfil exportado (sin necesidad de servidor compartido — ambos exportan JSON y se comparan localmente)~~ | **DONE** |
 
 ### 4.4 AI Avanzado
 
-| Feature | Descripcion |
-|---------|-------------|
-| **Conversacion con tu perfil** | Chat con Ollama donde puedes hacer preguntas como "Que juego deberia jugar si me gusto Hades?" o "Recomiendame algo relajante". El AI tiene contexto de tu perfil completo |
-| **Auto-categorization** | AI clasifica automaticamente los juegos de tu biblioteca en categorias (RPG largo, indie corto, multiplayer casual, etc.) basandose en metadata + tu playtime |
-| **Mood-based recommendations** | Seleccionar un mood (relajado, competitivo, narrativo, exploracion) y obtener recomendaciones filtradas por ese estado de animo |
-| **Resumen de reviews** | AI resume las reviews de Steam de un juego en 2-3 frases, destacando pros/cons segun lo que al usuario le importa |
+| Feature | Descripcion | Estado |
+|---------|-------------|--------|
+| ~~**Conversacion con tu perfil**~~ | ~~Chat con Ollama donde puedes hacer preguntas como "Que juego deberia jugar si me gusto Hades?" o "Recomiendame algo relajante". El AI tiene contexto de tu perfil completo~~ | **DONE** |
+| ~~**Auto-categorization**~~ | ~~AI clasifica automaticamente los juegos de tu biblioteca en categorias (RPG largo, indie corto, multiplayer casual, etc.) basandose en metadata + tu playtime~~ | **DONE** |
+| ~~**Mood-based recommendations**~~ | ~~Seleccionar un mood (relajado, competitivo, narrativo, exploracion) y obtener recomendaciones filtradas por ese estado de animo~~ | **DONE** |
+| ~~**Resumen de reviews**~~ | ~~AI resume las reviews de Steam de un juego en 2-3 frases, destacando pros/cons segun lo que al usuario le importa~~ | **DONE** |
 
 ### 4.5 Calidad de Vida
 
-| Feature | Descripcion |
-|---------|-------------|
-| **Keyboard shortcuts globales** | Shortcuts en todas las paginas (ej. `G D` para ir a Discovery, `G R` para Recommendations, `G P` para Profile) |
-| **Tema claro** | Actualmente solo hay dark mode. Un toggle dark/light beneficiaria a usuarios que prefieren temas claros |
-| **Backup automatico** | Backup periodico de la DB a un directorio configurable. Una linea de defensa contra corrupcion de datos |
-| **Configuracion centralizada** | Pagina de Settings con: cache TTL, rate limits, Ollama URL/modelo, idioma, tema, directorio de backup |
+| Feature | Descripcion | Estado |
+|---------|-------------|--------|
+| ~~**Keyboard shortcuts globales**~~ | ~~Shortcuts en todas las paginas (ej. `G D` para ir a Discovery, `G R` para Recommendations, `G P` para Profile)~~ | **DONE** |
+| ~~**Tema claro**~~ | ~~Actualmente solo hay dark mode. Un toggle dark/light beneficiaria a usuarios que prefieren temas claros~~ | **DONE** |
+| ~~**Backup automatico**~~ | ~~Backup periodico de la DB a un directorio configurable. Una linea de defensa contra corrupcion de datos~~ | **DONE** |
+| ~~**Configuracion centralizada**~~ | ~~Pagina de Settings con: cache TTL, rate limits, Ollama URL/modelo, idioma, tema, directorio de backup~~ | **DONE** |
 
 ---
 

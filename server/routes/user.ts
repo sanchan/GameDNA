@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 import { db } from '../db';
 import { users, user_games, games, swipe_history, taste_profiles, profile_snapshots, ai_summary_history } from '../db/schema';
@@ -123,7 +123,7 @@ async function runCategorySync(userId: number, steamId: string, cc: string | und
           .from(user_games)
           .where(and(eq(user_games.user_id, userId), eq(user_games.from_wishlist, 1)))
           .all();
-        for (const r of wl) wishlistSet.add(r.game_id);
+        for (const r of wl) if (r.game_id != null) wishlistSet.add(r.game_id);
       }
 
       for (const game of ownedGames) {
@@ -160,7 +160,7 @@ async function runCategorySync(userId: number, steamId: string, cc: string | und
       .from(user_games)
       .where(eq(user_games.user_id, userId))
       .all();
-    ownedGames = existing.map((r) => ({ appid: r.game_id, name: '', playtime_forever: r.playtime ?? 0 }));
+    ownedGames = existing.filter((r) => r.game_id != null).map((r) => ({ appid: r.game_id!, name: '', playtime_forever: r.playtime ?? 0 }));
   }
 
   // --- Wishlist ---
@@ -219,7 +219,7 @@ async function runCategorySync(userId: number, steamId: string, cc: string | und
       .from(user_games)
       .where(and(eq(user_games.user_id, userId), eq(user_games.from_wishlist, 1)))
       .all();
-    wishlistAppids = wl.map((r) => r.game_id);
+    wishlistAppids = wl.map((r) => r.game_id).filter((id): id is number => id != null);
   }
 
   // --- Backlog (game detail caching + discovery seeding) ---
@@ -767,6 +767,52 @@ user.post('/import', async (c) => {
   }
 
   return c.json({ importedTags, importedSwipes });
+});
+
+// POST /api/user/import-csv — import games from CSV (GOG, Epic, or generic)
+user.post('/import-csv', async (c) => {
+  const userId = c.get('userId');
+
+  const body = await c.req.json<{ csv: string; source?: string }>();
+  if (!body.csv?.trim()) return c.json({ error: 'CSV data required' }, 400);
+
+  const lines = body.csv.trim().split('\n');
+  if (lines.length < 2) return c.json({ error: 'CSV must have at least a header and one data row' }, 400);
+
+  const header = lines[0].toLowerCase();
+  let nameCol = 0;
+
+  // Detect format
+  const cols = header.split(',').map((c) => c.trim().replace(/"/g, ''));
+  const nameIdx = cols.findIndex((c) => c === 'name' || c === 'title' || c === 'game');
+  if (nameIdx >= 0) nameCol = nameIdx;
+
+  let imported = 0;
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  for (let i = 1; i < lines.length; i++) {
+    const parts = lines[i].split(',').map((p) => p.trim().replace(/^"|"$/g, ''));
+    const name = parts[nameCol]?.trim();
+    if (!name) continue;
+
+    // Try to find the game in our cache by name
+    const game = db
+      .select({ id: games.id })
+      .from(games)
+      .where(eq(games.name, name))
+      .get();
+
+    if (game) {
+      // Add to user_games if found
+      db.insert(user_games)
+        .values({ user_id: userId, game_id: game.id, playtime_mins: 0, from_wishlist: 0, synced_at: nowUnix })
+        .onConflictDoNothing()
+        .run();
+      imported++;
+    }
+  }
+
+  return c.json({ imported, total: lines.length - 1 });
 });
 
 export default user;

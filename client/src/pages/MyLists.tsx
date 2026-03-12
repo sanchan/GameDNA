@@ -4,8 +4,9 @@ import { useTranslation, Trans } from 'react-i18next';
 import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
 import { useBookmarks } from '../hooks/use-bookmarks';
+import { useToast } from '../components/Toast';
 import { api } from '../lib/api';
-import type { Game } from '../../../shared/types';
+import type { Game, Collection } from '../../../shared/types';
 
 interface LibraryEntry {
   game: Game;
@@ -80,19 +81,25 @@ function ReviewBadge({ score }: { score: number | null }) {
   );
 }
 
-type TabKey = 'library' | 'bookmarks' | 'wishlist';
+type TabKey = 'library' | 'bookmarks' | 'wishlist' | 'collections';
 type SortKey = 'recent' | 'name-asc' | 'name-desc' | 'price-low' | 'price-high' | 'rating';
 
 export default function MyLists() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { toggle: toggleBookmark } = useBookmarks();
+  const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = (searchParams.get('tab') as TabKey) || 'library';
 
   const [library, setLibrary] = useState<LibraryEntry[]>([]);
   const [bookmarkGames, setBookmarkGames] = useState<Game[]>([]);
   const [wishlist, setWishlist] = useState<Game[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState<number | null>(null);
+  const [collectionGames, setCollectionGames] = useState<any[]>([]);
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [showNewCollection, setShowNewCollection] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [genreFilter, setGenreFilter] = useState('');
@@ -118,6 +125,9 @@ export default function MyLists() {
       } else if (activeTab === 'wishlist') {
         const data = await api.get<PaginatedResponse<Game>>('/lists/wishlist?limit=200');
         setWishlist(data.items);
+      } else if (activeTab === 'collections') {
+        const data = await api.get<Collection[]>('/collections');
+        setCollections(data);
       }
     } catch {
       // ignore
@@ -195,6 +205,7 @@ export default function MyLists() {
             { key: 'library' as TabKey, label: t('myLists.tabs.library'), icon: 'fa-solid fa-book' },
             { key: 'bookmarks' as TabKey, label: t('myLists.tabs.bookmarks'), icon: 'fa-regular fa-bookmark' },
             { key: 'wishlist' as TabKey, label: t('myLists.tabs.wishlist'), icon: 'fa-regular fa-heart' },
+            { key: 'collections' as TabKey, label: 'Collections', icon: 'fa-solid fa-folder' },
           ]).map(({ key, label, icon }) => (
             <button
               key={key}
@@ -269,6 +280,109 @@ export default function MyLists() {
         <LibraryTab entries={filteredLibrary} stats={libraryStats} sortBy={sortBy} />
       ) : activeTab === 'bookmarks' ? (
         <BookmarksTab games={filteredBookmarks} onRemove={handleRemoveBookmark} sortBy={sortBy} />
+      ) : activeTab === 'collections' ? (
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            {showNewCollection ? (
+              <div className="flex items-center gap-2 flex-1">
+                <input
+                  type="text"
+                  value={newCollectionName}
+                  onChange={(e) => setNewCollectionName(e.target.value)}
+                  placeholder="Collection name..."
+                  className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newCollectionName.trim()) {
+                      api.post<Collection>('/collections', { name: newCollectionName.trim() })
+                        .then((c: Collection) => { setCollections((prev) => [c, ...prev]); setNewCollectionName(''); setShowNewCollection(false); toast('Collection created', 'success'); })
+                        .catch(() => toast('Failed to create collection', 'error'));
+                    }
+                  }}
+                />
+                <button onClick={() => setShowNewCollection(false)} className="text-gray-400 hover:text-white text-sm">Cancel</button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowNewCollection(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-xl text-sm font-medium hover:opacity-90"
+              >
+                <i className="fa-solid fa-plus" />
+                New Collection
+              </button>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-[#242424] border border-[#333] rounded-2xl p-6 animate-pulse">
+                  <div className="h-6 w-32 bg-[#333] rounded mb-2" />
+                  <div className="h-4 w-20 bg-[#333] rounded" />
+                </div>
+              ))}
+            </div>
+          ) : collections.length === 0 ? (
+            <div className="text-center py-16">
+              <i className="fa-solid fa-folder-open text-4xl text-gray-500 mb-4 block" />
+              <p className="text-gray-400 mb-2">No collections yet</p>
+              <p className="text-sm text-gray-500">Create collections to organize your games your way.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {collections.map((col) => (
+                <button
+                  key={col.id}
+                  onClick={async () => {
+                    setSelectedCollection(col.id);
+                    try {
+                      const g = await api.get<any[]>(`/collections/${col.id}/games`);
+                      setCollectionGames(g);
+                    } catch { setCollectionGames([]); }
+                  }}
+                  className={`text-left bg-[#242424] border rounded-2xl p-6 transition-all hover:border-[var(--primary)] ${selectedCollection === col.id ? 'border-[var(--primary)]' : 'border-[#333]'}`}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${col.color}33` }}>
+                      <i className={`fa-solid ${col.icon}`} style={{ color: col.color }} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white">{col.name}</h3>
+                      <p className="text-xs text-gray-400">{col.gameCount} games</p>
+                    </div>
+                  </div>
+                  {col.description && <p className="text-xs text-gray-500">{col.description}</p>}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {selectedCollection && collectionGames.length > 0 && (
+            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-white">
+                  {collections.find((c) => c.id === selectedCollection)?.name} Games
+                </h3>
+                <button onClick={() => { setSelectedCollection(null); setCollectionGames([]); }} className="text-gray-400 hover:text-white">
+                  <i className="fa-solid fa-xmark" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {collectionGames.map((game: any) => (
+                  <Link key={game.id} to={`/game/${game.id}`} className="group">
+                    <div className="aspect-video rounded-lg overflow-hidden mb-2">
+                      {game.headerImage ? (
+                        <img src={game.headerImage} alt={game.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      ) : (
+                        <div className="w-full h-full bg-[#333] flex items-center justify-center"><i className="fa-solid fa-gamepad text-gray-500" /></div>
+                      )}
+                    </div>
+                    <p className="text-xs font-semibold truncate">{game.name}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
         <WishlistTab games={filteredWishlist} sortBy={sortBy} />
       )}
@@ -568,6 +682,7 @@ function WishlistTab({ games, sortBy }: { games: Game[]; sortBy: SortKey }) {
           ))}
         </div>
       )}
+
     </div>
   );
 }
