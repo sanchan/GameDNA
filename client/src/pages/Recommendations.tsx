@@ -269,11 +269,12 @@ export default function Recommendations() {
       )}
 
       <WhyThisGame
-        gameId={explainRec?.id ?? 0}
+        gameId={explainRec?.game.id ?? 0}
         gameName={explainRec?.game.name ?? ''}
         gameImage={explainRec?.game.headerImage}
         gameDeveloper={explainRec?.game.developers?.[0]}
         matchScore={explainRec?.score}
+        aiExplanation={explainRec?.aiExplanation}
         open={explainRec !== null}
         onClose={() => setExplainRec(null)}
       />

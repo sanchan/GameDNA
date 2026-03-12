@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
+import { explainRecommendation } from '../services/ai-features';
+import { useDb } from '../contexts/db-context';
 
 interface WhyThisGameProps {
   gameId: number;
@@ -8,6 +10,7 @@ interface WhyThisGameProps {
   gameImage?: string | null;
   gameDeveloper?: string;
   matchScore?: number;
+  aiExplanation?: string | null;
   open: boolean;
   onClose: () => void;
 }
@@ -18,10 +21,12 @@ export default function WhyThisGame({
   gameImage,
   gameDeveloper,
   matchScore,
+  aiExplanation,
   open,
   onClose,
 }: WhyThisGameProps) {
   const { t } = useTranslation();
+  const { userId } = useDb();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,50 +86,39 @@ export default function WhyThisGame({
       return;
     }
 
-    const controller = new AbortController();
-    abortRef.current = controller;
     setLoading(true);
     setText('');
     setError(null);
 
+    // If we already have a stored AI explanation, use it directly
+    if (aiExplanation) {
+      setText(aiExplanation);
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise generate one via the local AI engine
+    const controller = new AbortController();
+    abortRef.current = controller;
+    let cancelled = false;
+
     (async () => {
       try {
-        const res = await fetch(`/api/recommendations/${gameId}/explain`, {
-          credentials: 'include',
-          signal: controller.signal,
-        });
-
-        if (!res.ok) {
+        if (!userId) {
           setError(t('whyThisGame.failedToLoad'));
           setLoading(false);
           return;
         }
-
-        if (!res.body) {
-          const fullText = await res.text();
-          setText(fullText);
-          setLoading(false);
-          return;
-        }
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
+        for await (const chunk of explainRecommendation(userId, gameId)) {
+          if (cancelled) break;
           setText((prev) => prev + chunk);
-
-          // Auto-scroll
           if (contentRef.current) {
             contentRef.current.scrollTop = contentRef.current.scrollHeight;
           }
         }
-
         setLoading(false);
       } catch (err: any) {
-        if (err.name !== 'AbortError') {
+        if (!cancelled) {
           setError(t('whyThisGame.failedToLoad'));
           setLoading(false);
         }
@@ -132,9 +126,10 @@ export default function WhyThisGame({
     })();
 
     return () => {
+      cancelled = true;
       controller.abort();
     };
-  }, [open, gameId]);
+  }, [open, gameId, aiExplanation, userId]);
 
   if (!open) return null;
 
