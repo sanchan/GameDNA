@@ -129,64 +129,64 @@ export default function Onboarding() {
             <div
               key={s}
               className={`w-3 h-3 rounded-full transition-colors ${
-                s === step ? 'bg-purple-500' : i < ['welcome', 'steam-id', 'api-key'].indexOf(step) ? 'bg-purple-400' : 'bg-[var(--surface)]'
+                s === step ? 'bg-[var(--primary)]' : i < ['welcome', 'steam-id', 'api-key'].indexOf(step) ? 'bg-[var(--primary)]/70' : 'bg-[var(--border)]'
               }`}
             />
           ))}
         </div>
 
-        <div className="bg-[var(--surface)] rounded-2xl p-8 shadow-xl border border-[var(--border)]">
+        <div className="bg-[var(--card)] rounded-2xl p-8 shadow-xl border border-[var(--border)]">
           {step === 'welcome' && (
             <>
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">
                   Welcome to GameDNA
                 </h1>
-                <p className="text-[var(--muted)] text-lg">
+                <p className="text-[var(--muted-foreground)] text-lg">
                   Discover your gaming personality and find your next favorite game.
                 </p>
               </div>
 
               <div className="space-y-4 mb-8">
                 <div className="flex gap-3 items-start">
-                  <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-purple-400 text-sm font-bold">1</span>
+                  <div className="w-8 h-8 rounded-full bg-[var(--primary)]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-[var(--primary)] text-sm font-bold">1</span>
                   </div>
                   <div>
                     <p className="text-[var(--foreground)] font-medium">Your data stays local</p>
-                    <p className="text-[var(--muted)] text-sm">Everything is stored in your browser. No accounts, no servers.</p>
+                    <p className="text-[var(--muted-foreground)] text-sm">Everything is stored in your browser. No accounts, no servers.</p>
                   </div>
                 </div>
                 <div className="flex gap-3 items-start">
-                  <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-purple-400 text-sm font-bold">2</span>
+                  <div className="w-8 h-8 rounded-full bg-[var(--primary)]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-[var(--primary)] text-sm font-bold">2</span>
                   </div>
                   <div>
                     <p className="text-[var(--foreground)] font-medium">Analyze your Steam library</p>
-                    <p className="text-[var(--muted)] text-sm">Build a taste profile from your games and playtime.</p>
+                    <p className="text-[var(--muted-foreground)] text-sm">Build a taste profile from your games and playtime.</p>
                   </div>
                 </div>
                 <div className="flex gap-3 items-start">
-                  <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-purple-400 text-sm font-bold">3</span>
+                  <div className="w-8 h-8 rounded-full bg-[var(--primary)]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-[var(--primary)] text-sm font-bold">3</span>
                   </div>
                   <div>
                     <p className="text-[var(--foreground)] font-medium">Get personalized recommendations</p>
-                    <p className="text-[var(--muted)] text-sm">Swipe through games tailored to your taste, with optional AI insights.</p>
+                    <p className="text-[var(--muted-foreground)] text-sm">Swipe through games tailored to your taste, with optional AI insights.</p>
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={() => setStep('steam-id')}
-                className="w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-colors"
+                className="w-full py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] text-white rounded-xl font-medium transition-all duration-300"
               >
                 Get Started
               </button>
 
               <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                <p className="text-[var(--muted)] text-xs text-center mb-3">Already have a backup?</p>
-                <label className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] rounded-xl font-medium cursor-pointer hover:bg-[var(--surface-hover)] transition-colors text-sm">
+                <p className="text-[var(--muted-foreground)] text-xs text-center mb-3">Already have a backup?</p>
+                <label className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] rounded-xl font-medium cursor-pointer hover:bg-[var(--accent)] transition-colors text-sm">
                   <i className="fa-solid fa-upload" />
                   Restore from Backup (.db)
                   <input type="file" accept=".db,.sqlite" onChange={handleImportBackup} className="hidden" />
@@ -198,7 +198,7 @@ export default function Onboarding() {
           {step === 'steam-id' && (
             <>
               <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">Your Steam ID</h2>
-              <p className="text-[var(--muted)] mb-6">
+              <p className="text-[var(--muted-foreground)] mb-6">
                 Enter your 17-digit Steam ID or paste your Steam profile URL.
               </p>
 
@@ -211,21 +211,28 @@ export default function Onboarding() {
                   value={steamInput}
                   onChange={(e) => setSteamInput(e.target.value)}
                   placeholder="76561198012345678 or https://steamcommunity.com/profiles/..."
-                  className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
                   onKeyDown={(e) => e.key === 'Enter' && resolveSteamId()}
                 />
               </div>
 
-              <p className="text-[var(--muted)] text-xs mb-6">
-                Find your Steam ID at{' '}
-                <a href="https://steamid.io" target="_blank" rel="noopener noreferrer" className="text-purple-400 underline">
-                  steamid.io
-                </a>
-                {' '}or in your Steam profile URL.
-              </p>
+              <div className="mb-6 p-3 bg-[var(--primary)]/10 border border-[var(--primary)]/30 rounded-xl">
+                <p className="text-[var(--primary)] text-sm mb-2 font-medium">How to find your Steam ID:</p>
+                <ol className="text-[var(--muted-foreground)] text-sm space-y-1 list-decimal list-inside">
+                  <li>Open Steam and go to your profile page</li>
+                  <li>The URL will look like <span className="font-mono text-[var(--foreground)] text-xs">steamcommunity.com/profiles/<strong>76561198...</strong></span></li>
+                  <li>Copy the 17-digit number from the URL</li>
+                </ol>
+                <p className="text-[var(--muted-foreground)] text-xs mt-2">
+                  If your URL uses a custom name instead, find your numeric ID at{' '}
+                  <a href="https://steamid.io" target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] underline">
+                    steamid.io
+                  </a>
+                </p>
+              </div>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                <div className="mb-4 p-3 bg-[var(--destructive)]/10 border border-[var(--destructive-foreground)]/30 rounded-xl text-[var(--destructive-foreground)] text-sm">
                   {error}
                 </div>
               )}
@@ -233,14 +240,14 @@ export default function Onboarding() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep('welcome')}
-                  className="px-6 py-3 bg-[var(--background)] text-[var(--foreground)] rounded-xl font-medium border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors"
+                  className="px-6 py-3 bg-[var(--background)] text-[var(--foreground)] rounded-xl font-medium border border-[var(--border)] hover:bg-[var(--accent)] transition-colors"
                 >
                   Back
                 </button>
                 <button
                   onClick={resolveSteamId}
                   disabled={!steamInput.trim() || loading}
-                  className="flex-1 py-3 px-6 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
+                  className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-300"
                 >
                   {loading ? 'Checking...' : 'Continue'}
                 </button>
@@ -251,7 +258,7 @@ export default function Onboarding() {
           {step === 'api-key' && (
             <>
               <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">Steam API Key</h2>
-              <p className="text-[var(--muted)] mb-6">
+              <p className="text-[var(--muted-foreground)] mb-6">
                 We need your Steam Web API key to access your game library. It's stored encrypted, locally in your browser only.
               </p>
 
@@ -264,17 +271,17 @@ export default function Onboarding() {
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="Your Steam Web API key"
-                  className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
+                  className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] font-mono"
                   onKeyDown={(e) => e.key === 'Enter' && finishSetup()}
                 />
               </div>
 
-              <div className="mb-6 p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl">
-                <p className="text-purple-300 text-sm mb-2 font-medium">How to get your API key:</p>
-                <ol className="text-[var(--muted)] text-sm space-y-1 list-decimal list-inside">
+              <div className="mb-6 p-3 bg-[var(--primary)]/10 border border-[var(--primary)]/30 rounded-xl">
+                <p className="text-[var(--primary)] text-sm mb-2 font-medium">How to get your API key:</p>
+                <ol className="text-[var(--muted-foreground)] text-sm space-y-1 list-decimal list-inside">
                   <li>
                     Go to{' '}
-                    <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener noreferrer" className="text-purple-400 underline">
+                    <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] underline">
                       steamcommunity.com/dev/apikey
                     </a>
                   </li>
@@ -285,7 +292,7 @@ export default function Onboarding() {
               </div>
 
               {resolvedId && (
-                <p className="text-[var(--muted)] text-xs mb-4">
+                <p className="text-[var(--muted-foreground)] text-xs mb-4">
                   Steam ID: <span className="font-mono text-[var(--foreground)]">{resolvedId}</span>
                 </p>
               )}
@@ -301,7 +308,7 @@ export default function Onboarding() {
               )}
 
               {error && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                <div className="mb-4 p-3 bg-[var(--destructive)]/10 border border-[var(--destructive-foreground)]/30 rounded-xl text-[var(--destructive-foreground)] text-sm">
                   {error}
                 </div>
               )}
@@ -309,14 +316,14 @@ export default function Onboarding() {
               <div className="flex gap-3">
                 <button
                   onClick={() => { setStep('steam-id'); setError(null); }}
-                  className="px-6 py-3 bg-[var(--background)] text-[var(--foreground)] rounded-xl font-medium border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors"
+                  className="px-6 py-3 bg-[var(--background)] text-[var(--foreground)] rounded-xl font-medium border border-[var(--border)] hover:bg-[var(--accent)] transition-colors"
                 >
                   Back
                 </button>
                 <button
                   onClick={finishSetup}
                   disabled={!apiKey.trim() || loading}
-                  className="flex-1 py-3 px-6 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
+                  className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-300"
                 >
                   {loading ? 'Verifying...' : 'Complete Setup'}
                 </button>
