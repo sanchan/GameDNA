@@ -5,6 +5,14 @@ import { useAuth, type SyncCategory, type CategorySyncState } from '../hooks/use
 import { useProfile, useGamingDNA } from '../hooks/use-profile';
 import { api } from '../lib/api';
 import RadarChart from '../components/RadarChart';
+import type { ProfileSnapshot, AiSummaryEntry } from '../../../shared/types';
+
+interface GenreGame {
+  id: number;
+  name: string;
+  headerImage: string | null;
+  playtimeMins: number;
+}
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -19,6 +27,20 @@ export default function Profile() {
   const [ignoredOverrides, setIgnoredOverrides] = useState<Record<string, boolean>>({});
   const [tagFilter, setTagFilter] = useState<'all' | 'selected' | 'unselected'>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Interactive radar state
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [genreGames, setGenreGames] = useState<GenreGame[]>([]);
+  const [loadingGenreGames, setLoadingGenreGames] = useState(false);
+
+  // Profile evolution state
+  const [snapshots, setSnapshots] = useState<ProfileSnapshot[]>([]);
+  const [showEvolution, setShowEvolution] = useState(false);
+
+  // AI summary history state
+  const [summaryHistory, setSummaryHistory] = useState<AiSummaryEntry[]>([]);
+  const [showSummaryHistory, setShowSummaryHistory] = useState(false);
+  const [generatingSummary, setGeneratingSummary] = useState(false);
 
   const handleExport = useCallback(async () => {
     try {
@@ -60,6 +82,73 @@ export default function Profile() {
     }
     prevSyncStatus.current = syncStatus;
   }, [syncStatus, refetchProfile, refetchDna]);
+
+  // Handle genre click on radar chart
+  const handleGenreClick = useCallback(async (genre: string) => {
+    if (selectedGenre === genre) {
+      setSelectedGenre(null);
+      setGenreGames([]);
+      return;
+    }
+    setSelectedGenre(genre);
+    setLoadingGenreGames(true);
+    try {
+      const games = await api.get<GenreGame[]>(`/user/genre-games/${encodeURIComponent(genre)}`);
+      setGenreGames(games);
+    } catch {
+      setGenreGames([]);
+    } finally {
+      setLoadingGenreGames(false);
+    }
+  }, [selectedGenre]);
+
+  // Fetch profile snapshots
+  const handleShowEvolution = useCallback(async () => {
+    if (showEvolution) {
+      setShowEvolution(false);
+      return;
+    }
+    try {
+      const data = await api.get<ProfileSnapshot[]>('/user/profile-snapshots');
+      setSnapshots(data);
+      setShowEvolution(true);
+    } catch {
+      setSnapshots([]);
+      setShowEvolution(true);
+    }
+  }, [showEvolution]);
+
+  // Fetch AI summary history
+  const handleShowSummaryHistory = useCallback(async () => {
+    if (showSummaryHistory) {
+      setShowSummaryHistory(false);
+      return;
+    }
+    try {
+      const data = await api.get<AiSummaryEntry[]>('/user/ai-summaries');
+      setSummaryHistory(data);
+      setShowSummaryHistory(true);
+    } catch {
+      setSummaryHistory([]);
+      setShowSummaryHistory(true);
+    }
+  }, [showSummaryHistory]);
+
+  // Generate new AI summary
+  const handleGenerateSummary = useCallback(async () => {
+    setGeneratingSummary(true);
+    try {
+      await api.post<{ summary: string }>('/user/generate-summary');
+      refetchDna();
+      // Refresh summary history
+      const data = await api.get<AiSummaryEntry[]>('/user/ai-summaries');
+      setSummaryHistory(data);
+    } catch {
+      // ignore
+    } finally {
+      setGeneratingSummary(false);
+    }
+  }, [refetchDna]);
 
   if (authLoading) return null;
   if (!user) return <Navigate to="/" />;
@@ -225,18 +314,112 @@ export default function Profile() {
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-2">{t('profile.gamingPreferenceProfile')}</h2>
                   <p className="text-gray-400 text-sm">{t('profile.gamingPreferenceSubtitle')}</p>
+                  <p className="text-xs text-[var(--primary)] mt-1">{t('profile.clickGenreHint')}</p>
                 </div>
-                <button
-                  onClick={() => { refetchDna(); refetchProfile(); }}
-                  className="flex items-center space-x-2 px-4 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all mt-4 lg:mt-0"
-                >
-                  <i className="fa-solid fa-rotate" />
-                  <span>{t('profile.refreshProfile')}</span>
-                </button>
+                <div className="flex items-center gap-3 mt-4 lg:mt-0">
+                  <button
+                    onClick={handleShowEvolution}
+                    className="flex items-center space-x-2 px-4 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
+                  >
+                    <i className="fa-solid fa-chart-line" />
+                    <span>{t('profile.profileEvolution')}</span>
+                  </button>
+                  <button
+                    onClick={() => { refetchDna(); refetchProfile(); }}
+                    className="flex items-center space-x-2 px-4 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
+                  >
+                    <i className="fa-solid fa-rotate" />
+                    <span>{t('profile.refreshProfile')}</span>
+                  </button>
+                </div>
               </div>
               <div className="max-w-lg mx-auto">
-                <RadarChart data={dna.topGenres} />
+                <RadarChart data={dna.topGenres} onGenreClick={handleGenreClick} />
               </div>
+
+              {/* Genre games popup */}
+              {selectedGenre && (
+                <div className="mt-6 bg-[#1a1a1a] rounded-xl p-5 border border-[var(--primary)]/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-white">
+                      {t('profile.gamesInGenre', { genre: selectedGenre })}
+                    </h3>
+                    <button
+                      onClick={() => { setSelectedGenre(null); setGenreGames([]); }}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      <i className="fa-solid fa-xmark" />
+                    </button>
+                  </div>
+                  {loadingGenreGames ? (
+                    <div className="flex gap-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="w-32 h-20 bg-[#333] rounded-lg animate-pulse" />
+                      ))}
+                    </div>
+                  ) : genreGames.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {genreGames.map((game) => (
+                        <Link
+                          key={game.id}
+                          to={`/game/${game.id}`}
+                          className="bg-[#242424] rounded-lg overflow-hidden hover:ring-1 hover:ring-[var(--primary)] transition-all"
+                        >
+                          {game.headerImage ? (
+                            <img src={game.headerImage} alt={game.name} className="w-full aspect-video object-cover" />
+                          ) : (
+                            <div className="w-full aspect-video bg-[#333] flex items-center justify-center">
+                              <i className="fa-solid fa-gamepad text-gray-500" />
+                            </div>
+                          )}
+                          <div className="p-2">
+                            <p className="text-xs font-semibold truncate">{game.name}</p>
+                            <p className="text-[10px] text-gray-500">
+                              {game.playtimeMins > 0 ? `${Math.round(game.playtimeMins / 60)}h played` : 'Never played'}
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">No games found for this genre.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Profile Evolution */}
+              {showEvolution && (
+                <div className="mt-6 bg-[#1a1a1a] rounded-xl p-5 border border-purple-500/30">
+                  <h3 className="text-lg font-bold text-white mb-2">{t('profile.profileEvolution')}</h3>
+                  <p className="text-sm text-gray-400 mb-4">{t('profile.profileEvolutionSubtitle')}</p>
+                  {snapshots.length === 0 ? (
+                    <p className="text-sm text-gray-500">{t('profile.noSnapshots')}</p>
+                  ) : (
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {snapshots.map((snapshot) => (
+                        <div key={snapshot.id} className="bg-[#242424] rounded-lg p-4 flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-400 mb-1">
+                              {new Date((snapshot.createdAt ?? 0) * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {snapshot.topGenres.slice(0, 5).map((g) => (
+                                <span key={g.name} className="px-2 py-0.5 bg-[var(--primary)]/20 text-[var(--primary)] rounded text-[10px] font-bold">
+                                  {g.name}: {g.score.toFixed(2)}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="text-right ml-4 shrink-0">
+                            <p className="text-sm font-bold">{snapshot.totalGames} games</p>
+                            <p className="text-xs text-gray-500">{snapshot.totalPlaytimeHours}h</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -332,13 +515,23 @@ export default function Profile() {
                     <p className="text-gray-400 text-sm">{t('profile.aiGamingSummarySubtitle')}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => { refetchDna(); }}
-                  className="flex items-center space-x-2 px-4 py-3 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
-                >
-                  <i className="fa-solid fa-rotate" />
-                  <span>{t('profile.regenerate')}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleShowSummaryHistory}
+                    className="flex items-center space-x-2 px-4 py-3 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
+                  >
+                    <i className="fa-solid fa-clock-rotate-left" />
+                    <span>{t('profile.summaryHistory')}</span>
+                  </button>
+                  <button
+                    onClick={handleGenerateSummary}
+                    disabled={generatingSummary}
+                    className="flex items-center space-x-2 px-4 py-3 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+                  >
+                    <i className={`fa-solid ${generatingSummary ? 'fa-spinner fa-spin' : 'fa-rotate'}`} />
+                    <span>{generatingSummary ? t('profile.generatingSummary') : t('profile.generateNewSummary')}</span>
+                  </button>
+                </div>
               </div>
               <div className="bg-[#242424]/50 rounded-xl p-6">
                 <p className="text-gray-300 leading-relaxed">
@@ -351,6 +544,27 @@ export default function Profile() {
                   )}
                 </p>
               </div>
+
+              {/* Summary History */}
+              {showSummaryHistory && (
+                <div className="mt-6 bg-[#1a1a1a] rounded-xl p-5 border border-[var(--primary)]/20">
+                  <h3 className="text-lg font-bold text-white mb-4">{t('profile.previousSummaries')}</h3>
+                  {summaryHistory.length === 0 ? (
+                    <p className="text-sm text-gray-500">{t('profile.noSummaryHistory')}</p>
+                  ) : (
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {summaryHistory.map((entry) => (
+                        <div key={entry.id} className="bg-[#242424] rounded-lg p-4">
+                          <p className="text-xs text-gray-400 mb-2">
+                            {new Date((entry.createdAt ?? 0) * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                          </p>
+                          <p className="text-sm text-gray-300 leading-relaxed">{entry.summary}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

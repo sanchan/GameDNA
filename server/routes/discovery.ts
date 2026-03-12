@@ -208,6 +208,49 @@ discovery.post('/swipe', async (c) => {
   return c.json({ success: true });
 });
 
+// POST /api/discovery/undo — undo the last swipe
+discovery.post('/undo', async (c) => {
+  const session = requireAuth(c);
+  if (!session) return c.json({ error: 'Unauthorized' }, 401);
+
+  const { userId } = session;
+
+  // Find the most recent swipe
+  const lastSwipe = db
+    .select({
+      id: swipe_history.id,
+      game_id: swipe_history.game_id,
+      decision: swipe_history.decision,
+    })
+    .from(swipe_history)
+    .where(eq(swipe_history.user_id, userId))
+    .orderBy(desc(swipe_history.swiped_at))
+    .limit(1)
+    .get();
+
+  if (!lastSwipe) {
+    return c.json({ error: 'No swipes to undo' }, 404);
+  }
+
+  // Get game details before deleting
+  const game = db.select().from(games).where(eq(games.id, lastSwipe.game_id)).get();
+
+  // Delete the swipe
+  db.delete(swipe_history).where(eq(swipe_history.id, lastSwipe.id)).run();
+
+  // Recalculate taste profile
+  recalculateTasteProfile(userId).catch(() => {});
+
+  return c.json({
+    success: true,
+    undone: {
+      gameId: lastSwipe.game_id,
+      decision: lastSwipe.decision,
+      game: game ? dbGameToGame(game) : null,
+    },
+  });
+});
+
 // POST /api/discovery/load-more — fetch more games from Steam into the catalog
 discovery.post('/load-more', async (c) => {
   const session = requireAuth(c);

@@ -33,11 +33,27 @@ export default function GameGrid({ games, onExplain, onDismiss, dismissedIds }: 
 
         return (
           <div key={rec.id} className="flex flex-col">
-            <GameCard
-              game={rec.game}
-              score={rec.score * 100}
-              className="cursor-pointer"
-            />
+            <div className="relative">
+              <GameCard
+                game={rec.game}
+                score={rec.score * 100}
+                className="cursor-pointer"
+              />
+              {/* Confidence indicator badge */}
+              <div className="absolute top-3 right-3 z-10">
+                {rec.source === 'ai' ? (
+                  <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-purple-500/30 text-purple-300 backdrop-blur-sm flex items-center gap-1">
+                    <i className="fa-solid fa-brain text-[8px]" />
+                    {t('recommendations.sourceAI')}
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-blue-500/30 text-blue-300 backdrop-blur-sm flex items-center gap-1">
+                    <i className="fa-solid fa-chart-simple text-[8px]" />
+                    {t('recommendations.sourceHeuristic')}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="flex items-center justify-between mt-3 px-6">
               {onExplain && (
                 <button

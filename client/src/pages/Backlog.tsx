@@ -11,6 +11,8 @@ interface BacklogEntry {
   game: Game;
   playtimeMins: number;
   fromWishlist: boolean;
+  estimatedHours?: number;
+  manualPosition?: number | null;
 }
 
 interface PrioritizedEntry extends BacklogEntry {
@@ -103,6 +105,15 @@ export default function Backlog() {
       toast('AI analysis failed. Is Ollama running?', 'error');
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const handleReorder = async (gameId: number, direction: 'up' | 'down') => {
+    try {
+      await api.post('/backlog/reorder', { gameId, direction });
+      fetchBacklog();
+    } catch {
+      toast('Failed to reorder', 'error');
     }
   };
 
@@ -442,6 +453,15 @@ export default function Backlog() {
                           <p className="text-3xl font-black text-white mb-1">{formatPlaytimeShort(entry.playtimeMins)}</p>
                           <p className="text-xs text-[var(--muted-foreground)]">{t('backlog.estPlaytime')}</p>
                         </div>
+                        {entry.estimatedHours && (
+                          <>
+                            <div className="w-px h-16 bg-[#333]" />
+                            <div className="text-center">
+                              <p className="text-2xl font-black text-purple-400 mb-1">{entry.estimatedHours}h</p>
+                              <p className="text-xs text-[var(--muted-foreground)]">Est. Total</p>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -495,6 +515,22 @@ export default function Backlog() {
                         <i className={`fa-solid ${markingPlayedId === entry.game.id ? 'fa-spinner fa-spin' : 'fa-check'}`} />
                         {t('backlog.markAsPlayed')}
                       </button>
+                      <div className="flex items-center gap-1 ml-auto">
+                        <button
+                          onClick={() => handleReorder(entry.game.id, 'up')}
+                          className="w-8 h-8 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg flex items-center justify-center transition-all"
+                          title={t('backlog.moveUp')}
+                        >
+                          <i className="fa-solid fa-chevron-up text-xs text-gray-400" />
+                        </button>
+                        <button
+                          onClick={() => handleReorder(entry.game.id, 'down')}
+                          className="w-8 h-8 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg flex items-center justify-center transition-all"
+                          title={t('backlog.moveDown')}
+                        >
+                          <i className="fa-solid fa-chevron-down text-xs text-gray-400" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

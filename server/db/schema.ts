@@ -74,6 +74,7 @@ export const recommendations = sqliteTable('recommendations', {
   ai_explanation: text('ai_explanation'),
   generated_at: integer('generated_at'),
   dismissed: integer('dismissed').default(0),
+  source: text('source').default('heuristic'), // 'ai' or 'heuristic'
 }, (table) => [
   uniqueIndex('rec_user_game_idx').on(table.user_id, table.game_id),
   index('recommendations_user_score_idx').on(table.user_id, table.score),
@@ -100,3 +101,32 @@ export const sync_states = sqliteTable('sync_states', {
   started_at: integer('started_at'),
   completed_at: integer('completed_at'),
 });
+
+export const profile_snapshots = sqliteTable('profile_snapshots', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  user_id: integer('user_id').references(() => users.id).notNull(),
+  genre_scores: text('genre_scores'), // JSON
+  tag_scores: text('tag_scores'), // JSON
+  total_games: integer('total_games').default(0),
+  total_playtime_hours: integer('total_playtime_hours').default(0),
+  created_at: integer('created_at').default(sql`(unixepoch())`),
+}, (table) => [
+  index('profile_snapshots_user_idx').on(table.user_id),
+]);
+
+export const ai_summary_history = sqliteTable('ai_summary_history', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  user_id: integer('user_id').references(() => users.id).notNull(),
+  summary: text('summary').notNull(),
+  created_at: integer('created_at').default(sql`(unixepoch())`),
+}, (table) => [
+  index('ai_summary_history_user_idx').on(table.user_id),
+]);
+
+export const backlog_order = sqliteTable('backlog_order', {
+  user_id: integer('user_id').references(() => users.id).notNull(),
+  game_id: integer('game_id').references(() => games.id).notNull(),
+  position: integer('position').notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.user_id, table.game_id] }),
+]);

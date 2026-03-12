@@ -9,9 +9,10 @@ import {
 
 interface RadarChartProps {
   data: { name: string; score: number }[];
+  onGenreClick?: (genre: string) => void;
 }
 
-export default function RadarChart({ data }: RadarChartProps) {
+export default function RadarChart({ data, onGenreClick }: RadarChartProps) {
   const maxScore = Math.max(...data.map((d) => d.score), 1);
 
   return (
@@ -20,7 +21,26 @@ export default function RadarChart({ data }: RadarChartProps) {
         <PolarGrid stroke="#334155" />
         <PolarAngleAxis
           dataKey="name"
-          tick={{ fill: '#94a3b8', fontSize: 12 }}
+          tick={(props: any) => {
+            const { x, y, payload } = props;
+            return (
+              <g
+                onClick={() => onGenreClick?.(payload.value)}
+                style={{ cursor: onGenreClick ? 'pointer' : 'default' }}
+              >
+                <text
+                  x={x}
+                  y={y}
+                  fill={onGenreClick ? '#818cf8' : '#94a3b8'}
+                  fontSize={12}
+                  textAnchor={props.textAnchor}
+                  dominantBaseline="central"
+                >
+                  {payload.value}
+                </text>
+              </g>
+            );
+          }}
         />
         <PolarRadiusAxis domain={[0, maxScore]} tick={false} axisLine={false} />
         <Radar

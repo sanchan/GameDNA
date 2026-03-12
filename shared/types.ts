@@ -39,6 +39,22 @@ export interface Recommendation {
   score: number;
   aiExplanation: string | null;
   generatedAt: number;
+  source: 'ai' | 'heuristic';
+}
+
+export interface ProfileSnapshot {
+  id: number;
+  topGenres: { name: string; score: number }[];
+  topTags: { name: string; score: number }[];
+  totalGames: number;
+  totalPlaytimeHours: number;
+  createdAt: number;
+}
+
+export interface AiSummaryEntry {
+  id: number;
+  summary: string;
+  createdAt: number;
 }
 
 export interface SwipeRecord {

@@ -165,4 +165,48 @@ history.delete('/:id', async (c) => {
   return c.json({ success: true });
 });
 
+// GET /api/history/stats — temporal swipe statistics (daily counts for last 30 days)
+history.get('/stats', async (c) => {
+  const userId = c.get('userId');
+
+  const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 30 * 86400;
+
+  const rows = db
+    .select({
+      day: sql<string>`date(${swipe_history.swiped_at}, 'unixepoch')`,
+      decision: swipe_history.decision,
+      count: sql<number>`count(*)`,
+    })
+    .from(swipe_history)
+    .where(and(
+      eq(swipe_history.user_id, userId),
+      gte(swipe_history.swiped_at, thirtyDaysAgo),
+    ))
+    .groupBy(sql`date(${swipe_history.swiped_at}, 'unixepoch')`, swipe_history.decision)
+    .all();
+
+  // Build daily stats map
+  const dailyStats: Record<string, { yes: number; no: number; maybe: number }> = {};
+  for (const row of rows) {
+    if (!dailyStats[row.day]) {
+      dailyStats[row.day] = { yes: 0, no: 0, maybe: 0 };
+    }
+    const decision = row.decision as 'yes' | 'no' | 'maybe';
+    dailyStats[row.day][decision] = row.count;
+  }
+
+  // Fill in missing days
+  const result: { date: string; yes: number; no: number; maybe: number; total: number }[] = [];
+  const now = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const stats = dailyStats[dateStr] ?? { yes: 0, no: 0, maybe: 0 };
+    result.push({ date: dateStr, ...stats, total: stats.yes + stats.no + stats.maybe });
+  }
+
+  return c.json(result);
+});
+
 export default history;
