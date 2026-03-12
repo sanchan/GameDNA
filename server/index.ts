@@ -11,6 +11,16 @@ import backlogRoutes from './routes/backlog';
 import recommendationRoutes from './routes/recommendations';
 import historyRoutes from './routes/history';
 import listsRoutes from './routes/lists';
+import collectionsRoutes from './routes/collections';
+import notesRoutes from './routes/notes';
+import gameStatusRoutes from './routes/game-status';
+import settingsRoutes from './routes/settings';
+import chatRoutes from './routes/chat';
+import statsRoutes from './routes/stats';
+import dealsRoutes from './routes/deals';
+import similarRoutes from './routes/similar';
+import blacklistRoutes from './routes/blacklist';
+import aiFeaturesRoutes from './routes/ai-features';
 import { recacheGamesWithoutCurrency } from './services/game-cache';
 import { startSessionCleanup } from './lib/session';
 import { cleanupSyncStates } from './services/sync-manager';
@@ -52,6 +62,18 @@ app.route('/api/history', historyRoutes);
 
 // Lists routes (library, bookmarks, wishlist)
 app.route('/api/lists', listsRoutes);
+
+// Phase 4 routes
+app.route('/api/collections', collectionsRoutes);
+app.route('/api/notes', notesRoutes);
+app.route('/api/game-status', gameStatusRoutes);
+app.route('/api/settings', settingsRoutes);
+app.route('/api/chat', chatRoutes);
+app.route('/api/stats', statsRoutes);
+app.route('/api/deals', dealsRoutes);
+app.route('/api/similar', similarRoutes);
+app.route('/api/blacklist', blacklistRoutes);
+app.route('/api/ai', aiFeaturesRoutes);
 
 // Serve design files statically
 app.use('/designs/*', serveStatic({ root: './' }));

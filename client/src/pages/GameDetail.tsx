@@ -6,8 +6,9 @@ import i18n from '../i18n';
 import { useAuth } from '../hooks/use-auth';
 import { api } from '../lib/api';
 import { useBookmarks } from '../hooks/use-bookmarks';
+import { useToast } from '../components/Toast';
 import MediaGallery from '../components/MediaGallery';
-import type { Game, SwipeDecision } from '../../../shared/types';
+import type { Game, SwipeDecision, GameStatusType, GameNote, Collection } from '../../../shared/types';
 
 interface MediaItem {
   type: 'image' | 'video';
@@ -95,6 +96,28 @@ export default function GameDetail() {
   const [error, setError] = useState<string | null>(null);
   const [swiped, setSwiped] = useState<SwipeDecision | null>(null);
   const [swiping, setSwiping] = useState(false);
+  const { toast } = useToast();
+
+  // Similar games
+  const [similarGames, setSimilarGames] = useState<{ game: Game; similarity: number }[]>([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
+
+  // Personal notes
+  const [note, setNote] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteLoaded, setNoteLoaded] = useState(false);
+
+  // Game status
+  const [gameStatus, setGameStatus] = useState<GameStatusType | null>(null);
+  const [statusLoaded, setStatusLoaded] = useState(false);
+
+  // AI review summary
+  const [reviewSummary, setReviewSummary] = useState<string | null>(null);
+  const [loadingReviewSummary, setLoadingReviewSummary] = useState(false);
+
+  // Collections
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [showCollections, setShowCollections] = useState(false);
 
   // Media state
   const [mediaItems, setMediaItems] = useState<MediaItem[] | null>(null);
@@ -149,6 +172,76 @@ export default function GameDetail() {
       loadMedia();
     }
   }, [game, mediaItems, mediaLoading, loadMedia]);
+
+  // Load similar games
+  useEffect(() => {
+    if (!game || !user) return;
+    setLoadingSimilar(true);
+    api.get<{ game: Game; similarity: number }[]>(`/similar/${game.id}`)
+      .then(setSimilarGames)
+      .catch(() => {})
+      .finally(() => setLoadingSimilar(false));
+  }, [game?.id, user]);
+
+  // Load personal note
+  useEffect(() => {
+    if (!game || !user) return;
+    api.get<{ content: string }>(`/notes/${game.id}`)
+      .then((data) => { setNote(data.content || ''); setNoteLoaded(true); })
+      .catch(() => setNoteLoaded(true));
+  }, [game?.id, user]);
+
+  // Load game status
+  useEffect(() => {
+    if (!game || !user) return;
+    api.get<{ status: GameStatusType | null }>(`/game-status/${game.id}`)
+      .then((data) => { setGameStatus(data.status); setStatusLoaded(true); })
+      .catch(() => setStatusLoaded(true));
+  }, [game?.id, user]);
+
+  // Load collections
+  useEffect(() => {
+    if (!user) return;
+    api.get<Collection[]>('/collections').then(setCollections).catch(() => {});
+  }, [user]);
+
+  const handleSaveNote = useCallback(async () => {
+    if (!game) return;
+    setNoteSaving(true);
+    try {
+      await api.put(`/notes/${game.id}`, { content: note });
+      toast('Note saved', 'success');
+    } catch { toast('Failed to save note', 'error'); }
+    finally { setNoteSaving(false); }
+  }, [game, note, toast]);
+
+  const handleSetStatus = useCallback(async (status: GameStatusType | null) => {
+    if (!game) return;
+    try {
+      await api.put(`/game-status/${game.id}`, { status });
+      setGameStatus(status);
+      toast(status ? `Marked as ${status.replace('_', ' ')}` : 'Status cleared', 'success');
+    } catch { toast('Failed to update status', 'error'); }
+  }, [game, toast]);
+
+  const handleLoadReviewSummary = useCallback(async () => {
+    if (!game) return;
+    setLoadingReviewSummary(true);
+    try {
+      const data = await api.post<{ summary: string }>(`/ai/summarize-reviews/${game.id}`);
+      setReviewSummary(data.summary);
+    } catch { setReviewSummary('AI review summary not available.'); }
+    finally { setLoadingReviewSummary(false); }
+  }, [game]);
+
+  const handleAddToCollection = useCallback(async (collectionId: number) => {
+    if (!game) return;
+    try {
+      await api.post(`/collections/${collectionId}/games`, { gameId: game.id });
+      toast('Added to collection', 'success');
+      setShowCollections(false);
+    } catch { toast('Failed to add to collection', 'error'); }
+  }, [game, toast]);
 
   const handleSwipe = async (decision: SwipeDecision) => {
     if (!game || swiping) return;
@@ -335,6 +428,51 @@ export default function GameDetail() {
                 <i className="fa-brands fa-steam" />
                 {t('common.openInSteam')}
               </a>
+
+              {/* Game Status Dropdown */}
+              {user && statusLoaded && (
+                <div className="relative">
+                  <select
+                    value={gameStatus || ''}
+                    onChange={(e) => handleSetStatus(e.target.value as GameStatusType || null)}
+                    className="appearance-none bg-[#1a1a1a] border border-[#444] text-gray-300 px-4 py-2.5 pr-8 rounded-xl text-sm font-medium cursor-pointer focus:outline-none focus:border-[var(--primary)]"
+                  >
+                    <option value="">Set Status...</option>
+                    <option value="playing">Playing</option>
+                    <option value="completed">Completed</option>
+                    <option value="plan_to_play">Plan to Play</option>
+                    <option value="abandoned">Abandoned</option>
+                  </select>
+                  <i className="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none" />
+                </div>
+              )}
+
+              {/* Add to Collection */}
+              {user && collections.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowCollections(!showCollections)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#444] text-gray-300 hover:bg-[#333] hover:text-white transition-colors text-sm font-medium"
+                  >
+                    <i className="fa-solid fa-folder-plus" />
+                    Collection
+                  </button>
+                  {showCollections && (
+                    <div className="absolute top-full mt-1 right-0 bg-[#242424] border border-[#333] rounded-xl shadow-xl z-30 min-w-[180px]">
+                      {collections.map((col) => (
+                        <button
+                          key={col.id}
+                          onClick={() => handleAddToCollection(col.id)}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-[#333] hover:text-white transition-colors first:rounded-t-xl last:rounded-b-xl"
+                        >
+                          <i className={`fa-solid ${col.icon} mr-2`} style={{ color: col.color }} />
+                          {col.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right: decision buttons */}
@@ -456,7 +594,7 @@ export default function GameDetail() {
                     <p className="text-white font-semibold mb-1">{reviewLabel(game.reviewScore)}</p>
                     {game.reviewCount !== null && (
                       <p className="text-sm text-gray-400 mb-3">
-                        {t('gameDetail.basedOnReviews', { count: game.reviewCount.toLocaleString() })}
+                        {t('gameDetail.basedOnReviews', { count: game.reviewCount })}
                       </p>
                     )}
 
@@ -508,6 +646,81 @@ export default function GameDetail() {
                   {t('gameDetail.aboutThisGame')}
                 </h2>
                 <p className="text-gray-300 leading-relaxed">{game.shortDesc}</p>
+              </div>
+            )}
+
+            {/* AI Review Summary */}
+            {user && (
+              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-white">
+                    <i className="fa-solid fa-brain mr-2 text-purple-400" />
+                    AI Review Summary
+                  </h2>
+                  {!reviewSummary && (
+                    <button
+                      onClick={handleLoadReviewSummary}
+                      disabled={loadingReviewSummary}
+                      className="text-xs px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition-colors disabled:opacity-50"
+                    >
+                      {loadingReviewSummary ? 'Analyzing...' : 'Summarize Reviews'}
+                    </button>
+                  )}
+                </div>
+                {reviewSummary ? (
+                  <p className="text-sm text-gray-300 leading-relaxed">{reviewSummary}</p>
+                ) : (
+                  <p className="text-sm text-gray-500">Click "Summarize Reviews" to get an AI-powered summary of what players say about this game.</p>
+                )}
+              </div>
+            )}
+
+            {/* Similar Games */}
+            {similarGames.length > 0 && (
+              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+                <h2 className="text-lg font-bold text-white mb-4">
+                  <i className="fa-solid fa-shuffle mr-2 text-blue-400" />
+                  Similar Games
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {similarGames.slice(0, 6).map((item) => (
+                    <Link key={item.game.id} to={`/game/${item.game.id}`} className="group">
+                      <div className="aspect-video rounded-lg overflow-hidden mb-2">
+                        {item.game.headerImage ? (
+                          <img src={item.game.headerImage} alt={item.game.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        ) : (
+                          <div className="w-full h-full bg-[#333] flex items-center justify-center"><i className="fa-solid fa-gamepad text-gray-500" /></div>
+                        )}
+                      </div>
+                      <p className="text-xs font-semibold truncate">{item.game.name}</p>
+                      <p className="text-[10px] text-[var(--primary)]">{item.similarity}% similar</p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Personal Note */}
+            {user && noteLoaded && (
+              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+                <h2 className="text-lg font-bold text-white mb-4">
+                  <i className="fa-solid fa-sticky-note mr-2 text-amber-400" />
+                  Personal Notes
+                </h2>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Add personal notes about this game..."
+                  rows={3}
+                  className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)] resize-none mb-3"
+                />
+                <button
+                  onClick={handleSaveNote}
+                  disabled={noteSaving}
+                  className="text-xs px-3 py-1.5 bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+                >
+                  {noteSaving ? 'Saving...' : 'Save Note'}
+                </button>
               </div>
             )}
           </div>

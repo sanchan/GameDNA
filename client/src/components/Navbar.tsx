@@ -15,7 +15,10 @@ export default function Navbar() {
     { to: '/lists', label: t('nav.myLists') },
     { to: '/history', label: t('nav.history') },
     { to: '/backlog', label: t('nav.backlog') },
+    { to: '/chat', label: t('nav.chat') },
+    { to: '/stats', label: t('nav.stats') },
     { to: '/profile', label: t('nav.profile') },
+    { to: '/settings', label: t('nav.settings') },
   ];
 
   return (

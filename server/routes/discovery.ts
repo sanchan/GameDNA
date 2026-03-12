@@ -1,13 +1,14 @@
 import { Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
-import { eq, and, notInArray, desc, gte, lte, like, sql } from 'drizzle-orm';
+import { eq, and, notInArray, desc, gte, lte, like, sql, asc } from 'drizzle-orm';
 import { getSession } from '../lib/session';
 import { db } from '../db';
-import { games, swipe_history, user_games, taste_profiles, users } from '../db/schema';
+import { games, swipe_history, user_games, taste_profiles, users, publisher_blacklist } from '../db/schema';
 import { recalculateTasteProfile } from '../services/taste-profile';
 import { fetchMoreGameIds } from '../services/steam-api';
 import { ensureGamesCached } from '../services/game-cache';
-import type { Game } from '../../shared/types';
+import { config } from '../config';
+import type { Game, DiscoveryMode } from '../../shared/types';
 
 const discovery = new Hono();
 
@@ -47,6 +48,8 @@ discovery.get('/queue', async (c) => {
   const maxPrice = c.req.query('maxPrice');
   const minReviewScore = c.req.query('minReviewScore');
   const genresParam = c.req.query('genres');
+  const mode = (c.req.query('mode') || 'default') as DiscoveryMode;
+  const maxHours = c.req.query('maxHours'); // Discovery by available time
 
   // Get IDs already swiped
   const swipedRows = db
@@ -65,6 +68,15 @@ discovery.get('/queue', async (c) => {
   const ownedIds = ownedRows.map((r) => r.gameId!);
 
   const excludeIds = [...new Set([...swipedIds, ...ownedIds])];
+
+  // Get publisher blacklist
+  const blacklistedRows = db
+    .select({ name: publisher_blacklist.name, type: publisher_blacklist.type })
+    .from(publisher_blacklist)
+    .where(eq(publisher_blacklist.user_id, userId))
+    .all();
+  const blacklistedPublishers = new Set(blacklistedRows.filter((r) => r.type === 'publisher').map((r) => r.name.toLowerCase()));
+  const blacklistedDevelopers = new Set(blacklistedRows.filter((r) => r.type === 'developer').map((r) => r.name.toLowerCase()));
 
   // Build conditions
   const conditions: any[] = [];
@@ -87,6 +99,24 @@ discovery.get('/queue', async (c) => {
     for (const genre of genreList) {
       conditions.push(like(games.genres, `%${genre}%`));
     }
+  }
+
+  // Discovery mode-specific conditions
+  if (mode === 'hidden_gems') {
+    // High review score, low review count
+    conditions.push(gte(games.review_score, 80));
+    conditions.push(lte(games.review_count, 5000));
+  } else if (mode === 'new_releases') {
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    conditions.push(gte(games.release_date, oneYearAgo.getFullYear().toString()));
+  }
+
+  // Time-based filtering
+  if (maxHours) {
+    const maxMins = Number(maxHours) * 60;
+    // Filter to games in genres with estimated playtime <= maxHours
+    // We'll filter post-query since estimated playtime is computed
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -134,12 +164,31 @@ discovery.get('/queue', async (c) => {
     return c.json(rows.map((r) => ({ game: dbGameToGame(r), score: 0 })));
   }
 
-  // Score each game by taste match
-  const scored = rows.map((game) => {
+  // Score each game by taste match, filtering out blacklisted publishers/developers
+  const scored = rows
+    .filter((game) => {
+      // Filter blacklisted publishers/developers
+      const pubs: string[] = game.publishers ? JSON.parse(game.publishers) : [];
+      const devs: string[] = game.developers ? JSON.parse(game.developers) : [];
+      if (pubs.some((p) => blacklistedPublishers.has(p.toLowerCase()))) return false;
+      if (devs.some((d) => blacklistedDevelopers.has(d.toLowerCase()))) return false;
+
+      // Time-based filter
+      if (maxHours) {
+        const gameGenres: string[] = game.genres ? JSON.parse(game.genres) : [];
+        const estHours = gameGenres.reduce<number>((min, g) => {
+          const est = (config.estimatedPlaytimeByGenre as Record<string, number>)[g.toLowerCase()];
+          return est ? Math.min(min, est) : min;
+        }, config.estimatedPlaytimeDefault as number);
+        if (estHours > Number(maxHours)) return false;
+      }
+      return true;
+    })
+    .map((game) => {
     const gameGenres: string[] = game.genres ? JSON.parse(game.genres) : [];
     const gameTags: string[] = game.tags ? JSON.parse(game.tags) : [];
 
-    const genreMatch = gameGenres.filter((g) => topGenres.has(g.toLowerCase())).length / Math.max(topGenres.size, 1);
+    let genreMatch = gameGenres.filter((g) => topGenres.has(g.toLowerCase())).length / Math.max(topGenres.size, 1);
     const tagMatch = gameTags.filter((t) => topTags.has(t.toLowerCase())).length / Math.max(topTags.size, 1);
     const reviewNorm = (game.review_score ?? 50) / 100;
 
@@ -152,6 +201,15 @@ discovery.get('/queue', async (c) => {
         const age = currentYear - releaseYear;
         recency = Math.max(0, 1 - age / 10);
       }
+    }
+
+    // Mode-specific scoring adjustments
+    if (mode === 'contrarian') {
+      // Prefer genres the user doesn't usually play
+      genreMatch = 1 - genreMatch;
+    } else if (mode === 'genre_deep_dive' && genresParam) {
+      // Boost genre match heavily
+      genreMatch *= 2;
     }
 
     const score = 0.4 * genreMatch + 0.3 * tagMatch + 0.2 * reviewNorm + 0.1 * recency;

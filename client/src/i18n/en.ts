@@ -46,7 +46,10 @@ const en = {
     myLists: 'My Lists',
     history: 'History',
     backlog: 'Backlog',
+    chat: 'Chat',
+    stats: 'Stats',
     profile: 'Profile',
+    settings: 'Settings',
   },
 
   // Landing page

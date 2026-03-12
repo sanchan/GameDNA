@@ -3,19 +3,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { useAuth } from './use-auth';
 import { useToast } from '../components/Toast';
-import type { Game, SwipeDecision, DiscoveryFilters } from '../../../shared/types';
+import type { Game, SwipeDecision, DiscoveryFilters, DiscoveryMode } from '../../../shared/types';
 
 interface ScoredGame {
   game: Game;
   score: number;
 }
 
-function buildQueryString(filters: DiscoveryFilters): string {
+function buildQueryString(filters: DiscoveryFilters, mode?: DiscoveryMode, maxHours?: number): string {
   const params = new URLSearchParams();
   if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
   if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
   if (filters.minReviewScore !== undefined) params.set('minReviewScore', String(filters.minReviewScore));
   if (filters.genres && filters.genres.length > 0) params.set('genres', filters.genres.join(','));
+  if (mode && mode !== 'default') params.set('mode', mode);
+  if (maxHours) params.set('maxHours', String(maxHours));
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 }
@@ -31,6 +33,8 @@ export function useDiscovery() {
   const { syncStatus } = useAuth();
   const { toast } = useToast();
   const [filters, setFilters] = useState<DiscoveryFilters>({});
+  const [discoveryMode, setDiscoveryMode] = useState<DiscoveryMode>('default');
+  const [maxHours, setMaxHours] = useState<number | undefined>(undefined);
   const [queue, setQueue] = useState<ScoredGame[]>([]);
   const [swipedCount, setSwipedCount] = useState(0);
   const [totalLoaded, setTotalLoaded] = useState(0);
@@ -39,8 +43,8 @@ export function useDiscovery() {
   const prevSyncStatus = useRef(syncStatus);
 
   const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
-    queryKey: ['discovery-queue', filters],
-    queryFn: () => api.get<ScoredGame[]>(`/discovery/queue${buildQueryString(filters)}`),
+    queryKey: ['discovery-queue', filters, discoveryMode, maxHours],
+    queryFn: () => api.get<ScoredGame[]>(`/discovery/queue${buildQueryString(filters, discoveryMode, maxHours)}`),
     staleTime: 0,
   });
 
@@ -156,5 +160,9 @@ export function useDiscovery() {
     refetchQueue,
     swipedCount,
     totalLoaded,
+    discoveryMode,
+    setDiscoveryMode,
+    maxHours,
+    setMaxHours,
   };
 }
