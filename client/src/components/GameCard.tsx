@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -51,6 +51,16 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
   const [currentIndex, setCurrentIndex] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [matchExplainerOpen, setMatchExplainerOpen] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [descClamped, setDescClamped] = useState(false);
+  const descRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = descRef.current;
+    if (el) {
+      setDescClamped(el.scrollHeight > el.clientHeight);
+    }
+  }, [game.shortDesc]);
 
   const price = formatPrice(game.priceCents, game.priceCurrency);
   const year = extractYear(game.releaseDate);
@@ -279,9 +289,22 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
 
         {/* Description */}
         {game.shortDesc && (
-          <p className="text-sm text-[var(--muted-foreground)] leading-relaxed line-clamp-2">
-            {game.shortDesc}
-          </p>
+          <div>
+            <p
+              ref={descRef}
+              className={`text-sm text-[var(--muted-foreground)] leading-relaxed ${descExpanded ? '' : 'line-clamp-2'}`}
+            >
+              {game.shortDesc}
+            </p>
+            {descClamped && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setDescExpanded((prev) => !prev); }}
+                className="text-xs text-[var(--primary)] hover:text-[var(--primary)]/80 mt-1 cursor-pointer"
+              >
+                {descExpanded ? t('common.readLess') : t('common.readMore')}
+              </button>
+            )}
+          </div>
         )}
       </div>
 

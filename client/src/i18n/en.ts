@@ -24,6 +24,8 @@ const en = {
     match: '{{score}}% Match',
     prev: 'Prev',
     next: 'Next',
+    readMore: 'Read more',
+    readLess: 'Read less',
     pageOf: 'Page {{current}} of {{total}}',
     results: '{{count}} result',
     results_other: '{{count}} results',
