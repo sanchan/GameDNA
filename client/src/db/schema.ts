@@ -222,7 +222,7 @@ CREATE TABLE IF NOT EXISTS local_config (
   avatar_url TEXT,
   profile_url TEXT,
   country_code TEXT,
-  ai_provider TEXT DEFAULT 'ollama',
+  ai_provider TEXT DEFAULT 'webllm',
   ollama_url TEXT DEFAULT 'http://localhost:11434',
   ollama_model TEXT DEFAULT 'llama3.1:8b',
   webllm_model TEXT DEFAULT 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
