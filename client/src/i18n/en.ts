@@ -34,6 +34,9 @@ const en = {
     syncLibrary: 'Sync Library',
     syncing: 'Syncing...',
     active: 'Active',
+    apiQuota: 'Steam API Quota',
+    apiCalls: '{{used}} / {{total}} calls',
+    apiQuotaResetsAt: 'Resets at midnight',
   },
 
   // Brand
