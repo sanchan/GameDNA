@@ -237,7 +237,7 @@ export function ensureUser(steamId: string, displayName?: string, avatarUrl?: st
 
   getDb().run(
     'INSERT INTO users (steam_id, display_name, avatar_url, profile_url, country_code, last_login, blacklisted_tags) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [steamId, displayName ?? null, avatarUrl ?? null, profileUrl ?? null, countryCode ?? null, nowUnix(), JSON.stringify(DEFAULT_IGNORED_TAGS)] as any[],
+    [steamId, displayName ?? null, avatarUrl ?? null, profileUrl ?? null, countryCode ?? null, nowUnix(), JSON.stringify(DEFAULT_BLACKLISTED_TAGS)] as any[],
   );
   persistDb();
   const row = get<{ id: number }>('SELECT id FROM users WHERE steam_id = ?', [steamId]);
@@ -1096,7 +1096,7 @@ export function getGamingDNA(userId: number): GamingDNA {
     }
   }
 
-  const allTagNames = new Set([...Object.keys(tagScores), ...Object.keys(tagCounts)]);
+  const allTagNames = new Set([...Object.keys(tagScores), ...Object.keys(tagCounts), ...blacklistedTags]);
   const allTags = Array.from(allTagNames)
     .map((name) => ({ name, score: tagScores[name] ?? 0, blacklisted: blacklistSet.has(name.toLowerCase()), count: tagCounts[name] || 0 }))
     .sort((a, b) => b.count - a.count || b.score - a.score);
