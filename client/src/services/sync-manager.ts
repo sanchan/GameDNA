@@ -2,7 +2,7 @@
 // Runs entirely in the browser with progress callbacks.
 
 import * as db from '../db/queries';
-import { getOwnedGames, getWishlist, getPopularGameIds } from './steam-api';
+import { getOwnedGames, getWishlist, getPopularGameIds, getSteamTags } from './steam-api';
 import { ensureGamesCached, forceRefreshGames } from './game-cache';
 import { recalculateTasteProfile } from './taste-profile';
 import { generateRecommendations } from './recommendation';
@@ -244,10 +244,20 @@ export async function runSync(
   // --- Tags (tag catalog + taste profile + recommendations) ---
   if (has('tags')) {
     try {
-      cats.tags = { status: 'syncing', progress: 5, detail: 'Building tag catalog...' };
+      cats.tags = { status: 'syncing', progress: 5, detail: 'Fetching Steam tags...' };
       onProgress(deriveOverall(cats, gamesCount, wishlistCount));
 
-      try { db.rebuildTagCatalog(); } catch (e) {
+      let steamTags: { name: string }[] = [];
+      try {
+        steamTags = await getSteamTags();
+      } catch (e) {
+        console.error('[sync] Steam tags fetch error:', e);
+      }
+
+      cats.tags = { status: 'syncing', progress: 10, detail: 'Building tag catalog...' };
+      onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+
+      try { db.rebuildTagCatalog(steamTags); } catch (e) {
         console.error('[sync] tag catalog error:', e);
       }
 

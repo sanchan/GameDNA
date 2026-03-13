@@ -292,6 +292,26 @@ export async function fetchMoreGameIds(exclude: Set<number>): Promise<number[]> 
   return [...ids];
 }
 
+/** Fetch all Steam community tags via the tagdata/populartags endpoint. */
+export async function getSteamTags(): Promise<{ tagid: number; name: string }[]> {
+  try {
+    await storeApiLimiter.acquire();
+    if (!checkDailyLimit()) throw new Error('Steam API daily limit reached');
+    const res = await fetch(`${PROXY_BASE}/tagdata/populartags/english`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    // Response is an array of { tagid, name } objects
+    if (Array.isArray(data)) {
+      return data.filter((t: unknown) => t && typeof t === 'object' && 'name' in (t as Record<string, unknown>))
+        .map((t: { tagid: number; name: string }) => ({ tagid: t.tagid, name: t.name }));
+    }
+    return [];
+  } catch (e) {
+    console.error('[steam-api] getSteamTags error:', e);
+    return [];
+  }
+}
+
 export async function getPlayerSummary(steamId: string, apiKey: string): Promise<PlayerSummary | null> {
   try {
     await webApiLimiter.acquire();
