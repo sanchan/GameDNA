@@ -18,6 +18,11 @@ const SWIPE_LABELS: Record<SwipeDecision, string> = {
   maybe: 'Saved for later',
 };
 
+// Persist queue state across remounts (e.g. navigating to GameDetail and back)
+let cachedQueue: ScoredGame[] = [];
+let cachedSwipedCount = 0;
+let cachedTotalLoaded = 0;
+
 export function useDiscovery() {
   const queryClient = useQueryClient();
   const { syncStatus } = useAuth();
@@ -26,12 +31,17 @@ export function useDiscovery() {
   const [filters, setFilters] = useState<DiscoveryFilters>({});
   const [discoveryMode, setDiscoveryMode] = useState<DiscoveryMode>('default');
   const [maxHours, setMaxHours] = useState<number | undefined>(undefined);
-  const [queue, setQueue] = useState<ScoredGame[]>([]);
-  const [swipedCount, setSwipedCount] = useState(0);
-  const [totalLoaded, setTotalLoaded] = useState(0);
+  const [queue, setQueue] = useState<ScoredGame[]>(cachedQueue);
+  const [swipedCount, setSwipedCount] = useState(cachedSwipedCount);
+  const [totalLoaded, setTotalLoaded] = useState(cachedTotalLoaded);
   const [animatingOut, setAnimatingOut] = useState<'left' | 'right' | 'down' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const prevSyncStatus = useRef(syncStatus);
+
+  // Keep module-level cache in sync
+  useEffect(() => { cachedQueue = queue; }, [queue]);
+  useEffect(() => { cachedSwipedCount = swipedCount; }, [swipedCount]);
+  useEffect(() => { cachedTotalLoaded = totalLoaded; }, [totalLoaded]);
 
   const fetchQueue = useCallback(() => {
     if (!userId) return;
@@ -53,8 +63,13 @@ export function useDiscovery() {
     }
   }, [userId, filters, discoveryMode, maxHours]);
 
-  // Initial load
+  // Initial load (skip if we have cached games from a previous mount)
+  const skipInitialFetch = useRef(queue.length > 0);
   useEffect(() => {
+    if (skipInitialFetch.current) {
+      skipInitialFetch.current = false;
+      return;
+    }
     if (userId) fetchQueue();
   }, [userId, filters, discoveryMode, maxHours, fetchQueue]);
 
