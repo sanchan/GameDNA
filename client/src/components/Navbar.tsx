@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { useTranslation } from 'react-i18next';
+import { getDailyApiUsage, DAILY_LIMIT } from '../services/steam-api';
 
 const navIcons: Record<string, string> = {
   '/discover': 'fa-solid fa-compass',
@@ -38,6 +39,27 @@ export default function Navbar() {
     { to: '/settings', label: t('nav.settings') },
     { to: '/help', label: t('nav.help') },
   ];
+
+  // API quota tracking — poll every 10s and on route changes
+  const [apiUsage, setApiUsage] = useState(() => getDailyApiUsage());
+
+  const refreshUsage = useCallback(() => setApiUsage(getDailyApiUsage()), []);
+
+  useEffect(() => {
+    refreshUsage();
+    const id = setInterval(refreshUsage, 10_000);
+    // Schedule reset at midnight
+    const now = new Date();
+    const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
+    const midnightTimeout = setTimeout(refreshUsage, msUntilMidnight + 100);
+    return () => { clearInterval(id); clearTimeout(midnightTimeout); };
+  }, [refreshUsage]);
+
+  useEffect(() => { refreshUsage(); }, [location.pathname, refreshUsage]);
+
+  const quotaPercent = Math.min(100, (apiUsage.count / DAILY_LIMIT) * 100);
+  const quotaColor = quotaPercent >= 90 ? 'bg-red-500' : quotaPercent >= 70 ? 'bg-yellow-500' : 'bg-emerald-500';
+  const quotaTextColor = quotaPercent >= 90 ? 'text-red-400' : quotaPercent >= 70 ? 'text-yellow-400' : 'text-[var(--muted-foreground)]';
 
   // Close sidebar on route change
   useEffect(() => {
@@ -108,6 +130,25 @@ export default function Navbar() {
               </div>
             </div>
           )}
+
+          {/* API quota */}
+          <div className="px-4 py-3 border-t border-[#333] shrink-0">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-medium text-[var(--muted-foreground)] uppercase tracking-wider">{t('common.apiQuota')}</span>
+              <span className={`text-[10px] font-medium ${quotaTextColor}`}>
+                {quotaPercent.toFixed(0)}%
+              </span>
+            </div>
+            <div className="w-full h-1.5 bg-[var(--muted)] rounded-full overflow-hidden">
+              <div
+                className={`h-full ${quotaColor} rounded-full transition-all duration-500`}
+                style={{ width: `${quotaPercent}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
+              {t('common.apiCalls', { used: apiUsage.count.toLocaleString(), total: DAILY_LIMIT.toLocaleString() })}
+            </p>
+          </div>
 
           {/* User info + logout */}
           <div className="px-3 py-4 border-t border-[#333] shrink-0">
@@ -255,6 +296,25 @@ export default function Navbar() {
                   </Link>
                 );
               })}
+            </div>
+
+            {/* API quota */}
+            <div className="px-4 py-3 border-t border-[#333] shrink-0">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-medium text-[var(--muted-foreground)] uppercase tracking-wider">{t('common.apiQuota')}</span>
+                <span className={`text-[10px] font-medium ${quotaTextColor}`}>
+                  {quotaPercent.toFixed(0)}%
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-[var(--muted)] rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${quotaColor} rounded-full transition-all duration-500`}
+                  style={{ width: `${quotaPercent}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
+                {t('common.apiCalls', { used: apiUsage.count.toLocaleString(), total: DAILY_LIMIT.toLocaleString() })}
+              </p>
             </div>
 
             {/* Logout button at bottom */}

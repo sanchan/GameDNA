@@ -4,8 +4,22 @@
 import { config } from './config';
 
 const PROXY_BASE = '/api/steam';
-const DAILY_LIMIT = 100_000;
+export const DAILY_LIMIT = 100_000;
 const DAILY_KEY = 'gamedna_api_calls';
+
+/** Read the current daily API call count (resets at midnight). */
+export function getDailyApiUsage(): { count: number; limit: number; date: string } {
+  const today = new Date().toISOString().slice(0, 10);
+  const raw = localStorage.getItem(DAILY_KEY);
+  if (!raw) return { count: 0, limit: DAILY_LIMIT, date: today };
+  try {
+    const data = JSON.parse(raw) as { date: string; count: number };
+    if (data.date !== today) return { count: 0, limit: DAILY_LIMIT, date: today };
+    return { count: data.count, limit: DAILY_LIMIT, date: today };
+  } catch {
+    return { count: 0, limit: DAILY_LIMIT, date: today };
+  }
+}
 
 /** Track daily API call count to respect the Steam 100K/day limit. */
 function checkDailyLimit(count: number = 1): boolean {
