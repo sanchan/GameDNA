@@ -375,12 +375,12 @@ export function getUserGamesCount(userId: number): number {
 // ── Swipe History ───────────────────────────────────────────────────────────
 
 export function recordSwipe(userId: number, gameId: number, decision: SwipeDecision): void {
-  run(
-    `INSERT INTO swipe_history (user_id, game_id, decision, swiped_at)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT(user_id, game_id) DO UPDATE SET decision=excluded.decision, swiped_at=excluded.swiped_at`,
-    [userId, gameId, decision, nowUnix()],
-  );
+  const existing = get<{ id: number; decision: string }>('SELECT id, decision FROM swipe_history WHERE user_id = ? AND game_id = ?', [userId, gameId]);
+  if (existing) {
+    run('UPDATE swipe_history SET decision = ?, swiped_at = ? WHERE id = ?', [decision, nowUnix(), existing.id]);
+  } else {
+    run('INSERT INTO swipe_history (user_id, game_id, decision, swiped_at) VALUES (?, ?, ?, ?)', [userId, gameId, decision, nowUnix()]);
+  }
 }
 
 export function undoLastSwipe(userId: number): { gameId: number; decision: string; game: Game | null } | null {
