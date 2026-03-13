@@ -1155,6 +1155,37 @@ export function resetBlacklistToDefaults(userId: number): void {
 /** @deprecated Use resetBlacklistToDefaults */
 export const resetIgnoredTagsToDefaults = resetBlacklistToDefaults;
 
+// ── Tag Catalog ─────────────────────────────────────────────────────────────
+
+export function rebuildTagCatalog(): void {
+  const rows = all<{ tags: string }>('SELECT tags FROM games WHERE tags IS NOT NULL AND tags != \'\'');
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    for (const tag of parseJson<string[]>(row.tags, [])) {
+      counts[tag] = (counts[tag] || 0) + 1;
+    }
+  }
+  getDb().run('DELETE FROM tag_catalog');
+  const now = Math.floor(Date.now() / 1000);
+  for (const [name, count] of Object.entries(counts)) {
+    getDb().run('INSERT OR REPLACE INTO tag_catalog (name, game_count, updated_at) VALUES (?, ?, ?)', [name, count, now]);
+  }
+  persistDb();
+}
+
+export function searchTagCatalog(query: string, limit = 20): { name: string; gameCount: number }[] {
+  if (!query.trim()) return [];
+  return all<{ name: string; game_count: number }>(
+    'SELECT name, game_count FROM tag_catalog WHERE LOWER(name) LIKE ? ORDER BY game_count DESC LIMIT ?',
+    [`%${query.toLowerCase()}%`, limit],
+  ).map((r) => ({ name: r.name, gameCount: r.game_count }));
+}
+
+export function getTagCatalogCount(): number {
+  const row = get<{ c: number }>('SELECT count(*) as c FROM tag_catalog');
+  return row?.c ?? 0;
+}
+
 // ── Library & Wishlist ──────────────────────────────────────────────────────
 
 export function getLibrary(userId: number, opts?: { limit?: number; offset?: number; sort?: string }) {

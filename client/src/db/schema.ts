@@ -211,6 +211,12 @@ CREATE TABLE IF NOT EXISTS publisher_blacklist (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS blacklist_user_name_idx ON publisher_blacklist(user_id, name);
 
+CREATE TABLE IF NOT EXISTS tag_catalog (
+  name TEXT PRIMARY KEY,
+  game_count INTEGER DEFAULT 0,
+  updated_at INTEGER DEFAULT (unixepoch())
+);
+
 -- Local-only table for app configuration (not in server schema)
 CREATE TABLE IF NOT EXISTS local_config (
   id INTEGER PRIMARY KEY CHECK (id = 1),

@@ -241,10 +241,17 @@ export async function runSync(
     }
   }
 
-  // --- Tags (taste profile + recommendations) ---
+  // --- Tags (tag catalog + taste profile + recommendations) ---
   if (has('tags')) {
     try {
-      cats.tags = { status: 'syncing', progress: 10, detail: 'Building taste profile...' };
+      cats.tags = { status: 'syncing', progress: 5, detail: 'Building tag catalog...' };
+      onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+
+      try { db.rebuildTagCatalog(); } catch (e) {
+        console.error('[sync] tag catalog error:', e);
+      }
+
+      cats.tags = { status: 'syncing', progress: 15, detail: 'Building taste profile...' };
       onProgress(deriveOverall(cats, gamesCount, wishlistCount));
 
       try { recalculateTasteProfile(userId); } catch (e) {
