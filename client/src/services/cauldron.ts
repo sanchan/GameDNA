@@ -107,11 +107,11 @@ export async function cookCauldron(
 
   if (top.length === 0) return [];
 
-  // Try AI layer
+  // Try AI layer (only if model is already loaded — don't force a download)
   const engine = getAiEngine();
   let aiResults: { appid: number; score: number; explanation: string }[] | null = null;
 
-  if (engine) {
+  if (engine && engine.isModelReady()) {
     onStatus?.('Asking AI to mix the potion...');
     try {
       const healthy = await engine.checkHealth();
@@ -139,7 +139,11 @@ Re-rank these candidates based on how well they blend the qualities of the input
 
 Respond with a JSON object: {"games": [{"appid": number, "score": number, "explanation": "string"}]}`;
 
-        const result = await engine.generateJSON<{ games: { appid: number; score: number; explanation: string }[] }>(prompt);
+        // Timeout after 60s to avoid hanging forever if AI stalls
+        const aiPromise = engine.generateJSON<{ games: { appid: number; score: number; explanation: string }[] }>(prompt);
+        const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 60_000));
+        const result = await Promise.race([aiPromise, timeoutPromise]);
+
         if (result?.games) {
           aiResults = result.games;
         }

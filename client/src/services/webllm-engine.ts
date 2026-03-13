@@ -76,11 +76,21 @@ export class WebLLMEngine implements AiEngine {
   async generateJSON<T>(prompt: string, temperature = 0.3): Promise<T | null> {
     try {
       const engine = await this.ensureLoaded();
-      const reply = await engine.chat.completions.create({
+
+      // Race against a timeout — WebLLM's json_object mode can hang if the
+      // internal grammar compiler throws (the Promise never settles).
+      const completion = engine.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
         temperature,
         response_format: { type: 'json_object' },
       });
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 90_000));
+      const reply = await Promise.race([completion, timeout]);
+
+      if (!reply) {
+        console.warn('[webllm] generateJSON timed out');
+        return null;
+      }
 
       const raw = reply.choices[0]?.message?.content;
       if (!raw) return null;
