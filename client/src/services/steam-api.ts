@@ -84,6 +84,8 @@ export interface GameDetails {
   developers: string[];
   publishers: string[];
   platforms: { windows: boolean; mac: boolean; linux: boolean };
+  screenshots: { thumbnail: string; full: string }[];
+  movies: { thumbnail: string; webm480: string; webmMax: string }[];
 }
 
 export interface PlayerSummary {
@@ -178,6 +180,19 @@ export async function getAppDetails(appid: number, cc?: string): Promise<GameDet
     const releaseDate = d.release_date as { date?: string } | undefined;
     const platforms = (d.platforms as { windows?: boolean; mac?: boolean; linux?: boolean }) ?? {};
 
+    const screenshotsRaw = (d.screenshots as Array<{ path_thumbnail?: string; path_full?: string }>) ?? [];
+    const screenshots = screenshotsRaw.map((s) => ({
+      thumbnail: s.path_thumbnail ?? '',
+      full: s.path_full ?? '',
+    })).filter((s) => s.thumbnail && s.full);
+
+    const moviesRaw = (d.movies as Array<{ thumbnail?: string; webm?: { '480'?: string; max?: string } }>) ?? [];
+    const movies = moviesRaw.map((m) => ({
+      thumbnail: m.thumbnail ?? '',
+      webm480: m.webm?.['480'] ?? '',
+      webmMax: m.webm?.max ?? '',
+    })).filter((m) => m.thumbnail && (m.webm480 || m.webmMax));
+
     return {
       appid,
       name: (d.name as string) ?? '',
@@ -197,6 +212,8 @@ export async function getAppDetails(appid: number, cc?: string): Promise<GameDet
         mac: platforms.mac ?? false,
         linux: platforms.linux ?? false,
       },
+      screenshots,
+      movies,
     };
   } catch {
     return null;

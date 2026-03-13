@@ -8,6 +8,7 @@ import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
 import { useBookmarks } from '../hooks/use-bookmarks';
 import { useToast } from '../components/Toast';
+import { cacheGame } from '../services/game-cache';
 import MediaGallery from '../components/MediaGallery';
 import type { Game, SwipeDecision, GameStatusType, GameNote, Collection } from '../../../shared/types';
 
@@ -89,6 +90,9 @@ export default function GameDetail() {
   const [reviewSummary, setReviewSummary] = useState<string | null>(null);
   const [loadingReviewSummary, setLoadingReviewSummary] = useState(false);
 
+  // Sync game data
+  const [syncing, setSyncing] = useState(false);
+
   // Collections
   const [collections, setCollections] = useState<Collection[]>([]);
   const [showCollections, setShowCollections] = useState(false);
@@ -117,30 +121,31 @@ export default function GameDetail() {
     }
   }, [appid]);
 
-  const loadMedia = useCallback(async () => {
-    if (mediaItems !== null || mediaLoading || !appid) return mediaItems;
+  const loadMedia = useCallback(() => {
+    if (mediaItems !== null || mediaLoading || !game) return mediaItems;
     setMediaLoading(true);
-    try {
-      // Media is not stored locally; use Steam CDN screenshots as fallback
-      const items: MediaItem[] = [];
-      // Steam provides standard screenshot URLs for known games
-      for (let i = 0; i < 5; i++) {
-        items.push({
-          type: 'image',
-          thumbnail: `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/ss_${i}.600x338.jpg`,
-          full: `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/ss_${i}.1920x1080.jpg`,
-        });
-      }
-      // Just use empty array since we can't reliably enumerate screenshots without the API
-      setMediaItems([]);
-      setMediaLoading(false);
-      return [];
-    } catch {
-      setMediaItems([]);
-      setMediaLoading(false);
-      return [];
+    const items: MediaItem[] = [];
+    // Add movies first
+    for (const m of game.movies ?? []) {
+      items.push({
+        type: 'video',
+        thumbnail: m.thumbnail,
+        full: m.thumbnail,
+        videoSrc: m.webmMax || m.webm480,
+      });
     }
-  }, [appid, mediaItems, mediaLoading]);
+    // Then screenshots
+    for (const s of game.screenshots ?? []) {
+      items.push({
+        type: 'image',
+        thumbnail: s.thumbnail,
+        full: s.full,
+      });
+    }
+    setMediaItems(items);
+    setMediaLoading(false);
+    return items;
+  }, [game, mediaItems, mediaLoading]);
 
   // Load media on mount
   useEffect(() => {
@@ -239,6 +244,28 @@ export default function GameDetail() {
       setSwiping(false);
     }
   };
+
+  const handleSyncGame = useCallback(async () => {
+    if (!appid || syncing) return;
+    setSyncing(true);
+    try {
+      const success = await cacheGame(Number(appid));
+      if (success) {
+        const refreshed = queries.getGame(Number(appid));
+        if (refreshed) {
+          setGame(refreshed);
+          setMediaItems(null); // Reset media so it rebuilds from fresh data
+        }
+        toast(t('gameDetail.syncSuccess', 'Game data updated'), 'success');
+      } else {
+        toast(t('gameDetail.syncFailed', 'Failed to sync game'), 'error');
+      }
+    } catch {
+      toast(t('gameDetail.syncFailed', 'Failed to sync game'), 'error');
+    } finally {
+      setSyncing(false);
+    }
+  }, [appid, syncing, toast, t]);
 
   const openGallery = (index: number) => {
     setGalleryIndex(index);
@@ -412,6 +439,15 @@ export default function GameDetail() {
                 <i className="fa-brands fa-steam" />
                 {t('common.openInSteam')}
               </a>
+
+              <button
+                onClick={handleSyncGame}
+                disabled={syncing}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#444] text-gray-300 hover:bg-[#333] hover:text-white transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                <i className={`fa-solid fa-arrows-rotate ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? t('common.syncing', 'Syncing...') : t('gameDetail.syncGame', 'Sync')}
+              </button>
 
               {/* Game Status Dropdown */}
               {user && statusLoaded && (

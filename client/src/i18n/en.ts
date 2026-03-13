@@ -51,6 +51,7 @@ const en = {
     stats: 'Stats',
     profile: 'Profile',
     settings: 'Settings',
+    help: 'Help',
   },
 
   // Landing page
@@ -454,6 +455,90 @@ const en = {
     previous: 'Previous',
     next: 'Next',
     counter: '{{current}} / {{total}}',
+  },
+
+  // Help page
+  help: {
+    title: 'Help',
+    subtitle: 'Learn how GameDNA works and how we protect your data',
+    matchTitle: 'How Match Scores Work',
+    matchDesc: 'Understand how we calculate game compatibility scores',
+    privacyTitle: 'Privacy & Your Data',
+    privacyDesc: 'How GameDNA respects and protects your privacy',
+    legalTitle: 'Legal & Attributions',
+    legalDesc: 'Terms of use, Steam attribution, and legal information',
+  },
+
+  // Match explainer
+  matchExplainer: {
+    title: 'How Match Works',
+    howItWorks: 'How is this score calculated?',
+    description: 'Your match score measures how well a game fits your gaming DNA. It combines your taste profile (built from your owned games and swipe history) with game characteristics to produce a compatibility percentage.',
+    formula: 'Scoring formula',
+    factors: 'Scoring Factors',
+    factor: {
+      genre: {
+        title: 'Genre Match',
+        desc: 'How well the game\'s genres align with your preferred genres. Based on the genres of games you own and have swiped yes on, weighted by playtime.',
+      },
+      tag: {
+        title: 'Tag Match',
+        desc: 'How well the game\'s Steam tags match your tag preferences. Tags like "Open World", "Co-op", or "Story Rich" are compared against your taste profile.',
+      },
+      review: {
+        title: 'Community Reviews',
+        desc: 'The game\'s overall review score on Steam, normalized to a 0-1 scale. Higher-rated games get a boost in the match calculation.',
+      },
+      recency: {
+        title: 'Release Recency',
+        desc: 'How recently the game was released. Newer games (within the last 10 years) score higher, helping surface fresh titles alongside classics.',
+      },
+    },
+    tasteProfileTitle: 'Your Taste Profile',
+    tasteProfileDesc: 'Your taste profile is built automatically from two sources: your Steam library (games you own, weighted by playtime) and your swipe history (yes = strong signal, maybe = moderate, no = negative). The more you play and swipe, the more accurate your matches become.',
+    aiLayerTitle: 'AI Enhancement',
+    aiLayerDesc: 'When an AI provider is configured (Ollama or WebLLM), recommendations go through an additional scoring layer. The AI analyzes game descriptions, your profile, and contextual factors to refine the heuristic score. Games marked "AI Scored" have gone through this enhanced analysis.',
+  },
+
+  // Help Privacy page
+  helpPrivacy: {
+    principlesTitle: 'Our Privacy Principles',
+    localFirst: {
+      title: 'Local-First Architecture',
+      desc: 'All your personal data — swipe history, taste profile, preferences, and cached game metadata — is stored locally in your browser using an in-browser SQLite database. Nothing is sent to or stored on external servers.',
+    },
+    noTracking: {
+      title: 'No Tracking or Analytics',
+      desc: 'GameDNA does not use tracking cookies, analytics services, advertising, or any form of user tracking. The only cookies used are for Steam OpenID authentication.',
+    },
+    localAi: {
+      title: 'AI Runs Locally',
+      desc: 'AI features (Ollama or WebLLM) run entirely on your machine or in your browser. Your gaming data is never sent to external AI services for processing.',
+    },
+    fullControl: {
+      title: 'Full Control Over Your Data',
+      desc: 'You can export all your data at any time (JSON or database backup), and delete everything with a single click in Settings. Since data is stored locally, clearing browser data also removes all GameDNA data.',
+    },
+    whatWeAccessTitle: 'What We Access From Steam',
+    weAccess: 'We access (read-only):',
+    weNeverAccess: 'We never access:',
+    access: {
+      profile: 'Your public Steam profile (display name, avatar, Steam ID)',
+      games: 'Your owned games list and playtime data',
+      wishlist: 'Your Steam wishlist',
+    },
+    neverAccess: {
+      password: 'Your password or login credentials',
+      email: 'Your email address',
+      payment: 'Payment information or purchase history',
+      messages: 'Private messages or friend lists',
+    },
+    dataStorageTitle: 'Where Your Data Lives',
+    dataStorageDesc: 'Everything stays in your browser. GameDNA uses OPFS (Origin Private File System) to store an SQLite database locally. Your Steam API key is only sent to our proxy server to authenticate Steam API requests and is never logged or persisted. Game metadata from Steam is cached locally for up to 7 days to minimize API calls.',
+    yourRightsTitle: 'Your Data, Your Choice',
+    yourRightsDesc: 'You can export, review, or delete all your data at any time from the Settings page. No account deletion request needed — just clear your data and it\'s gone.',
+    goToSettings: 'Go to Settings',
+    viewFullLegal: 'View full Legal & Terms of Use',
   },
 } as const;
 

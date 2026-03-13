@@ -64,6 +64,8 @@ function dbGameToGame(row: Record<string, unknown>): Game {
     developers: parseJson<string[]>(row.developers, []),
     publishers: parseJson<string[]>(row.publishers, []),
     platforms: parseJson(row.platforms, { windows: false, mac: false, linux: false }),
+    screenshots: parseJson<{ thumbnail: string; full: string }[]>(row.screenshots, []),
+    movies: parseJson<{ thumbnail: string; webm480: string; webmMax: string }[]>(row.movies, []),
   };
 }
 
@@ -259,15 +261,16 @@ export function getUser(userId: number): User | null {
 export function upsertGame(game: { id: number; name: string; [key: string]: unknown }): void {
   const now = nowUnix();
   getDb().run(
-    `INSERT INTO games (id, name, short_desc, header_image, genres, tags, release_date, price_cents, price_currency, review_score, review_count, developers, publishers, platforms, cached_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO games (id, name, short_desc, header_image, genres, tags, release_date, price_cents, price_currency, review_score, review_count, developers, publishers, platforms, screenshots, movies, cached_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        name=excluded.name, short_desc=excluded.short_desc, header_image=excluded.header_image,
        genres=excluded.genres, tags=excluded.tags, release_date=excluded.release_date,
        price_cents=excluded.price_cents, price_currency=excluded.price_currency,
        review_score=excluded.review_score, review_count=excluded.review_count,
        developers=excluded.developers, publishers=excluded.publishers,
-       platforms=excluded.platforms, cached_at=excluded.cached_at`,
+       platforms=excluded.platforms, screenshots=excluded.screenshots,
+       movies=excluded.movies, cached_at=excluded.cached_at`,
     [
       game.id, game.name,
       (game.short_desc ?? game.short_description ?? null) as any,
@@ -282,6 +285,8 @@ export function upsertGame(game: { id: number; name: string; [key: string]: unkn
       typeof game.developers === 'string' ? game.developers : JSON.stringify(game.developers ?? []),
       typeof game.publishers === 'string' ? game.publishers : JSON.stringify(game.publishers ?? []),
       typeof game.platforms === 'string' ? game.platforms : JSON.stringify(game.platforms ?? {}),
+      typeof game.screenshots === 'string' ? game.screenshots : JSON.stringify(game.screenshots ?? []),
+      typeof game.movies === 'string' ? game.movies : JSON.stringify(game.movies ?? []),
       now,
     ] as any[],
   );
@@ -309,6 +314,11 @@ export function isCacheFresh(appid: number): boolean {
   const row = get<{ cached_at: number }>('SELECT cached_at FROM games WHERE id = ?', [appid]);
   if (!row || !row.cached_at) return false;
   return nowUnix() - row.cached_at < config.cacheTtlSeconds;
+}
+
+export function getAllCachedGameIds(): number[] {
+  const rows = all<{ id: number }>('SELECT id FROM games WHERE cached_at > 0');
+  return rows.map((r) => r.id);
 }
 
 export function getStaleAppIds(appids: number[]): number[] {

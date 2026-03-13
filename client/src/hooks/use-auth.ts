@@ -24,6 +24,7 @@ const defaultCategories: Record<SyncCategory, CategorySyncState> = {
   library: { status: 'idle', progress: 0, detail: '' },
   wishlist: { status: 'idle', progress: 0, detail: '' },
   backlog: { status: 'idle', progress: 0, detail: '' },
+  cache: { status: 'idle', progress: 0, detail: '' },
   tags: { status: 'idle', progress: 0, detail: '' },
 };
 

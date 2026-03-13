@@ -13,6 +13,7 @@ const navIcons: Record<string, string> = {
   '/stats': 'fa-solid fa-chart-pie',
   '/profile': 'fa-solid fa-user',
   '/settings': 'fa-solid fa-gear',
+  '/help': 'fa-solid fa-circle-question',
 };
 
 export default function Navbar() {
@@ -31,6 +32,7 @@ export default function Navbar() {
     { to: '/stats', label: t('nav.stats') },
     { to: '/profile', label: t('nav.profile') },
     { to: '/settings', label: t('nav.settings') },
+    { to: '/help', label: t('nav.help') },
   ];
 
   // Close sidebar on route change

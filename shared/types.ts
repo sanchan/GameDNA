@@ -23,6 +23,8 @@ export interface Game {
   developers: string[];
   publishers: string[];
   platforms: { windows: boolean; mac: boolean; linux: boolean };
+  screenshots: { thumbnail: string; full: string }[];
+  movies: { thumbnail: string; webm480: string; webmMax: string }[];
 }
 
 export interface TasteProfile {

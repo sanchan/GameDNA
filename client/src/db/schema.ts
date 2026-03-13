@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS games (
   publishers TEXT,
   platforms TEXT,
   detailed_desc TEXT,
+  screenshots TEXT,
+  movies TEXT,
   cached_at INTEGER
 );
 
@@ -233,4 +235,6 @@ CREATE TABLE IF NOT EXISTS local_config (
 // Incremental migrations for existing databases (ALTER TABLE is safe to retry — SQLite errors on duplicate columns)
 export const MIGRATIONS_SQL = [
   `ALTER TABLE user_settings ADD COLUMN explanation_template TEXT`,
+  `ALTER TABLE games ADD COLUMN screenshots TEXT`,
+  `ALTER TABLE games ADD COLUMN movies TEXT`,
 ];
