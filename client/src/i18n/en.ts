@@ -50,6 +50,7 @@ const en = {
     history: 'History',
     backlog: 'Backlog',
     chat: 'Chat',
+    cauldron: 'The Cauldron',
     filters: 'Tag Filters',
     stats: 'Stats',
     profile: 'Profile',
@@ -489,6 +490,27 @@ const en = {
     previous: 'Previous',
     next: 'Next',
     counter: '{{current}} / {{total}}',
+  },
+
+  // Cauldron page
+  cauldron: {
+    title: 'The Cauldron',
+    subtitle: 'Throw in games you love and brew new discoveries. Add at least 2 games to cook up recommendations that blend their best qualities.',
+    searchPlaceholder: 'Search for a game to add...',
+    emptyState: 'Your cauldron is empty',
+    emptyStateHint: 'Search and add games above to get started',
+    gamesAdded: '{{count}} game in cauldron',
+    gamesAdded_other: '{{count}} games in cauldron',
+    clearAll: 'Clear All',
+    cookButton: 'Cook the Cauldron',
+    needMoreGames: 'Add {{count}} more game to cook',
+    needMoreGames_other: 'Add {{count}} more games to cook',
+    cooking: 'Brewing your potion...',
+    cachingGames: 'Fetching game data...',
+    notEnoughData: 'Not enough game data found. Try different games.',
+    cookFailed: 'Something went wrong. Please try again.',
+    resultsSubtitle: '{{count}} games brewed from your mix',
+    backToCauldron: 'Back to Cauldron',
   },
 
   // Help page

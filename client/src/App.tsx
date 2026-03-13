@@ -21,6 +21,7 @@ import Chat from './pages/Chat';
 import Legal from './pages/Legal';
 import Filters from './pages/Filters';
 import Help from './pages/Help';
+import Cauldron from './pages/Cauldron';
 import HelpMatch from './pages/HelpMatch';
 import HelpPrivacy from './pages/HelpPrivacy';
 import Onboarding from './pages/Onboarding';
@@ -94,6 +95,7 @@ function AppRoutes() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/cauldron" element={<Cauldron />} />
           <Route path="/help" element={<Help />} />
           <Route path="/help/match" element={<HelpMatch />} />
           <Route path="/help/privacy" element={<HelpPrivacy />} />
