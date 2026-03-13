@@ -88,7 +88,7 @@ export default function Profile() {
       const text = await file.text();
       const data = JSON.parse(text);
       const result = queries.importUserData(userId, data);
-      setImportResult(`Imported ${result.importedTags} ignored tags, ${result.importedSwipes} swipes`);
+      setImportResult(t('profile.importSuccess', { tags: result.importedTags, swipes: result.importedSwipes }));
       refetchDna();
     } catch (e) {
       setImportResult('Import failed — invalid file format');
@@ -451,10 +451,10 @@ export default function Profile() {
                     <p className="text-gray-400 text-sm">{t('profile.tagPreferencesSubtitle')}</p>
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-xs text-[var(--primary)] font-medium">
-                        {dna.allTags.filter((t) => !t.blacklisted).length} active
+                        {dna.allTags.filter((t) => !t.blacklisted).length} {t('filters.positive')}
                       </span>
                       <span className="text-xs text-gray-500">
-                        {dna.allTags.filter((t) => t.blacklisted).length} blacklisted
+                        {dna.allTags.filter((t) => t.blacklisted).length} {t('filters.blacklisted')}
                       </span>
                     </div>
                   </div>

@@ -236,7 +236,7 @@ export function ensureUser(steamId: string, displayName?: string, avatarUrl?: st
   }
 
   getDb().run(
-    'INSERT INTO users (steam_id, display_name, avatar_url, profile_url, country_code, last_login, ignored_tags) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO users (steam_id, display_name, avatar_url, profile_url, country_code, last_login, blacklisted_tags) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [steamId, displayName ?? null, avatarUrl ?? null, profileUrl ?? null, countryCode ?? null, nowUnix(), JSON.stringify(DEFAULT_IGNORED_TAGS)] as any[],
   );
   persistDb();
@@ -1122,8 +1122,8 @@ export function getGamingDNA(userId: number): GamingDNA {
 // ── Blacklisted Tags ────────────────────────────────────────────────────────
 
 export function getBlacklistedTags(userId: number): string[] {
-  const row = get<{ ignored_tags: string }>('SELECT ignored_tags FROM users WHERE id = ?', [userId]);
-  return row?.ignored_tags ? parseJson(row.ignored_tags, DEFAULT_BLACKLISTED_TAGS) : DEFAULT_BLACKLISTED_TAGS;
+  const row = get<{ blacklisted_tags: string }>('SELECT blacklisted_tags FROM users WHERE id = ?', [userId]);
+  return row?.blacklisted_tags ? parseJson(row.blacklisted_tags, DEFAULT_BLACKLISTED_TAGS) : DEFAULT_BLACKLISTED_TAGS;
 }
 
 /** @deprecated Use getBlacklistedTags */
@@ -1141,7 +1141,7 @@ export function setTagBlacklisted(userId: number, tag: string, blacklisted: bool
   } else {
     updated = current.filter((t) => t.toLowerCase() !== tag.toLowerCase());
   }
-  run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify(updated), userId]);
+  run('UPDATE users SET blacklisted_tags = ? WHERE id = ?', [JSON.stringify(updated), userId]);
   return updated;
 }
 
@@ -1149,7 +1149,7 @@ export function setTagBlacklisted(userId: number, tag: string, blacklisted: bool
 export const setTagIgnored = setTagBlacklisted;
 
 export function resetBlacklistToDefaults(userId: number): void {
-  run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify(DEFAULT_BLACKLISTED_TAGS), userId]);
+  run('UPDATE users SET blacklisted_tags = ? WHERE id = ?', [JSON.stringify(DEFAULT_BLACKLISTED_TAGS), userId]);
 }
 
 /** @deprecated Use resetBlacklistToDefaults */
@@ -1341,7 +1341,7 @@ export function importUserData(userId: number, data: {
   // Support both old 'ignored' and new 'blacklisted' keys
   const tagList = data.tags?.blacklisted ?? data.tags?.ignored;
   if (tagList) {
-    run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify(tagList), userId]);
+    run('UPDATE users SET blacklisted_tags = ? WHERE id = ?', [JSON.stringify(tagList), userId]);
     importedTags = tagList.length;
   }
 
