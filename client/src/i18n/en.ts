@@ -442,7 +442,7 @@ const en = {
     blacklisted: 'blacklisted',
     blacklistCount: '{{count}} tag blacklisted',
     blacklistCount_other: '{{count}} tags blacklisted',
-    resetDefaults: 'Reset Defaults',
+    resetDefaults: 'Clear All',
     noTagsFound: 'No tags match your search.',
     autoTagsTitle: 'Positive Tags',
     autoTagsSubtitle: 'Auto-scored from your library, swipes, bookmarks, and wishlist',
