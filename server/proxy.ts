@@ -56,6 +56,23 @@ app.all('/api/steam/store/*', async (c) => {
   }
 });
 
+// Tag data proxy: /api/steam/tagdata/* → store.steampowered.com/tagdata/*
+app.all('/api/steam/tagdata/*', async (c) => {
+  const path = c.req.path.replace('/api/steam/tagdata/', '');
+  const url = new URL(`https://store.steampowered.com/tagdata/${path}`);
+
+  try {
+    const res = await fetch(url.toString());
+    const body = await res.text();
+    return new Response(body, {
+      status: res.status,
+      headers: { 'Content-Type': res.headers.get('Content-Type') ?? 'application/json' },
+    });
+  } catch (e) {
+    return c.json({ error: 'Proxy error' }, 502);
+  }
+});
+
 // Reviews proxy: /api/steam/reviews/:appid → store.steampowered.com/appreviews/:appid
 app.all('/api/steam/reviews/:appid', async (c) => {
   const appid = c.req.param('appid');

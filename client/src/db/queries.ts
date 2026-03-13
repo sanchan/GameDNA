@@ -1157,7 +1157,8 @@ export const resetIgnoredTagsToDefaults = resetBlacklistToDefaults;
 
 // ── Tag Catalog ─────────────────────────────────────────────────────────────
 
-export function rebuildTagCatalog(): void {
+export function rebuildTagCatalog(steamTags?: { name: string }[]): void {
+  // Count tags from locally cached games
   const rows = all<{ tags: string }>('SELECT tags FROM games WHERE tags IS NOT NULL AND tags != \'\'');
   const counts: Record<string, number> = {};
   for (const row of rows) {
@@ -1165,6 +1166,16 @@ export function rebuildTagCatalog(): void {
       counts[tag] = (counts[tag] || 0) + 1;
     }
   }
+
+  // Merge Steam community tags (game_count = 0 if not found locally)
+  if (steamTags) {
+    for (const st of steamTags) {
+      if (!(st.name in counts)) {
+        counts[st.name] = 0;
+      }
+    }
+  }
+
   getDb().run('DELETE FROM tag_catalog');
   const now = Math.floor(Date.now() / 1000);
   for (const [name, count] of Object.entries(counts)) {
