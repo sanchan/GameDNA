@@ -451,10 +451,10 @@ export default function Profile() {
                     <p className="text-gray-400 text-sm">{t('profile.tagPreferencesSubtitle')}</p>
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-xs text-[var(--primary)] font-medium">
-                        {dna.allTags.filter((t) => !t.ignored).length} active
+                        {dna.allTags.filter((t) => !t.blacklisted).length} active
                       </span>
                       <span className="text-xs text-gray-500">
-                        {dna.allTags.filter((t) => t.ignored).length} ignored
+                        {dna.allTags.filter((t) => t.blacklisted).length} blacklisted
                       </span>
                     </div>
                   </div>

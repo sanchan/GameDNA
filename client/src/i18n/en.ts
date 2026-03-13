@@ -348,7 +348,7 @@ const en = {
     importData: 'Import Data',
     restorePreferences: 'Restore preferences',
     importing: 'Importing...',
-    importSuccess: 'Imported {{tags}} ignored tags, {{swipes}} swipes',
+    importSuccess: 'Imported {{tags}} blacklisted tags, {{swipes}} swipes',
     importFailed: 'Import failed — invalid file format',
     viewHistory: 'View History',
     totalSwipesCount: '{{count}} total swipes',
@@ -423,24 +423,25 @@ const en = {
     reviewsK: '{{count}}K reviews',
   },
 
-  // Filters page (tag management)
+  // Filters page (blacklist + auto-computed tags)
   filters: {
     title: 'Tag Filters',
-    subtitle: 'Control which tags influence your discovery and recommendations. Click any tag to toggle it.',
-    searchPlaceholder: 'Search tags...',
-    viewMode: {
-      all: 'All',
-      active: 'Active',
-      ignored: 'Ignored',
-    },
+    subtitle: 'Tags are auto-scored from your library and swipes. Blacklist tags you never want to see.',
+    blacklistTitle: 'Blacklisted Tags',
+    blacklistSubtitle: 'Games with these tags are hidden from discovery and recommendations',
+    searchToBlacklist: 'Search tags to blacklist...',
+    addToBlacklist: 'Blacklist',
+    noBlacklistedTags: 'No tags blacklisted. All tags are active.',
+    blacklistCount: '{{count}} tag blacklisted',
+    blacklistCount_other: '{{count}} tags blacklisted',
     resetDefaults: 'Reset Defaults',
-    activateAll: 'Activate All',
-    ignoreAll: 'Ignore All',
-    showingResults: 'Showing {{shown}} of {{total}} tags',
     noTagsFound: 'No tags match your search.',
-    legendActive: 'Active — influences recommendations',
-    legendIgnored: 'Ignored — hidden from recommendations',
-    legendHint: 'Click a tag to toggle',
+    autoTagsTitle: 'Auto-Scored Tags',
+    autoTagsSubtitle: 'Computed from your library, swipes, bookmarks, and wishlist',
+    noAutoTags: 'No tag scores yet. Sync your library to get started.',
+    tagName: 'Tag',
+    games: 'Games',
+    score: 'Score',
   },
 
   // FilterPanel component
@@ -455,6 +456,7 @@ const en = {
     genresPlaceholder: 'action, rpg, indie, strategy...',
     separateWithCommas: 'Separate genres with commas',
     popularTags: 'Popular Tags',
+    yourTopTags: 'Your Top Tags',
     releaseDate: 'Release Date',
     releaseDateOptions: {
       anyTime: 'Any Time',

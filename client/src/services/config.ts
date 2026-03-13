@@ -33,6 +33,8 @@ export const config = {
     highPlaytime: 1.0,
     mediumPlaytime: 0.5,
     lowPlaytime: 0.1,
+    wishlist: 0.3,
+    bookmark: 0.5,
     swipeYes: 1.0,
     swipeMaybe: 0.3,
     swipeNo: -0.5,

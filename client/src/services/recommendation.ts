@@ -3,7 +3,7 @@
 
 import { getDb } from '../db/index';
 import * as db from '../db/queries';
-import { getIgnoredTagsSet } from './tag-filter';
+import { getBlacklistedTagsSet } from './tag-filter';
 import { config } from './config';
 import { aiScoreRecommendations } from './ai-features';
 
@@ -50,9 +50,9 @@ export async function generateRecommendations(userId: number, onlyDismissed = fa
   const profile = db.getTasteProfile(userId);
   if (!profile) return 0;
 
-  // Load ignored tags
-  const ignoredTags = db.getIgnoredTags(userId);
-  const ignoredSet = getIgnoredTagsSet(ignoredTags);
+  // Load blacklisted tags
+  const blacklistedTags = db.getBlacklistedTags(userId);
+  const blacklistSet = getBlacklistedTagsSet(blacklistedTags);
 
   const topGenres = new Set(
     Object.entries(profile.genreScores)
@@ -63,7 +63,7 @@ export async function generateRecommendations(userId: number, onlyDismissed = fa
 
   const topTags = new Set(
     Object.entries(profile.tagScores)
-      .filter(([name]) => !ignoredSet.has(name.toLowerCase()))
+      .filter(([name]) => !blacklistSet.has(name.toLowerCase()))
       .sort(([, a], [, b]) => b - a)
       .slice(0, config.recTopTagsCount)
       .map(([name]) => name.toLowerCase()),
@@ -94,7 +94,13 @@ export async function generateRecommendations(userId: number, onlyDismissed = fa
 
   const candidates = queryAll(sql, params);
 
-  const scored = candidates
+  // Filter out candidates with blacklisted tags
+  const filtered = candidates.filter((game) => {
+    const gameTags = parseJson<string[]>(game.tags, []);
+    return !gameTags.some((t) => blacklistSet.has(t.toLowerCase()));
+  });
+
+  const scored = filtered
     .map((game) => ({
       game,
       hScore: heuristicScore(game, topGenres, topTags),

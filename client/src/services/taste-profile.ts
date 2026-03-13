@@ -3,7 +3,6 @@
 
 import { getDb } from '../db/index';
 import * as db from '../db/queries';
-import { getIgnoredTagsSet } from './tag-filter';
 import { config } from './config';
 
 function parseJson<T>(val: unknown, fallback: T): T {
@@ -21,12 +20,9 @@ function queryAll<T = Record<string, unknown>>(sql: string, params?: unknown[]):
 }
 
 export function recalculateTasteProfile(userId: number): void {
-  const ignoredTags = db.getIgnoredTags(userId);
-  const ignoredSet = getIgnoredTagsSet(ignoredTags);
-
-  // Fetch all user_games with game data
-  const userGamesRows = queryAll<{ playtime_mins: number; genres: string; tags: string; price_cents: number | null }>(
-    `SELECT ug.playtime_mins, g.genres, g.tags, g.price_cents
+  // Fetch all user_games with game data (includes from_wishlist flag)
+  const userGamesRows = queryAll<{ playtime_mins: number; genres: string; tags: string; price_cents: number | null; from_wishlist: number }>(
+    `SELECT ug.playtime_mins, g.genres, g.tags, g.price_cents, ug.from_wishlist
      FROM user_games ug
      INNER JOIN games g ON ug.game_id = g.id
      WHERE ug.user_id = ?`,
@@ -42,21 +38,34 @@ export function recalculateTasteProfile(userId: number): void {
     [userId],
   );
 
+  // Fetch bookmarked games
+  const bookmarkRows = queryAll<{ genres: string; tags: string; price_cents: number | null }>(
+    `SELECT g.genres, g.tags, g.price_cents
+     FROM bookmarks b
+     INNER JOIN games g ON b.game_id = g.id
+     WHERE b.user_id = ?`,
+    [userId],
+  );
+
   const genreScoresRaw: Record<string, number> = {};
   const tagScoresRaw: Record<string, number> = {};
 
   for (const row of userGamesRows) {
-    const playtime = row.playtime_mins ?? 0;
     const tw = config.tasteWeights;
-    const weight = playtime > 600 ? tw.highPlaytime : playtime >= 60 ? tw.mediumPlaytime : tw.lowPlaytime;
+    let weight: number;
+    if (row.from_wishlist === 1) {
+      // Wishlist games use dedicated wishlist weight
+      weight = tw.wishlist;
+    } else {
+      const playtime = row.playtime_mins ?? 0;
+      weight = playtime > 600 ? tw.highPlaytime : playtime >= 60 ? tw.mediumPlaytime : tw.lowPlaytime;
+    }
 
     for (const g of parseJson<string[]>(row.genres, [])) {
       genreScoresRaw[g] = (genreScoresRaw[g] ?? 0) + weight;
     }
     for (const t of parseJson<string[]>(row.tags, [])) {
-      if (!ignoredSet.has(t.toLowerCase())) {
-        tagScoresRaw[t] = (tagScoresRaw[t] ?? 0) + weight;
-      }
+      tagScoresRaw[t] = (tagScoresRaw[t] ?? 0) + weight;
     }
   }
 
@@ -68,9 +77,18 @@ export function recalculateTasteProfile(userId: number): void {
       genreScoresRaw[g] = (genreScoresRaw[g] ?? 0) + weight;
     }
     for (const t of parseJson<string[]>(row.tags, [])) {
-      if (!ignoredSet.has(t.toLowerCase())) {
-        tagScoresRaw[t] = (tagScoresRaw[t] ?? 0) + weight;
-      }
+      tagScoresRaw[t] = (tagScoresRaw[t] ?? 0) + weight;
+    }
+  }
+
+  // Bookmark contributions
+  const bookmarkWeight = config.tasteWeights.bookmark;
+  for (const row of bookmarkRows) {
+    for (const g of parseJson<string[]>(row.genres, [])) {
+      genreScoresRaw[g] = (genreScoresRaw[g] ?? 0) + bookmarkWeight;
+    }
+    for (const t of parseJson<string[]>(row.tags, [])) {
+      tagScoresRaw[t] = (tagScoresRaw[t] ?? 0) + bookmarkWeight;
     }
   }
 

@@ -1,6 +1,6 @@
 // Port of server/services/tag-filter.ts — no changes needed (pure logic).
 
-export const DEFAULT_IGNORED_TAGS: string[] = [
+export const DEFAULT_BLACKLISTED_TAGS: string[] = [
   'Steam Achievements', 'Steam Trading Cards', 'Steam Cloud', 'Steam Workshop',
   'Steam Leaderboards', 'Stats', 'Valve Anti-Cheat enabled', 'Includes Source SDK',
   'Commentary available', 'Includes level editor',
@@ -20,11 +20,20 @@ export const DEFAULT_IGNORED_TAGS: string[] = [
   'HDR available',
 ];
 
-export function getIgnoredTagsSet(userIgnoredTags?: string[]): Set<string> {
-  const tags = userIgnoredTags ?? DEFAULT_IGNORED_TAGS;
+/** @deprecated Use DEFAULT_BLACKLISTED_TAGS */
+export const DEFAULT_IGNORED_TAGS = DEFAULT_BLACKLISTED_TAGS;
+
+export function getBlacklistedTagsSet(userBlacklistedTags?: string[]): Set<string> {
+  const tags = userBlacklistedTags ?? DEFAULT_BLACKLISTED_TAGS;
   return new Set(tags.map((t) => t.toLowerCase()));
 }
 
-export function isTagIgnored(tag: string, ignoredSet: Set<string>): boolean {
-  return ignoredSet.has(tag.toLowerCase());
+/** @deprecated Use getBlacklistedTagsSet */
+export const getIgnoredTagsSet = getBlacklistedTagsSet;
+
+export function isTagBlacklisted(tag: string, blacklistSet: Set<string>): boolean {
+  return blacklistSet.has(tag.toLowerCase());
 }
+
+/** @deprecated Use isTagBlacklisted */
+export const isTagIgnored = isTagBlacklisted;
