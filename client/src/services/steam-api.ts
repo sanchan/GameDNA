@@ -312,6 +312,26 @@ export async function getSteamTags(): Promise<{ tagid: number; name: string }[]>
   }
 }
 
+/** Search the Steam Store by term via the storesearch endpoint. */
+export async function searchSteamStore(term: string): Promise<{ id: number; name: string; headerImage: string }[]> {
+  if (!term.trim()) return [];
+  try {
+    await storeApiLimiter.acquire();
+    if (!checkDailyLimit()) return [];
+    const res = await fetch(`${PROXY_BASE}/store/storesearch?term=${encodeURIComponent(term)}&l=english&cc=us`);
+    if (!res.ok) return [];
+    const data = await res.json() as { items?: Array<{ id: number; name: string; tiny_image: string }> };
+    return (data.items ?? []).map((item) => ({
+      id: item.id,
+      name: item.name,
+      headerImage: item.tiny_image?.replace('capsule_sm_120', 'header') ?? '',
+    }));
+  } catch (e) {
+    console.error('[steam-api] searchSteamStore error:', e);
+    return [];
+  }
+}
+
 export async function getPlayerSummary(steamId: string, apiKey: string): Promise<PlayerSummary | null> {
   try {
     await webApiLimiter.acquire();
