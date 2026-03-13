@@ -10,16 +10,25 @@ import { DEFAULT_BLACKLISTED_TAGS } from '../services/tag-filter';
 export default function Filters() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
-  const { userId } = useDb();
+  const { userId, triggerSync, syncStatus } = useDb();
   const { data: dna, refetch: refetchDna } = useGamingDNA();
 
   const [search, setSearch] = useState('');
   const [blacklistOverrides, setBlacklistOverrides] = useState<Record<string, boolean>>({});
+  const [catalogCount, setCatalogCount] = useState(() => queries.getTagCatalogCount());
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     searchRef.current?.focus();
   }, []);
+
+  // Refresh catalog count after sync completes
+  useEffect(() => {
+    if (syncStatus === 'synced') {
+      setCatalogCount(queries.getTagCatalogCount());
+      refetchDna();
+    }
+  }, [syncStatus, refetchDna]);
 
   const isBlacklisted = useCallback(
     (tag: { name: string; blacklisted: boolean }) =>
@@ -69,29 +78,46 @@ export default function Filters() {
     }
   }, [userId, dna]);
 
-  // Split tags into blacklisted and auto-computed
-  const { blacklistedTags, autoTags, searchResults } = useMemo(() => {
-    const allTags = dna?.allTags ?? [];
-    const searchLower = search.toLowerCase().trim();
+  const handleSyncTags = useCallback(async () => {
+    await triggerSync(['backlog', 'tags']);
+  }, [triggerSync]);
 
-    const bl = allTags.filter((tag) => isBlacklisted(tag));
+  // Build blacklisted tags list and auto-computed tags
+  const { blacklistedTags, autoTags } = useMemo(() => {
+    const allTags = dna?.allTags ?? [];
+    const bl = allTags.filter((tag) => isBlacklisted(tag))
+      .sort((a, b) => a.name.localeCompare(b.name));
     const auto = allTags
       .filter((tag) => !isBlacklisted(tag))
       .sort((a, b) => b.score - a.score || b.count - a.count);
+    return { blacklistedTags: bl, autoTags: auto };
+  }, [dna?.allTags, isBlacklisted]);
 
-    // Search results: non-blacklisted tags matching search (for adding to blacklist)
-    const results = searchLower
-      ? allTags.filter(
-          (tag) =>
-            tag.name.toLowerCase().includes(searchLower) && !isBlacklisted(tag),
-        )
-      : [];
+  // Search results from tag catalog (all known Steam tags, not just user's library)
+  const catalogResults = useMemo(() => {
+    const trimmed = search.trim();
+    if (!trimmed) return [];
+    const blacklistSet = new Set(blacklistedTags.map((t) => t.name.toLowerCase()));
+    return queries.searchTagCatalog(trimmed, 15)
+      .filter((t) => !blacklistSet.has(t.name.toLowerCase()));
+  }, [search, blacklistedTags]);
 
-    return { blacklistedTags: bl, autoTags: auto, searchResults: results };
-  }, [dna?.allTags, search, isBlacklisted]);
+  // Check if freeform entry is possible (search doesn't match any catalog result exactly)
+  const canAddFreeform = useMemo(() => {
+    const trimmed = search.trim();
+    if (!trimmed) return false;
+    const lower = trimmed.toLowerCase();
+    // Don't offer freeform if already blacklisted
+    if (blacklistedTags.some((t) => t.name.toLowerCase() === lower)) return false;
+    // Don't offer freeform if exact match exists in catalog results
+    if (catalogResults.some((t) => t.name.toLowerCase() === lower)) return false;
+    return true;
+  }, [search, blacklistedTags, catalogResults]);
 
   if (authLoading) return null;
   if (!user) return <Navigate to="/" />;
+
+  const isSyncing = syncStatus === 'syncing';
 
   const scoreBar = (score: number) => {
     const pct = Math.round(score * 100);
@@ -113,10 +139,27 @@ export default function Filters() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 max-w-4xl">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-black text-white mb-2">{t('filters.title')}</h1>
-        <p className="text-gray-400 text-sm">{t('filters.subtitle')}</p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-black text-white mb-2">{t('filters.title')}</h1>
+          <p className="text-gray-400 text-sm">{t('filters.subtitle')}</p>
+        </div>
+        <button
+          onClick={handleSyncTags}
+          disabled={isSyncing}
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-xl text-sm font-medium transition-all text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i className={`fa-solid fa-arrows-rotate text-sm ${isSyncing ? 'animate-spin' : ''}`} />
+          {isSyncing ? t('filters.syncing') : t('filters.syncTags')}
+        </button>
       </div>
+
+      {/* Tag catalog info */}
+      {catalogCount > 0 && (
+        <p className="text-xs text-gray-600 mb-6">
+          {t('filters.catalogInfo', { count: catalogCount })}
+        </p>
+      )}
 
       {/* Section 1: Blacklist Management */}
       <div className="mb-10">
@@ -147,6 +190,12 @@ export default function Filters() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && canAddFreeform && search.trim()) {
+                handleAddToBlacklist(search.trim());
+                setSearch('');
+              }
+            }}
             placeholder={t('filters.searchToBlacklist')}
             className="w-full bg-[#242424] border border-[#333] rounded-xl pl-11 pr-10 py-3 text-sm focus:outline-none focus:border-red-500/50 transition-colors placeholder:text-gray-500"
           />
@@ -161,9 +210,28 @@ export default function Filters() {
         </div>
 
         {/* Search results dropdown */}
-        {search && searchResults.length > 0 && (
-          <div className="bg-[#1a1a1a] border border-[#333] rounded-xl mb-4 max-h-48 overflow-y-auto">
-            {searchResults.slice(0, 10).map((tag) => (
+        {search && (catalogResults.length > 0 || canAddFreeform) && (
+          <div className="bg-[#1a1a1a] border border-[#333] rounded-xl mb-4 max-h-60 overflow-y-auto">
+            {/* Freeform entry option */}
+            {canAddFreeform && (
+              <button
+                onClick={() => {
+                  handleAddToBlacklist(search.trim());
+                  setSearch('');
+                }}
+                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-red-500/10 transition-colors text-sm text-left border-b border-[#333]"
+              >
+                <span className="text-white font-medium">
+                  "{search.trim()}"
+                </span>
+                <span className="text-xs text-red-400">
+                  <i className="fa-solid fa-plus mr-1" />
+                  {t('filters.addCustom')}
+                </span>
+              </button>
+            )}
+            {/* Catalog results */}
+            {catalogResults.map((tag) => (
               <button
                 key={tag.name}
                 onClick={() => {
@@ -172,7 +240,12 @@ export default function Filters() {
                 }}
                 className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-red-500/10 transition-colors text-sm text-left"
               >
-                <span className="text-gray-300">{tag.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-300">{tag.name}</span>
+                  <span className="text-[10px] text-gray-600">
+                    {tag.gameCount} {tag.gameCount === 1 ? 'game' : 'games'}
+                  </span>
+                </div>
                 <span className="text-xs text-red-400">
                   <i className="fa-solid fa-plus mr-1" />
                   {t('filters.addToBlacklist')}
@@ -182,8 +255,8 @@ export default function Filters() {
           </div>
         )}
 
-        {search && searchResults.length === 0 && (
-          <p className="text-xs text-gray-500 mb-4">{t('filters.noTagsFound')}</p>
+        {search && catalogResults.length === 0 && !canAddFreeform && (
+          <p className="text-xs text-gray-500 mb-4">{t('filters.alreadyBlacklisted')}</p>
         )}
 
         {/* Blacklisted tag chips */}
