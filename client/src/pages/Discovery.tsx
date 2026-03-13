@@ -21,6 +21,77 @@ interface HistoryItem {
   swipedAt: number;
 }
 
+function RecentSwipeCard({ item, userId, onReswipe }: { item: HistoryItem; userId: number; onReswipe: () => void }) {
+  const { t } = useTranslation();
+  const [hovered, setHovered] = useState(false);
+  const [decision, setDecision] = useState(item.decision);
+
+  const handleSwipe = (newDecision: SwipeDecision) => {
+    queries.recordSwipe(userId, item.game.id, newDecision);
+    setDecision(newDecision);
+    onReswipe();
+  };
+
+  const decisionBadge = (d: SwipeDecision) => {
+    switch (d) {
+      case 'yes':
+        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">{t('discovery.liked')}</span>;
+      case 'no':
+        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">{t('discovery.passed')}</span>;
+      case 'maybe':
+        return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">{t('discovery.maybe')}</span>;
+    }
+  };
+
+  return (
+    <div
+      className="bg-[#242424] border border-[#333] rounded-xl overflow-hidden hover:border-[#444] transition-colors"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {item.game.headerImage && (
+        <div className="relative">
+          <img
+            src={item.game.headerImage}
+            alt={item.game.name}
+            className={`w-full aspect-video object-cover transition-all ${hovered ? 'blur-[5px]' : ''}`}
+            loading="lazy"
+          />
+          <div className={`absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity ${hovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <button
+              onClick={() => handleSwipe('no')}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'no' ? 'bg-red-500 text-white' : 'bg-white/20 text-red-400 hover:bg-red-500/30'}`}
+              title={t('discovery.passed')}
+            >
+              <i className="fa-solid fa-thumbs-down text-sm" />
+            </button>
+            <button
+              onClick={() => handleSwipe('maybe')}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'maybe' ? 'bg-yellow-500 text-white' : 'bg-white/20 text-yellow-400 hover:bg-yellow-500/30'}`}
+              title={t('discovery.maybe')}
+            >
+              <i className="fa-solid fa-minus text-sm" />
+            </button>
+            <button
+              onClick={() => handleSwipe('yes')}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'yes' ? 'bg-green-500 text-white' : 'bg-white/20 text-green-400 hover:bg-green-500/30'}`}
+              title={t('discovery.liked')}
+            >
+              <i className="fa-solid fa-thumbs-up text-sm" />
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="p-3">
+        <a href={`/game/${item.game.id}`} className="text-sm font-semibold truncate mb-2 block hover:text-[var(--primary)] transition-colors">
+          {item.game.name}
+        </a>
+        {decisionBadge(decision)}
+      </div>
+    </div>
+  );
+}
+
 export default function Discovery() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus, syncProgress } = useAuth();
@@ -425,59 +496,12 @@ export default function Discovery() {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {recentSwipes.map((item) => (
-                <div
+                <RecentSwipeCard
                   key={item.id}
-                  className="bg-[#242424] border border-[#333] rounded-xl overflow-hidden hover:border-[#444] transition-colors"
-                >
-                  {item.game.headerImage && (
-                    <div className="relative group">
-                      <img
-                        src={item.game.headerImage}
-                        alt={item.game.name}
-                        className="w-full aspect-video object-cover transition-all group-hover:blur-[5px]"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => {
-                            queries.recordSwipe(userId!, item.game.id, 'no');
-                            setRecentSwipesRevision((r) => r + 1);
-                          }}
-                          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${item.decision === 'no' ? 'bg-red-500 text-white' : 'bg-white/20 text-red-400 hover:bg-red-500/30'}`}
-                          title={t('discovery.passed')}
-                        >
-                          <i className="fa-solid fa-thumbs-down text-sm" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            queries.recordSwipe(userId!, item.game.id, 'maybe');
-                            setRecentSwipesRevision((r) => r + 1);
-                          }}
-                          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${item.decision === 'maybe' ? 'bg-yellow-500 text-white' : 'bg-white/20 text-yellow-400 hover:bg-yellow-500/30'}`}
-                          title={t('discovery.maybe')}
-                        >
-                          <i className="fa-solid fa-minus text-sm" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            queries.recordSwipe(userId!, item.game.id, 'yes');
-                            setRecentSwipesRevision((r) => r + 1);
-                          }}
-                          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${item.decision === 'yes' ? 'bg-green-500 text-white' : 'bg-white/20 text-green-400 hover:bg-green-500/30'}`}
-                          title={t('discovery.liked')}
-                        >
-                          <i className="fa-solid fa-thumbs-up text-sm" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <div className="p-3">
-                    <a href={`/game/${item.game.id}`} className="text-sm font-semibold truncate mb-2 block hover:text-[var(--primary)] transition-colors">
-                      {item.game.name}
-                    </a>
-                    {decisionBadge(item.decision)}
-                  </div>
-                </div>
+                  item={item}
+                  userId={userId!}
+                  onReswipe={() => setRecentSwipesRevision((r) => r + 1)}
+                />
               ))}
             </div>
           </div>
