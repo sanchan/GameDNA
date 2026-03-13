@@ -91,7 +91,7 @@ export async function getLocalConfig(): Promise<LocalConfig> {
     return {
       steamId: null, steamApiKey: null, displayName: null, avatarUrl: null,
       profileUrl: null, countryCode: null,
-      aiProvider: 'ollama', ollamaUrl: 'http://localhost:11434',
+      aiProvider: 'webllm', ollamaUrl: 'http://localhost:11434',
       ollamaModel: 'llama3.1:8b', webllmModel: 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
       setupComplete: false,
     };
@@ -118,7 +118,7 @@ export async function getLocalConfig(): Promise<LocalConfig> {
     avatarUrl: (row.avatar_url as string) ?? null,
     profileUrl: (row.profile_url as string) ?? null,
     countryCode: (row.country_code as string) ?? null,
-    aiProvider: (row.ai_provider as 'ollama' | 'webllm') ?? 'ollama',
+    aiProvider: (row.ai_provider as 'ollama' | 'webllm') ?? 'webllm',
     ollamaUrl: (row.ollama_url as string) ?? 'http://localhost:11434',
     ollamaModel: (row.ollama_model as string) ?? 'llama3.1:8b',
     webllmModel: (row.webllm_model as string) ?? 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
@@ -155,7 +155,7 @@ export async function saveLocalConfig(updates: Partial<{
       updates.steamId ?? null,
       encFields.encrypted ?? null, encFields.iv ?? null, encFields.salt ?? null,
       updates.displayName ?? null, updates.avatarUrl ?? null, updates.profileUrl ?? null,
-      updates.countryCode ?? null, updates.aiProvider ?? 'ollama',
+      updates.countryCode ?? null, updates.aiProvider ?? 'webllm',
       updates.ollamaUrl ?? 'http://localhost:11434', updates.ollamaModel ?? 'llama3.1:8b',
       updates.webllmModel ?? 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
       updates.setupComplete ? 1 : 0, nowUnix(),
