@@ -411,6 +411,7 @@ const en = {
     failedToLoad: 'Failed to load explanation.',
     aiExplanation: 'AI Explanation',
     highConfidence: 'High Confidence',
+    regenerate: 'Regenerate',
   },
 
   // GameCard component

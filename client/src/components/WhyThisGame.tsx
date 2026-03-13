@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { explainRecommendation } from '../services/ai-features';
 import { useDb } from '../contexts/db-context';
+import * as queries from '../db/queries';
 
 interface WhyThisGameProps {
+  recId?: number;
   gameId: number;
   gameName: string;
   gameImage?: string | null;
@@ -13,9 +15,11 @@ interface WhyThisGameProps {
   aiExplanation?: string | null;
   open: boolean;
   onClose: () => void;
+  onExplanationSaved?: (recId: number, explanation: string) => void;
 }
 
 export default function WhyThisGame({
+  recId,
   gameId,
   gameName,
   gameImage,
@@ -24,6 +28,7 @@ export default function WhyThisGame({
   aiExplanation,
   open,
   onClose,
+  onExplanationSaved,
 }: WhyThisGameProps) {
   const { t } = useTranslation();
   const { userId } = useDb();
@@ -31,6 +36,7 @@ export default function WhyThisGame({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const cancelRef = useRef<(() => void) | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -79,16 +85,61 @@ export default function WhyThisGame({
     };
   }, [open, handleKeyDown]);
 
-  useEffect(() => {
-    if (!open) {
-      setText('');
-      setError(null);
+  const startGeneration = useCallback(() => {
+    // Cancel any in-flight generation
+    cancelRef.current?.();
+
+    if (!userId) {
+      setError(t('whyThisGame.failedToLoad'));
+      setLoading(false);
       return;
     }
 
     setLoading(true);
     setText('');
     setError(null);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    let cancelled = false;
+    let fullText = '';
+
+    cancelRef.current = () => {
+      cancelled = true;
+      controller.abort();
+    };
+
+    (async () => {
+      try {
+        for await (const chunk of explainRecommendation(userId, gameId)) {
+          if (cancelled) break;
+          fullText += chunk;
+          setText(fullText);
+          if (contentRef.current) {
+            contentRef.current.scrollTop = contentRef.current.scrollHeight;
+          }
+        }
+        if (!cancelled && fullText && recId && userId) {
+          queries.updateRecommendationExplanation(recId, userId, fullText);
+          onExplanationSaved?.(recId, fullText);
+        }
+        if (!cancelled) setLoading(false);
+      } catch (err: any) {
+        if (!cancelled) {
+          setError(t('whyThisGame.failedToLoad'));
+          setLoading(false);
+        }
+      }
+    })();
+  }, [userId, gameId, recId, onExplanationSaved, t]);
+
+  useEffect(() => {
+    if (!open) {
+      cancelRef.current?.();
+      setText('');
+      setError(null);
+      return;
+    }
 
     // If we already have a stored AI explanation, use it directly
     if (aiExplanation) {
@@ -98,43 +149,19 @@ export default function WhyThisGame({
     }
 
     // Otherwise generate one via the local AI engine
-    const controller = new AbortController();
-    abortRef.current = controller;
-    let cancelled = false;
+    startGeneration();
+    return () => cancelRef.current?.();
+  }, [open, gameId, aiExplanation]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    (async () => {
-      try {
-        if (!userId) {
-          setError(t('whyThisGame.failedToLoad'));
-          setLoading(false);
-          return;
-        }
-        for await (const chunk of explainRecommendation(userId, gameId)) {
-          if (cancelled) break;
-          setText((prev) => prev + chunk);
-          if (contentRef.current) {
-            contentRef.current.scrollTop = contentRef.current.scrollHeight;
-          }
-        }
-        setLoading(false);
-      } catch (err: any) {
-        if (!cancelled) {
-          setError(t('whyThisGame.failedToLoad'));
-          setLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [open, gameId, aiExplanation, userId]);
+  const handleRegenerate = () => {
+    startGeneration();
+  };
 
   if (!open) return null;
 
   const matchPercent = matchScore != null ? Math.round(matchScore * 100) : null;
   const isHighConfidence = matchScore != null && matchScore >= 0.7;
+  const hasStoredExplanation = !!aiExplanation || (!loading && !!text && !error);
 
   const modal = (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={gameName}>
@@ -188,10 +215,21 @@ export default function WhyThisGame({
         <div ref={contentRef} className="p-6 overflow-y-auto max-h-[calc(90vh-280px)]">
           {/* AI Explanation */}
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-3 flex items-center gap-2">
-              <i className="fa-solid fa-brain" />
-              {t('whyThisGame.aiExplanation')}
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-[var(--muted-foreground)] uppercase tracking-wider flex items-center gap-2">
+                <i className="fa-solid fa-brain" />
+                {t('whyThisGame.aiExplanation')}
+              </h3>
+              {hasStoredExplanation && !loading && (
+                <button
+                  onClick={handleRegenerate}
+                  className="text-xs text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors flex items-center gap-1.5"
+                >
+                  <i className="fa-solid fa-rotate-right" />
+                  {t('whyThisGame.regenerate')}
+                </button>
+              )}
+            </div>
             <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-5">
               {error ? (
                 <p className="text-red-400">{error}</p>

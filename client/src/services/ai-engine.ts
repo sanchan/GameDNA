@@ -3,6 +3,8 @@
 export interface AiEngine {
   readonly name: string;
   checkHealth(): Promise<boolean>;
+  /** Returns true only if the engine is ready to generate without needing to download/load a model. */
+  isModelReady(): boolean;
   generateJSON<T>(prompt: string, temperature?: number): Promise<T | null>;
   generateText(prompt: string, temperature?: number): Promise<string | null>;
   generateStream(prompt: string, temperature?: number): AsyncGenerator<string>;

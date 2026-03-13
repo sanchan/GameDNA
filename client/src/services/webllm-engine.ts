@@ -68,6 +68,11 @@ export class WebLLMEngine implements AiEngine {
     }
   }
 
+  /** Returns true only if the model is loaded and ready to generate. */
+  isModelReady(): boolean {
+    return this.engine !== null;
+  }
+
   async generateJSON<T>(prompt: string, temperature = 0.3): Promise<T | null> {
     try {
       const engine = await this.ensureLoaded();

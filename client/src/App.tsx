@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import { ThemeContext, useThemeProvider } from './hooks/use-theme';
 import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts';
 import { useAuth } from './hooks/use-auth';
+import { useAi } from './hooks/use-ai';
 import Landing from './pages/Landing';
 import Discovery from './pages/Discovery';
 import Backlog from './pages/Backlog';
@@ -62,6 +63,12 @@ function DbGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/** Initialize the AI engine once at app startup based on saved config. */
+function AiInit() {
+  useAi();
+  return null;
+}
+
 function AppRoutes() {
   const { config } = useDb();
   const isSetup = config?.setupComplete;
@@ -105,6 +112,7 @@ export default function App() {
             <ToastProvider>
               <KeyboardShortcutsProvider>
                 <DbGate>
+                  <AiInit />
                   <div className="min-h-screen bg-[var(--background)]">
                     <a href="#main-content" className="skip-to-content">
                       Skip to content
