@@ -408,7 +408,7 @@ export function getSwipedNoIds(userId: number): number[] {
 }
 
 export function getSwipeHistory(userId: number, opts?: { limit?: number; offset?: number; decision?: string; search?: string }) {
-  let sql = `SELECT sh.id, sh.game_id, sh.decision, sh.swiped_at, g.name, g.header_image, g.genres, g.tags, g.review_score, g.price_cents, g.price_currency, g.developers, g.publishers, g.platforms, g.short_desc, g.release_date, g.review_count
+  let sql = `SELECT sh.id, sh.game_id, sh.decision, sh.swiped_at, g.id as gid, g.name, g.header_image, g.genres, g.tags, g.review_score, g.price_cents, g.price_currency, g.developers, g.publishers, g.platforms, g.short_desc, g.release_date, g.review_count
     FROM swipe_history sh
     INNER JOIN games g ON sh.game_id = g.id
     WHERE sh.user_id = ?`;
@@ -439,7 +439,7 @@ export function getSwipeHistory(userId: number, opts?: { limit?: number; offset?
     gameId: row.game_id as number,
     decision: row.decision as string,
     swipedAt: row.swiped_at as number,
-    game: dbGameToGame(row),
+    game: dbGameToGame({ ...row, id: row.gid }),
   }));
 }
 
