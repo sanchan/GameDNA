@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Navigate, Link } from 'react-router';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Navigate, Link, useNavigate } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
@@ -50,6 +50,9 @@ export default function Settings() {
     }
   }, [aiProvider]);
 
+  // Track the last-saved snapshot for dirty detection
+  const savedSettingsRef = useRef<UserSettings | null>(null);
+
   const saveNow = useCallback((
     overrideSettings?: UserSettings,
     overrideAiProvider?: AiProvider | null,
@@ -67,6 +70,7 @@ export default function Settings() {
         webllmModel: provider === 'webllm' ? webllmModel : null,
       });
       refreshConfig?.();
+      savedSettingsRef.current = s;
       toast('Settings saved', 'success');
     } catch {
       toast('Failed to save settings', 'error');
@@ -76,6 +80,52 @@ export default function Settings() {
   }, [settings, userId, toast, aiProvider, webllmModel, refreshConfig]);
 
   const handleSave = useCallback(() => saveNow(), [saveNow]);
+
+  // Initialize saved snapshot when settings first load
+  useEffect(() => {
+    if (settings && !savedSettingsRef.current) {
+      savedSettingsRef.current = settings;
+    }
+  }, [settings]);
+
+  // Dirty = text fields differ from last save (buttons auto-save, so we only check text inputs)
+  const isDirty = useMemo(() => {
+    if (!settings || !savedSettingsRef.current) return false;
+    const saved = savedSettingsRef.current;
+    return (
+      (settings.ollamaUrl ?? '') !== (saved.ollamaUrl ?? '') ||
+      (settings.ollamaModel ?? '') !== (saved.ollamaModel ?? '') ||
+      (settings.explanationTemplate ?? '') !== (saved.explanationTemplate ?? '') ||
+      (settings.cacheTtlSeconds ?? '') !== (saved.cacheTtlSeconds ?? '')
+    );
+  }, [settings]);
+
+  // Block browser close / refresh when dirty
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  // Intercept in-app link clicks when dirty
+  const navigate = useNavigate();
+  const [pendingNavTo, setPendingNavTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest('a[href]');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href || href.startsWith('http') || href.startsWith('//')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingNavTo(href);
+    };
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
+  }, [isDirty]);
 
 
   if (authLoading) return null;
@@ -335,15 +385,53 @@ export default function Settings() {
         </div>
 
         {/* Save button */}
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3 items-center">
+          {isDirty && (
+            <span className="text-sm text-amber-400">
+              <i className="fa-solid fa-circle-exclamation mr-1" />
+              Unsaved changes
+            </span>
+          )}
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-3 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+            className={`px-6 py-3 rounded-xl font-bold transition-all disabled:opacity-50 ${isDirty ? 'bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 ring-2 ring-[var(--primary)]/30' : 'bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90'}`}
           >
             {saving ? 'Saving...' : 'Save Settings'}
           </button>
         </div>
+
+        {/* Unsaved changes dialog */}
+        {pendingNavTo && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+              <h3 className="text-lg font-bold text-white mb-2">Unsaved Changes</h3>
+              <p className="text-sm text-gray-400 mb-6">
+                You have unsaved settings. Do you want to save before leaving?
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => { setPendingNavTo(null); }}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-gray-300 border border-[#444] hover:bg-[#333] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => { const to = pendingNavTo; setPendingNavTo(null); navigate(to); }}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-red-400 border border-red-500/30 hover:bg-red-500/10 transition-colors"
+                >
+                  Discard
+                </button>
+                <button
+                  onClick={() => { saveNow(); const to = pendingNavTo; setPendingNavTo(null); navigate(to); }}
+                  className="px-4 py-2 rounded-lg text-sm font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition-opacity"
+                >
+                  Save & Leave
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
