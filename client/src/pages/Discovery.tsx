@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/use-auth';
 import { useDb } from '../contexts/db-context';
@@ -9,6 +9,7 @@ import * as queries from '../db/queries';
 import { fetchMoreGameIds } from '../services/steam-api';
 import { ensureGamesCached } from '../services/game-cache';
 import GameCard from '../components/GameCard';
+import type { GameCardHandle } from '../components/GameCard';
 import SwipeControls from '../components/SwipeControls';
 import FilterPanel, { useFilterCount } from '../components/FilterPanel';
 import type { Game, SwipeDecision } from '../../../shared/types';
@@ -36,6 +37,8 @@ export default function Discovery() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [dragStyle, setDragStyle] = useState<React.CSSProperties>({});
   const isDraggingRef = useRef(false);
+  const gameCardRef = useRef<GameCardHandle>(null);
+  const navigate = useNavigate();
 
   // Save scroll position before navigating away
   useEffect(() => {
@@ -88,10 +91,16 @@ export default function Discovery() {
         swipe('no');
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
+        gameCardRef.current?.openGallery();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
         swipe('maybe');
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         swipe('yes');
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        navigate(`/game/${currentGame.id}`);
       } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
         if (canUndo) undo();
@@ -99,7 +108,7 @@ export default function Discovery() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [currentGame, swipe, undo, canUndo]);
+  }, [currentGame, swipe, undo, canUndo, navigate]);
 
   // Touch gesture handlers
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -308,7 +317,7 @@ export default function Discovery() {
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerUp}
               >
-                <GameCard game={currentGame} score={currentScore ? currentScore * 100 : null} />
+                <GameCard ref={gameCardRef} game={currentGame} score={currentScore ? currentScore * 100 : null} />
               </div>
             </>
           ) : (
