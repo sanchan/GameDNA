@@ -1130,6 +1130,18 @@ export function setTagIgnored(userId: number, tag: string, ignored: boolean): st
   return updated;
 }
 
+export function resetIgnoredTagsToDefaults(userId: number): void {
+  run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify(DEFAULT_IGNORED_TAGS), userId]);
+}
+
+export function setAllTagsIgnored(userId: number, tagNames: string[]): void {
+  run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify(tagNames), userId]);
+}
+
+export function setAllTagsActive(userId: number): void {
+  run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify([]), userId]);
+}
+
 // ── Library & Wishlist ──────────────────────────────────────────────────────
 
 export function getLibrary(userId: number, opts?: { limit?: number; offset?: number; sort?: string }) {

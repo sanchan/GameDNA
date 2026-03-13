@@ -50,6 +50,7 @@ const en = {
     history: 'History',
     backlog: 'Backlog',
     chat: 'Chat',
+    filters: 'Tag Filters',
     stats: 'Stats',
     profile: 'Profile',
     settings: 'Settings',
@@ -420,6 +421,26 @@ const en = {
     fullscreenGallery: 'Fullscreen gallery',
     reviews: '{{count}} reviews',
     reviewsK: '{{count}}K reviews',
+  },
+
+  // Filters page (tag management)
+  filters: {
+    title: 'Tag Filters',
+    subtitle: 'Control which tags influence your discovery and recommendations. Click any tag to toggle it.',
+    searchPlaceholder: 'Search tags...',
+    viewMode: {
+      all: 'All',
+      active: 'Active',
+      ignored: 'Ignored',
+    },
+    resetDefaults: 'Reset Defaults',
+    activateAll: 'Activate All',
+    ignoreAll: 'Ignore All',
+    showingResults: 'Showing {{shown}} of {{total}} tags',
+    noTagsFound: 'No tags match your search.',
+    legendActive: 'Active — influences recommendations',
+    legendIgnored: 'Ignored — hidden from recommendations',
+    legendHint: 'Click a tag to toggle',
   },
 
   // FilterPanel component
