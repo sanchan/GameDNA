@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   profile_url TEXT,
   country_code TEXT,
   last_login INTEGER,
-  ignored_tags TEXT,
+  blacklisted_tags TEXT,
   created_at INTEGER DEFAULT (unixepoch())
 );
 
@@ -237,4 +237,5 @@ export const MIGRATIONS_SQL = [
   `ALTER TABLE user_settings ADD COLUMN explanation_template TEXT`,
   `ALTER TABLE games ADD COLUMN screenshots TEXT`,
   `ALTER TABLE games ADD COLUMN movies TEXT`,
+  `ALTER TABLE users RENAME COLUMN ignored_tags TO blacklisted_tags`,
 ];
