@@ -6,6 +6,8 @@ import { useDb } from '../contexts/db-context';
 import { useDiscovery } from '../hooks/use-discovery';
 import { useGamingDNA } from '../hooks/use-profile';
 import * as queries from '../db/queries';
+import { fetchMoreGameIds } from '../services/steam-api';
+import { ensureGamesCached } from '../services/game-cache';
 import GameCard from '../components/GameCard';
 import SwipeControls from '../components/SwipeControls';
 import FilterPanel, { useFilterCount } from '../components/FilterPanel';
@@ -21,7 +23,7 @@ interface HistoryItem {
 export default function Discovery() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus, syncProgress } = useAuth();
-  const { userId } = useDb();
+  const { userId, config } = useDb();
   const { currentGame, currentScore, swipe, undo, canUndo, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded, discoveryMode, setDiscoveryMode, maxHours, setMaxHours } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -159,13 +161,22 @@ export default function Discovery() {
     }
   }, [swipe]);
 
-  const handleLoadMore = () => {
-    // In local-first mode, just refetch the queue with current filters
+  const handleLoadMore = async () => {
+    if (!userId || loadingMore) return;
     setLoadingMore(true);
     try {
+      // Fetch new game IDs from Steam that we don't already have cached
+      const existingIds = new Set(queries.getAllCachedGameIds());
+      const newIds = await fetchMoreGameIds(existingIds);
+      if (newIds.length > 0) {
+        // Cache their details from Steam
+        const cc = config?.countryCode ?? undefined;
+        await ensureGamesCached(newIds, () => {}, cc);
+      }
+      // Refetch the discovery queue with the newly cached games
       refetchQueue();
-    } catch {
-      // ignore
+    } catch (e) {
+      console.error('[discovery] Load more error:', e);
     } finally {
       setLoadingMore(false);
     }
@@ -332,9 +343,17 @@ export default function Discovery() {
                   <p className="text-sm mb-4">{t('discovery.loadMorePrompt')}</p>
                   <button
                     onClick={handleLoadMore}
-                    className="bg-[var(--primary)] text-[var(--primary-foreground)] px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                    disabled={loadingMore}
+                    className="bg-[var(--primary)] text-[var(--primary-foreground)] px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {t('discovery.loadMoreButton')}
+                    {loadingMore ? (
+                      <span className="flex items-center gap-2">
+                        <i className="fa-solid fa-arrows-rotate animate-spin text-xs" />
+                        {t('discovery.fetchingGames')}
+                      </span>
+                    ) : (
+                      t('discovery.loadMoreButton')
+                    )}
                   </button>
                 </div>
               )}
