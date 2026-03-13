@@ -401,7 +401,7 @@ export default function Settings() {
                 </button>
                 <button
                   onClick={() => { const to = pendingNavTo; setPendingNavTo(null); navigate(to); }}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-red-400 border border-red-500/30 hover:bg-red-500/10 transition-colors"
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-red-400 border border-red-500/50 hover:bg-red-500/10 transition-colors"
                 >
                   Discard
                 </button>

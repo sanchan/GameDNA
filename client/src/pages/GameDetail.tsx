@@ -501,7 +501,7 @@ export default function GameDetail() {
                 <button
                   onClick={() => handleSwipe('no')}
                   disabled={swiping}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   <i className="fa-solid fa-xmark" />
                   {t('gameDetail.notForMe')}
@@ -509,7 +509,7 @@ export default function GameDetail() {
                 <button
                   onClick={() => handleSwipe('maybe')}
                   disabled={swiping}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 transition-colors text-sm font-medium disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   <i className="fa-solid fa-question" />
                   {t('gameDetail.maybe')}
@@ -517,7 +517,7 @@ export default function GameDetail() {
                 <button
                   onClick={() => handleSwipe('yes')}
                   disabled={swiping}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-colors text-sm font-medium disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-green-500/50 text-green-400 hover:bg-green-500/10 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   <i className="fa-solid fa-check" />
                   {t('gameDetail.interested')}

@@ -195,7 +195,7 @@ export default function WhyThisGame({
                   </span>
                 )}
                 {isHighConfidence && (
-                  <span className="bg-[oklch(0.72_0.19_142)]/20 text-[oklch(0.72_0.19_142)] border border-[oklch(0.72_0.19_142)]/30 px-3 py-1 rounded-full text-xs font-bold">
+                  <span className="bg-[oklch(0.72_0.19_142)]/20 text-[oklch(0.72_0.19_142)] border border-[oklch(0.72_0.19_142)]/50 px-3 py-1 rounded-full text-xs font-bold">
                     <i className="fa-solid fa-check mr-1" />
                     {t('whyThisGame.highConfidence')}
                   </span>

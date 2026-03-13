@@ -179,7 +179,7 @@ export default function DataManagement() {
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
             confirmClear
               ? 'bg-red-500 text-white hover:bg-red-600'
-              : 'bg-[#1a1a1a] border border-red-500/30 text-red-400 hover:bg-red-500/10'
+              : 'bg-[#1a1a1a] border border-red-500/50 text-red-400 hover:bg-red-500/10'
           } disabled:opacity-50`}
         >
           <i className={`fa-solid ${clearing ? 'fa-spinner fa-spin' : 'fa-trash'}`} />

@@ -107,7 +107,7 @@ export default function WebLLMSetup({ selectedModel, onModelChange }: Props) {
           <button
             onClick={handleDownload}
             disabled={loading || !webgpuAvailable}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[var(--primary)]/20 border border-[var(--primary)]/30 text-[var(--primary)] rounded-xl text-sm font-medium hover:bg-[var(--primary)]/30 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[var(--primary)]/20 border border-[var(--primary)]/50 text-[var(--primary)] rounded-xl text-sm font-medium hover:bg-[var(--primary)]/30 transition-colors disabled:opacity-50"
           >
             <i className={`fa-solid ${loading ? 'fa-spinner fa-spin' : ready ? 'fa-check' : 'fa-download'}`} />
             {loading ? 'Loading...' : ready ? 'Model Ready' : 'Download & Load Model'}
