@@ -329,10 +329,7 @@ export default function GameDetail() {
     ? game.reviewCount - positiveCount
     : null;
 
-  // Use the first screenshot as the hero background, or fall back to header
-  const heroImage = (mediaItems && mediaItems.length > 0)
-    ? (mediaItems.find(m => m.type === 'image')?.full ?? game.headerImage)
-    : game.headerImage;
+  const heroImage = game.headerImage;
 
   return (
     <div className="min-h-screen bg-[#1a1a1a]">
@@ -348,22 +345,20 @@ export default function GameDetail() {
         )}
 
         {/* Gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a]/80 via-transparent to-transparent" />
-
-        {/* Back button */}
-        <div className="absolute top-6 left-6 z-10">
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm"
-          >
-            <i className="fa-solid fa-arrow-left" />
-            <span>{t('common.back')}</span>
-          </Link>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a]/80 via-transparent to-transparent pointer-events-none" />
 
         {/* Hero content */}
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end h-full pb-28 lg:pb-32">
+          {/* Back button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute top-6 left-0 flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm cursor-pointer"
+          >
+            <i className="fa-solid fa-arrow-left" />
+            <span>{t('common.back')}</span>
+          </button>
+
           <div className="max-w-4xl">
             {/* Title */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-3 leading-tight">
