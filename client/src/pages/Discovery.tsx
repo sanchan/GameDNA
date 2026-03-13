@@ -23,7 +23,6 @@ interface HistoryItem {
 
 function RecentSwipeCard({ item, userId, onReswipe }: { item: HistoryItem; userId: number; onReswipe: () => void }) {
   const { t } = useTranslation();
-  const [hovered, setHovered] = useState(false);
   const [decision, setDecision] = useState(item.decision);
 
   const handleSwipe = (newDecision: SwipeDecision) => {
@@ -44,37 +43,33 @@ function RecentSwipeCard({ item, userId, onReswipe }: { item: HistoryItem; userI
   };
 
   return (
-    <div
-      className="bg-[#242424] border border-[#333] rounded-xl overflow-hidden hover:border-[#444] transition-colors"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
+    <div className="group bg-[#242424] border border-[#333] rounded-xl overflow-hidden hover:border-[#444] transition-colors">
       {item.game.headerImage && (
         <div className="relative">
           <img
             src={item.game.headerImage}
             alt={item.game.name}
-            className={`w-full aspect-video object-cover transition-all ${hovered ? 'blur-[5px]' : ''}`}
+            className="w-full aspect-video object-cover transition-all group-hover:blur-[5px]"
             loading="lazy"
           />
-          <div className={`absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity ${hovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity opacity-0 group-hover:opacity-100 pointer-events-none">
             <button
               onClick={() => handleSwipe('no')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'no' ? 'bg-red-500 text-white' : 'bg-white/20 text-red-400 hover:bg-red-500/30'}`}
+              className={`pointer-events-auto w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'no' ? 'bg-red-500 text-white' : 'bg-white/20 text-red-400 hover:bg-red-500/30'}`}
               title={t('discovery.passed')}
             >
               <i className="fa-solid fa-thumbs-down text-sm" />
             </button>
             <button
               onClick={() => handleSwipe('maybe')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'maybe' ? 'bg-yellow-500 text-white' : 'bg-white/20 text-yellow-400 hover:bg-yellow-500/30'}`}
+              className={`pointer-events-auto w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'maybe' ? 'bg-yellow-500 text-white' : 'bg-white/20 text-yellow-400 hover:bg-yellow-500/30'}`}
               title={t('discovery.maybe')}
             >
               <i className="fa-solid fa-minus text-sm" />
             </button>
             <button
               onClick={() => handleSwipe('yes')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'yes' ? 'bg-green-500 text-white' : 'bg-white/20 text-green-400 hover:bg-green-500/30'}`}
+              className={`pointer-events-auto w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'yes' ? 'bg-green-500 text-white' : 'bg-white/20 text-green-400 hover:bg-green-500/30'}`}
               title={t('discovery.liked')}
             >
               <i className="fa-solid fa-thumbs-up text-sm" />
