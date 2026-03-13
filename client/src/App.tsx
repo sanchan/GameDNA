@@ -19,6 +19,7 @@ import Settings from './pages/Settings';
 import Stats from './pages/Stats';
 import Chat from './pages/Chat';
 import Legal from './pages/Legal';
+import Filters from './pages/Filters';
 import Help from './pages/Help';
 import HelpMatch from './pages/HelpMatch';
 import HelpPrivacy from './pages/HelpPrivacy';
@@ -89,6 +90,7 @@ function AppRoutes() {
           <Route path="/recommendations" element={<Recommendations />} />
           <Route path="/history" element={<History />} />
           <Route path="/lists" element={<MyLists />} />
+          <Route path="/filters" element={<Filters />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/chat" element={<Chat />} />

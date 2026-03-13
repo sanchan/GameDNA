@@ -22,12 +22,8 @@ export default function Profile() {
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { data: dna, isLoading: dnaLoading, refetch: refetchDna } = useGamingDNA();
   const prevSyncStatus = useRef(syncStatus);
-  const [showAllTags, setShowAllTags] = useState(false);
-  const [togglingTag, setTogglingTag] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
-  const [ignoredOverrides, setIgnoredOverrides] = useState<Record<string, boolean>>({});
-  const [tagFilter, setTagFilter] = useState<'all' | 'selected' | 'unselected'>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Interactive radar state
@@ -229,27 +225,6 @@ export default function Profile() {
     ? dna.swipeStats.yes + dna.swipeStats.no + dna.swipeStats.maybe
     : 0;
 
-  const handleToggleTag = (tagName: string, currentlyIgnored: boolean) => {
-    if (!userId) return;
-    const newIgnored = !currentlyIgnored;
-    setIgnoredOverrides((prev) => ({ ...prev, [tagName]: newIgnored }));
-    setTogglingTag(tagName);
-    try {
-      queries.setTagIgnored(userId, tagName, newIgnored);
-    } catch {
-      // Revert on error
-      setIgnoredOverrides((prev) => ({ ...prev, [tagName]: currentlyIgnored }));
-    } finally {
-      setTogglingTag(null);
-    }
-  };
-
-  // Helper to get effective ignored status (local override takes precedence)
-  const isTagIgnored = (tag: { name: string; ignored: boolean }) =>
-    tag.name in ignoredOverrides ? ignoredOverrides[tag.name] : tag.ignored;
-
-  const tagColors = ['#f97316', '#8b5cf6', '#3b82f6', '#22c55e', '#eab308', '#ef4444', '#ec4899', '#06b6d4'];
-
   const syncCategories: { key: SyncCategory; label: string; icon: string; iconColor: string; bgColor: string }[] = [
     { key: 'library', label: 'Library', icon: 'fa-gamepad', iconColor: 'text-blue-500', bgColor: 'bg-blue-500/20' },
     { key: 'wishlist', label: 'Wishlist', icon: 'fa-heart', iconColor: 'text-pink-500', bgColor: 'bg-pink-500/20' },
@@ -261,14 +236,6 @@ export default function Profile() {
   const anyCategorySyncing = syncCategories.some(
     ({ key }) => syncProgress?.categories?.[key]?.status === 'syncing'
   );
-
-  const displayTags = (() => {
-    const sorted = dna?.allTags.slice().sort((a, b) => b.score - a.score) ?? [];
-    const base = showAllTags ? sorted : sorted.slice(0, 6);
-    if (tagFilter === 'selected') return base.filter((tag) => !isTagIgnored(tag));
-    if (tagFilter === 'unselected') return base.filter((tag) => isTagIgnored(tag));
-    return base;
-  })();
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
@@ -468,83 +435,33 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Tag Management */}
+          {/* Tag Filters Link */}
           {dna && dna.allTags.length > 0 && (
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 lg:p-8">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-2">{t('profile.tagPreferences')}</h2>
-                  <p className="text-gray-400 text-sm">{t('profile.tagPreferencesSubtitle')}</p>
-                </div>
-                <div className="mt-4 lg:mt-0">
-                  <div className="relative">
-                    <select
-                      value={tagFilter}
-                      onChange={(e) => setTagFilter(e.target.value as 'all' | 'selected' | 'unselected')}
-                      className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2 text-sm font-medium text-white appearance-none cursor-pointer pr-10 focus:outline-none focus:border-[var(--primary)]"
-                    >
-                      <option value="all">{t('profile.allTags')}</option>
-                      <option value="selected">{t('profile.selectedOnly', 'Selected Only')}</option>
-                      <option value="unselected">{t('profile.unselectedOnly', 'Unselected Only')}</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
-                      <i className="fa-solid fa-chevron-down text-gray-400 text-xs" />
+            <Link
+              to="/filters"
+              className="block bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-2xl p-6 lg:p-8 transition-all group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 bg-[var(--primary)]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i className="fa-solid fa-sliders text-[var(--primary)] text-2xl" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white mb-1">{t('profile.tagPreferences')}</h2>
+                    <p className="text-gray-400 text-sm">{t('profile.tagPreferencesSubtitle')}</p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-xs text-[var(--primary)] font-medium">
+                        {dna.allTags.filter((t) => !t.ignored).length} active
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {dna.allTags.filter((t) => t.ignored).length} ignored
+                      </span>
                     </div>
                   </div>
                 </div>
+                <i className="fa-solid fa-arrow-right text-gray-500 group-hover:text-[var(--primary)] transition-colors text-lg" />
               </div>
-
-              {/* Tag List (vertical) */}
-              <div className="space-y-3">
-                {displayTags.map((tag, idx) => {
-                  const ignored = isTagIgnored(tag);
-                  const color = tagColors[idx % tagColors.length];
-                  return (
-                    <div key={tag.name} className="bg-[#1a1a1a] rounded-lg p-4 flex items-center hover:bg-[#1a1a1a]/70 transition-all">
-                      <div className="flex items-center space-x-4 flex-1">
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{ backgroundColor: `${color}33` }}
-                        >
-                          <i className="fa-solid fa-tag" style={{ color }} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-bold text-white">{tag.name}</h3>
-                            <div className="flex items-center space-x-4">
-                              <div className="text-sm text-gray-400">
-                                Score: <span className="font-bold" style={{ color: ignored ? undefined : color }}>{tag.score.toFixed(1)}</span>
-                              </div>
-                              <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  className="sr-only peer"
-                                  checked={!ignored}
-                                  disabled={togglingTag === tag.name}
-                                  onChange={() => handleToggleTag(tag.name, ignored)}
-                                />
-                                <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary)] peer-disabled:opacity-50" />
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Show All Tags Button */}
-              <div className="mt-6 pt-6 border-t border-[#333]">
-                <button
-                  onClick={() => setShowAllTags(!showAllTags)}
-                  className="w-full bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-xl p-4 flex items-center justify-center space-x-3 transition-all group"
-                >
-                  <i className={`fa-solid ${showAllTags ? 'fa-chevron-up' : 'fa-chevron-down'} text-[var(--primary)] group-hover:text-white transition-colors`} />
-                  <span className="font-bold text-sm">{showAllTags ? t('profile.hideAllTags') : t('profile.showAllTags')}</span>
-                </button>
-              </div>
-            </div>
+            </Link>
           )}
 
           {/* AI Summary */}
