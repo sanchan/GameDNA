@@ -28,6 +28,8 @@ export async function cacheGame(appid: number, cc?: string): Promise<boolean> {
         developers: details.developers,
         publishers: details.publishers,
         platforms: details.platforms,
+        screenshots: details.screenshots,
+        movies: details.movies,
       });
 
       return true;
@@ -43,6 +45,30 @@ export async function cacheGame(appid: number, cc?: string): Promise<boolean> {
 
   console.error(`[game-cache] Failed to cache appid ${appid}:`, lastError);
   return false;
+}
+
+/** Force-refresh game cache for given appids, ignoring TTL. */
+export async function forceRefreshGames(
+  appids: number[],
+  onProgress?: (cached: number, total: number) => void,
+  cc?: string,
+): Promise<void> {
+  if (appids.length === 0) return;
+
+  for (let i = 0; i < appids.length; i += config.cacheBatchSize) {
+    const batch = appids.slice(i, i + config.cacheBatchSize);
+    await Promise.allSettled(batch.map((appid) => cacheGame(appid, cc)));
+
+    if (onProgress) {
+      onProgress(Math.min(i + config.cacheBatchSize, appids.length), appids.length);
+    }
+
+    if (i + config.cacheBatchSize < appids.length) {
+      await new Promise((r) => setTimeout(r, config.cacheBatchDelayMs));
+    }
+  }
+
+  db.batchPersist();
 }
 
 export async function ensureGamesCached(

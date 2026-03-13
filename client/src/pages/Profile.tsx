@@ -43,6 +43,7 @@ export default function Profile() {
   const [summaryHistory, setSummaryHistory] = useState<AiSummaryEntry[]>([]);
   const [showSummaryHistory, setShowSummaryHistory] = useState(false);
   const [generatingSummary, setGeneratingSummary] = useState(false);
+  const [refreshCache, setRefreshCache] = useState(false);
 
   const handleExport = useCallback(() => {
     if (!userId) return;
@@ -230,6 +231,7 @@ export default function Profile() {
     { key: 'library', label: 'Library', icon: 'fa-gamepad', iconColor: 'text-blue-500', bgColor: 'bg-blue-500/20' },
     { key: 'wishlist', label: 'Wishlist', icon: 'fa-heart', iconColor: 'text-pink-500', bgColor: 'bg-pink-500/20' },
     { key: 'backlog', label: 'Backlog', icon: 'fa-database', iconColor: 'text-amber-500', bgColor: 'bg-amber-500/20' },
+    { key: 'cache', label: 'Refresh Cache', icon: 'fa-rotate', iconColor: 'text-cyan-500', bgColor: 'bg-cyan-500/20' },
     { key: 'tags', label: 'Tags', icon: 'fa-tags', iconColor: 'text-purple-500', bgColor: 'bg-purple-500/20' },
   ];
 
@@ -596,13 +598,41 @@ export default function Profile() {
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-bold text-white">{t('profile.syncLibraryCard')}</h3>
               <button
-                onClick={() => triggerSync()}
+                onClick={() => {
+                  if (refreshCache) {
+                    triggerSync(['library', 'wishlist', 'backlog', 'cache', 'tags']);
+                  } else {
+                    triggerSync();
+                  }
+                }}
                 disabled={anyCategorySyncing}
                 className="flex items-center space-x-1.5 px-3 py-1.5 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-[var(--primary-foreground)] rounded-lg text-xs font-bold transition-all disabled:opacity-50"
               >
                 <i className={`fa-solid fa-arrows-rotate text-xs ${anyCategorySyncing ? 'animate-spin' : ''}`} />
                 <span>{anyCategorySyncing ? t('common.syncing') : t('profile.syncAll', 'Sync All')}</span>
               </button>
+            </div>
+
+            {/* Refresh Cache toggle */}
+            <div className="flex items-center justify-between mb-4 bg-[#1a1a1a] rounded-xl px-4 py-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i className="fa-solid fa-rotate text-cyan-500 text-xs" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-white">Refresh game cache</h4>
+                  <p className="text-[10px] text-gray-500">Re-fetch all game data on Sync All</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={refreshCache}
+                  onChange={(e) => setRefreshCache(e.target.checked)}
+                />
+                <div className="w-9 h-5 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500" />
+              </label>
             </div>
 
             <div className="space-y-3">

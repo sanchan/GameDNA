@@ -3,12 +3,14 @@
 
 import * as db from '../db/queries';
 import { getOwnedGames, getWishlist, getPopularGameIds } from './steam-api';
-import { ensureGamesCached } from './game-cache';
+import { ensureGamesCached, forceRefreshGames } from './game-cache';
 import { recalculateTasteProfile } from './taste-profile';
 import { generateRecommendations } from './recommendation';
 
-export type SyncCategory = 'library' | 'wishlist' | 'backlog' | 'tags';
+export type SyncCategory = 'library' | 'wishlist' | 'backlog' | 'tags' | 'cache';
 export const ALL_CATEGORIES: SyncCategory[] = ['library', 'wishlist', 'backlog', 'tags'];
+/** Extended categories including cache refresh — used when user opts in. */
+export const ALL_CATEGORIES_WITH_CACHE: SyncCategory[] = ['library', 'wishlist', 'backlog', 'cache', 'tags'];
 
 export type CategoryStatus = 'idle' | 'syncing' | 'complete' | 'error';
 
@@ -35,27 +37,30 @@ function defaultState(): Record<SyncCategory, CategorySyncState> {
     wishlist: { status: 'idle', progress: 0, detail: '' },
     backlog: { status: 'idle', progress: 0, detail: '' },
     tags: { status: 'idle', progress: 0, detail: '' },
+    cache: { status: 'idle', progress: 0, detail: '' },
   };
 }
 
 function deriveOverall(cats: Record<SyncCategory, CategorySyncState>, gamesCount: number, wishlistCount: number): SyncState {
-  const statuses = ALL_CATEGORIES.map((c) => cats[c].status);
+  const allKeys = ALL_CATEGORIES_WITH_CACHE;
+  const statuses = allKeys.map((c) => cats[c].status);
   let step = 'idle';
 
   if (statuses.some((s) => s === 'error')) step = 'error';
   else if (statuses.every((s) => s === 'complete' || s === 'idle')) {
     step = statuses.some((s) => s === 'complete') ? 'complete' : 'idle';
   } else if (cats.tags.status === 'syncing') step = 'generating-recommendations';
+  else if (cats.cache.status === 'syncing') step = 'refreshing-cache';
   else if (cats.backlog.status === 'syncing') step = 'building-profile';
   else if (cats.wishlist.status === 'syncing' || cats.library.status === 'syncing') step = 'fetching-library';
   else step = 'starting';
 
-  const active = ALL_CATEGORIES.filter((c) => cats[c].status !== 'idle');
+  const active = allKeys.filter((c) => cats[c].status !== 'idle');
   const progress = active.length > 0
     ? Math.round(active.reduce((sum, c) => sum + cats[c].progress, 0) / active.length)
     : 0;
 
-  const syncingCat = ALL_CATEGORIES.find((c) => cats[c].status === 'syncing');
+  const syncingCat = allKeys.find((c) => cats[c].status === 'syncing');
   const detail = syncingCat ? cats[syncingCat].detail : step === 'complete' ? 'Sync complete!' : '';
 
   return { categories: cats, gamesCount, wishlistCount, step, progress, detail };
@@ -202,6 +207,36 @@ export async function runSync(
       onProgress(deriveOverall(cats, gamesCount, wishlistCount));
     } catch (e) {
       cats.backlog = { status: 'error', progress: 0, detail: `Failed: ${e instanceof Error ? e.message : 'Unknown error'}` };
+      onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+    }
+  }
+
+  // --- Cache (force-refresh all cached games) ---
+  if (has('cache')) {
+    try {
+      cats.cache = { status: 'syncing', progress: 5, detail: 'Finding cached games...' };
+      onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+
+      // Get all game IDs that have been cached (have a cached_at > 0)
+      const cachedAppids = db.getAllCachedGameIds();
+      if (cachedAppids.length === 0) {
+        cats.cache = { status: 'complete', progress: 100, detail: 'No games to refresh' };
+        onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+      } else {
+        cats.cache = { status: 'syncing', progress: 10, detail: `Refreshing ${cachedAppids.length} games...` };
+        onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+
+        await forceRefreshGames(cachedAppids, (cached, total) => {
+          cats.cache.progress = 10 + Math.round((cached / total) * 85);
+          cats.cache.detail = `Refreshing games... (${cached}/${total})`;
+          onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+        }, cc);
+
+        cats.cache = { status: 'complete', progress: 100, detail: 'Complete' };
+        onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+      }
+    } catch (e) {
+      cats.cache = { status: 'error', progress: 0, detail: `Failed: ${e instanceof Error ? e.message : 'Unknown error'}` };
       onProgress(deriveOverall(cats, gamesCount, wishlistCount));
     }
   }

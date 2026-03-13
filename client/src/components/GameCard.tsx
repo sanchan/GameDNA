@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type { Game } from '../../../shared/types';
 import BookmarkButton from './BookmarkButton';
 import MediaGallery from './MediaGallery';
+import MatchExplainer from './MatchExplainer';
 import i18n from '../i18n';
 
 function formatPrice(cents: number | null, currency?: string | null): string | null {
@@ -49,6 +50,7 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
   const [mediaLoading, setMediaLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [matchExplainerOpen, setMatchExplainerOpen] = useState(false);
 
   const price = formatPrice(game.priceCents, game.priceCurrency);
   const year = extractYear(game.releaseDate);
@@ -56,34 +58,51 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
   const reviewCount = formatReviewCount(game.reviewCount);
   const reviewScore = game.reviewScore;
 
-  const loadMedia = useCallback(async () => {
+  const loadMedia = useCallback(() => {
     if (mediaItems !== null || mediaLoading) return mediaItems;
     setMediaLoading(true);
-    // Media data is not stored locally; return empty (no server API available)
-    setMediaItems([]);
+    const items: MediaItem[] = [];
+    // Add movies first
+    for (const m of game.movies ?? []) {
+      items.push({
+        type: 'video',
+        thumbnail: m.thumbnail,
+        full: m.thumbnail,
+        videoSrc: m.webmMax || m.webm480,
+      });
+    }
+    // Then screenshots
+    for (const s of game.screenshots ?? []) {
+      items.push({
+        type: 'image',
+        thumbnail: s.thumbnail,
+        full: s.full,
+      });
+    }
+    setMediaItems(items);
     setMediaLoading(false);
-    return [];
-  }, [game.id, mediaItems, mediaLoading]);
+    return items;
+  }, [game.id, game.movies, game.screenshots, mediaItems, mediaLoading]);
 
-  const handlePrev = async (e: React.MouseEvent) => {
+  const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const items = mediaItems ?? (await loadMedia());
+    const items = mediaItems ?? loadMedia();
     if (!items || items.length === 0) return;
     const total = items.length + 1;
     setCurrentIndex((prev) => (prev - 1 + total) % total);
   };
 
-  const handleNext = async (e: React.MouseEvent) => {
+  const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const items = mediaItems ?? (await loadMedia());
+    const items = mediaItems ?? loadMedia();
     if (!items || items.length === 0) return;
     const total = items.length + 1;
     setCurrentIndex((prev) => (prev + 1) % total);
   };
 
-  const handleFullscreen = async (e: React.MouseEvent) => {
+  const handleFullscreen = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const items = mediaItems ?? (await loadMedia());
+    const items = mediaItems ?? loadMedia();
     if (!items || items.length === 0) return;
     setGalleryOpen(true);
   };
@@ -164,12 +183,16 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
           <i className="fa-solid fa-chevron-right text-xs" />
         </button>
 
-        {/* Match score badge — top right */}
+        {/* Match score badge — top right (clickable) */}
         {score != null && score > 0 && (
-          <div className="absolute top-4 right-4 bg-[var(--primary)] text-[var(--primary-foreground)] px-3 py-1.5 rounded-full font-bold text-sm flex items-center space-x-1.5 z-20">
+          <button
+            onClick={(e) => { e.stopPropagation(); setMatchExplainerOpen(true); }}
+            className="absolute top-4 right-4 bg-[var(--primary)] text-[var(--primary-foreground)] px-3 py-1.5 rounded-full font-bold text-sm flex items-center space-x-1.5 z-20 hover:opacity-90 transition-opacity cursor-pointer"
+            title={t('matchExplainer.title')}
+          >
             <i className="fa-solid fa-star" />
             <span>{t('common.match', { score: Math.round(score) })}</span>
-          </div>
+          </button>
         )}
 
         {/* Action buttons — top left */}
@@ -270,6 +293,14 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
           onClose={() => setGalleryOpen(false)}
         />,
         document.body,
+      )}
+
+      {/* Match explainer dialog */}
+      {matchExplainerOpen && score != null && score > 0 && (
+        <MatchExplainer
+          score={score}
+          onClose={() => setMatchExplainerOpen(false)}
+        />
       )}
     </div>
   );
