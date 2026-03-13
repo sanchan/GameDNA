@@ -2,8 +2,34 @@
 
 export const DEFAULT_BLACKLISTED_TAGS: string[] = [];
 
-/** @deprecated Use DEFAULT_BLACKLISTED_TAGS */
-export const DEFAULT_IGNORED_TAGS = DEFAULT_BLACKLISTED_TAGS;
+// Pre-defined tag collections users can toggle during onboarding / filters
+export const TAG_COLLECTIONS: { id: string; label: string; description: string; tags: string[] }[] = [
+  {
+    id: 'nsfw',
+    label: 'NSFW / Sexual Content',
+    description: 'Sexual content, nudity, and adult-only games',
+    tags: [
+      'NSFW',
+      'Sexual Content',
+      'Nudity',
+      'Mature',
+      'Hentai',
+      'Adult Only',
+      'Erotic',
+    ],
+  },
+  {
+    id: 'dating-sim',
+    label: 'Dating Sim / Visual Novel (Adult)',
+    description: 'Adult-oriented dating sims and visual novels',
+    tags: [
+      'Dating Sim',
+      'Visual Novel',
+      'Romance',
+      'Anime',
+    ],
+  },
+];
 
 export function getBlacklistedTagsSet(userBlacklistedTags?: string[]): Set<string> {
   const tags = userBlacklistedTags ?? DEFAULT_BLACKLISTED_TAGS;

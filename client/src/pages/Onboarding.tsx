@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
 import { importDb } from '../db/index';
 import { getPlayerSummary, resolveVanityUrl } from '../services/steam-api';
 import type { AiProvider } from '../services/ai-engine';
+import { TAG_COLLECTIONS } from '../services/tag-filter';
 
 type Step = 'welcome' | 'steam-id' | 'api-key' | 'preferences' | 'import';
 
@@ -34,6 +35,36 @@ export default function Onboarding() {
   const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState('llama3.1:8b');
   const [webllmModel, setWebllmModel] = useState('Llama-3.2-1B-Instruct-q4f16_1-MLC');
+
+  // Blacklist state
+  const [enabledCollections, setEnabledCollections] = useState<Record<string, boolean>>({});
+  const [customBlacklistTags, setCustomBlacklistTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+
+  // Compute all blacklisted tags from enabled collections + custom tags
+  const allBlacklistedTags = useMemo(() => {
+    const tags = new Set<string>();
+    for (const col of TAG_COLLECTIONS) {
+      if (enabledCollections[col.id]) {
+        for (const tag of col.tags) tags.add(tag);
+      }
+    }
+    for (const tag of customBlacklistTags) tags.add(tag);
+    return [...tags];
+  }, [enabledCollections, customBlacklistTags]);
+
+  const handleAddCustomTag = useCallback(() => {
+    const trimmed = tagInput.trim();
+    if (!trimmed) return;
+    if (!customBlacklistTags.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
+      setCustomBlacklistTags((prev) => [...prev, trimmed]);
+    }
+    setTagInput('');
+  }, [tagInput, customBlacklistTags]);
+
+  const handleRemoveCustomTag = useCallback((tag: string) => {
+    setCustomBlacklistTags((prev) => prev.filter((t) => t !== tag));
+  }, []);
 
   const resolveSteamId = useCallback(async () => {
     setError(null);
@@ -124,6 +155,13 @@ export default function Onboarding() {
       const existingSettings = queries.getUserSettings(userId);
       queries.saveUserSettings(userId, { ...existingSettings, theme });
 
+      // Save blacklisted tags
+      if (allBlacklistedTags.length > 0) {
+        for (const tag of allBlacklistedTags) {
+          queries.setTagBlacklisted(userId, tag, true);
+        }
+      }
+
       await refreshConfig();
       navigate('/');
     } catch (e) {
@@ -131,7 +169,7 @@ export default function Onboarding() {
     } finally {
       setLoading(false);
     }
-  }, [resolvedId, apiKey, refreshConfig, navigate, playerName, playerAvatar, theme, selectedAiProvider, ollamaUrl, ollamaModel, webllmModel]);
+  }, [resolvedId, apiKey, refreshConfig, navigate, playerName, playerAvatar, theme, selectedAiProvider, ollamaUrl, ollamaModel, webllmModel, allBlacklistedTags]);
 
   const handleImportBackup = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -479,6 +517,97 @@ export default function Onboarding() {
                 {!selectedAiProvider && (
                   <p className="text-sm text-[var(--muted-foreground)] mt-2">
                     AI features disabled. Recommendations will use heuristic scoring only.
+                  </p>
+                )}
+              </div>
+
+              {/* Tag Blacklist */}
+              <div className="mb-6">
+                <label className="text-sm font-medium text-[var(--foreground)] mb-1 block flex items-center gap-2">
+                  <i className="fa-solid fa-ban text-[var(--muted-foreground)]" />
+                  Tag Blacklist
+                </label>
+                <p className="text-xs text-[var(--muted-foreground)] mb-4">
+                  Exclude games with these tags from recommendations and discovery.
+                </p>
+
+                {/* Collection switches */}
+                <div className="space-y-3 mb-4">
+                  {TAG_COLLECTIONS.map((col) => (
+                    <div
+                      key={col.id}
+                      className="flex items-center justify-between p-3 bg-[var(--background)] border border-[var(--border)] rounded-xl"
+                    >
+                      <div className="flex-1 min-w-0 mr-3">
+                        <p className="text-sm font-medium text-[var(--foreground)]">{col.label}</p>
+                        <p className="text-xs text-[var(--muted-foreground)] truncate">{col.description}</p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={!!enabledCollections[col.id]}
+                        onClick={() => setEnabledCollections((prev) => ({ ...prev, [col.id]: !prev[col.id] }))}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2 focus:ring-offset-[var(--card)] ${
+                          enabledCollections[col.id] ? 'bg-red-500' : 'bg-[var(--border)]'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            enabledCollections[col.id] ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Custom tag input */}
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomTag(); } }}
+                    placeholder="Add a custom tag..."
+                    className="flex-1 px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomTag}
+                    disabled={!tagInput.trim()}
+                    className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-sm font-medium hover:bg-red-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <i className="fa-solid fa-plus" />
+                  </button>
+                </div>
+
+                {/* Blacklisted tags preview */}
+                {allBlacklistedTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {allBlacklistedTags.map((tag) => {
+                      // Check if this tag comes from a collection (non-removable individually)
+                      const fromCollection = TAG_COLLECTIONS.some(
+                        (col) => enabledCollections[col.id] && col.tags.some((t) => t.toLowerCase() === tag.toLowerCase()),
+                      );
+                      return (
+                        <span
+                          key={tag}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 border border-red-500/30 text-red-400 ${
+                            !fromCollection ? 'cursor-pointer hover:bg-red-500/20' : ''
+                          }`}
+                          onClick={() => { if (!fromCollection) handleRemoveCustomTag(tag); }}
+                        >
+                          {tag}
+                          {!fromCollection && <i className="fa-solid fa-xmark text-[10px] opacity-60" />}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {allBlacklistedTags.length > 0 && (
+                  <p className="text-xs text-[var(--muted-foreground)] mt-2">
+                    {allBlacklistedTags.length} tag{allBlacklistedTags.length !== 1 ? 's' : ''} will be blacklisted. You can change this later in Filters.
                   </p>
                 )}
               </div>

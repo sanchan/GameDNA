@@ -85,13 +85,19 @@ export default function Filters() {
   // Build blacklisted tags list and auto-computed tags
   const { blacklistedTags, autoTags } = useMemo(() => {
     const allTags = dna?.allTags ?? [];
-    const bl = allTags.filter((tag) => isBlacklisted(tag))
+    const allTagNames = new Set(allTags.map((t) => t.name.toLowerCase()));
+    // Include optimistically-added tags that aren't yet in allTags (e.g. tags with 0 games)
+    const extraBlacklisted = Object.entries(blacklistOverrides)
+      .filter(([name, bl]) => bl && !allTagNames.has(name.toLowerCase()))
+      .map(([name]) => ({ name, score: 0, blacklisted: true, count: 0 }));
+    const combined = [...allTags, ...extraBlacklisted];
+    const bl = combined.filter((tag) => isBlacklisted(tag))
       .sort((a, b) => a.name.localeCompare(b.name));
     const auto = allTags
       .filter((tag) => !isBlacklisted(tag))
       .sort((a, b) => b.score - a.score || b.count - a.count);
     return { blacklistedTags: bl, autoTags: auto };
-  }, [dna?.allTags, isBlacklisted]);
+  }, [dna?.allTags, isBlacklisted, blacklistOverrides]);
 
   // Search results from tag catalog (all known Steam tags, not just user's library)
   const catalogResults = useMemo(() => {
