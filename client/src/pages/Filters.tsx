@@ -5,9 +5,7 @@ import { useAuth } from '../hooks/use-auth';
 import { useDb } from '../contexts/db-context';
 import { useGamingDNA } from '../hooks/use-profile';
 import * as queries from '../db/queries';
-import { DEFAULT_IGNORED_TAGS } from '../services/tag-filter';
-
-type ViewMode = 'all' | 'active' | 'ignored';
+import { DEFAULT_BLACKLISTED_TAGS } from '../services/tag-filter';
 
 export default function Filters() {
   const { t } = useTranslation();
@@ -16,30 +14,40 @@ export default function Filters() {
   const { data: dna, refetch: refetchDna } = useGamingDNA();
 
   const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState<ViewMode>('all');
-  const [ignoredOverrides, setIgnoredOverrides] = useState<Record<string, boolean>>({});
+  const [blacklistOverrides, setBlacklistOverrides] = useState<Record<string, boolean>>({});
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Focus search on mount
   useEffect(() => {
     searchRef.current?.focus();
   }, []);
 
-  const isTagIgnored = useCallback(
-    (tag: { name: string; ignored: boolean }) =>
-      tag.name in ignoredOverrides ? ignoredOverrides[tag.name] : tag.ignored,
-    [ignoredOverrides],
+  const isBlacklisted = useCallback(
+    (tag: { name: string; blacklisted: boolean }) =>
+      tag.name in blacklistOverrides ? blacklistOverrides[tag.name] : tag.blacklisted,
+    [blacklistOverrides],
   );
 
-  const handleToggleTag = useCallback(
-    (tagName: string, currentlyIgnored: boolean) => {
+  const handleRemoveFromBlacklist = useCallback(
+    (tagName: string) => {
       if (!userId) return;
-      const newIgnored = !currentlyIgnored;
-      setIgnoredOverrides((prev) => ({ ...prev, [tagName]: newIgnored }));
+      setBlacklistOverrides((prev) => ({ ...prev, [tagName]: false }));
       try {
-        queries.setTagIgnored(userId, tagName, newIgnored);
+        queries.setTagBlacklisted(userId, tagName, false);
       } catch {
-        setIgnoredOverrides((prev) => ({ ...prev, [tagName]: currentlyIgnored }));
+        setBlacklistOverrides((prev) => ({ ...prev, [tagName]: true }));
+      }
+    },
+    [userId],
+  );
+
+  const handleAddToBlacklist = useCallback(
+    (tagName: string) => {
+      if (!userId) return;
+      setBlacklistOverrides((prev) => ({ ...prev, [tagName]: true }));
+      try {
+        queries.setTagBlacklisted(userId, tagName, true);
+      } catch {
+        setBlacklistOverrides((prev) => ({ ...prev, [tagName]: false }));
       }
     },
     [userId],
@@ -47,83 +55,60 @@ export default function Filters() {
 
   const handleResetToDefaults = useCallback(() => {
     if (!userId) return;
-    // Set all tags to not-ignored first, then apply defaults
     const allTags = dna?.allTags ?? [];
-    const defaultSet = new Set(DEFAULT_IGNORED_TAGS.map((t) => t.toLowerCase()));
+    const defaultSet = new Set(DEFAULT_BLACKLISTED_TAGS.map((t) => t.toLowerCase()));
     const overrides: Record<string, boolean> = {};
     for (const tag of allTags) {
-      const shouldIgnore = defaultSet.has(tag.name.toLowerCase());
-      overrides[tag.name] = shouldIgnore;
+      overrides[tag.name] = defaultSet.has(tag.name.toLowerCase());
     }
-    setIgnoredOverrides(overrides);
-    // Persist
+    setBlacklistOverrides(overrides);
     try {
-      queries.resetIgnoredTagsToDefaults(userId);
+      queries.resetBlacklistToDefaults(userId);
     } catch {
-      setIgnoredOverrides({});
+      setBlacklistOverrides({});
     }
   }, [userId, dna]);
 
-  const handleIgnoreAll = useCallback(() => {
-    if (!userId || !dna) return;
-    const overrides: Record<string, boolean> = {};
-    for (const tag of dna.allTags) {
-      overrides[tag.name] = true;
-    }
-    setIgnoredOverrides(overrides);
-    try {
-      queries.setAllTagsIgnored(userId, dna.allTags.map((t) => t.name));
-    } catch {
-      setIgnoredOverrides({});
-    }
-  }, [userId, dna]);
-
-  const handleActivateAll = useCallback(() => {
-    if (!userId || !dna) return;
-    const overrides: Record<string, boolean> = {};
-    for (const tag of dna.allTags) {
-      overrides[tag.name] = false;
-    }
-    setIgnoredOverrides(overrides);
-    try {
-      queries.setAllTagsActive(userId);
-    } catch {
-      setIgnoredOverrides({});
-    }
-  }, [userId, dna]);
-
-  // Filtered and sorted tags
-  const { displayTags, activeTags, ignoredTags } = useMemo(() => {
+  // Split tags into blacklisted and auto-computed
+  const { blacklistedTags, autoTags, searchResults } = useMemo(() => {
     const allTags = dna?.allTags ?? [];
     const searchLower = search.toLowerCase().trim();
 
-    // Apply search filter
-    const searched = searchLower
-      ? allTags.filter((tag) => tag.name.toLowerCase().includes(searchLower))
-      : allTags;
+    const bl = allTags.filter((tag) => isBlacklisted(tag));
+    const auto = allTags
+      .filter((tag) => !isBlacklisted(tag))
+      .sort((a, b) => b.score - a.score || b.count - a.count);
 
-    // Split into active/ignored
-    const active = searched.filter((tag) => !isTagIgnored(tag));
-    const ignored = searched.filter((tag) => isTagIgnored(tag));
+    // Search results: non-blacklisted tags matching search (for adding to blacklist)
+    const results = searchLower
+      ? allTags.filter(
+          (tag) =>
+            tag.name.toLowerCase().includes(searchLower) && !isBlacklisted(tag),
+        )
+      : [];
 
-    let display: typeof allTags;
-    if (viewMode === 'active') display = active;
-    else if (viewMode === 'ignored') display = ignored;
-    else display = searched;
-
-    return { displayTags: display, activeTags: active, ignoredTags: ignored };
-  }, [dna?.allTags, search, viewMode, isTagIgnored]);
-
-  // Counts (unfiltered by search)
-  const totalCounts = useMemo(() => {
-    const allTags = dna?.allTags ?? [];
-    const active = allTags.filter((tag) => !isTagIgnored(tag)).length;
-    const ignored = allTags.filter((tag) => isTagIgnored(tag)).length;
-    return { total: allTags.length, active, ignored };
-  }, [dna?.allTags, isTagIgnored]);
+    return { blacklistedTags: bl, autoTags: auto, searchResults: results };
+  }, [dna?.allTags, search, isBlacklisted]);
 
   if (authLoading) return null;
   if (!user) return <Navigate to="/" />;
+
+  const scoreBar = (score: number) => {
+    const pct = Math.round(score * 100);
+    return (
+      <div className="flex items-center gap-2 min-w-[80px]">
+        <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[var(--primary)] rounded-full transition-all"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <span className="text-[10px] text-gray-500 tabular-nums w-8 text-right">
+          {pct > 0 ? `${pct}%` : '–'}
+        </span>
+      </div>
+    );
+  };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 max-w-4xl">
@@ -133,155 +118,142 @@ export default function Filters() {
         <p className="text-gray-400 text-sm">{t('filters.subtitle')}</p>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-6">
-        <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-        <input
-          ref={searchRef}
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('filters.searchPlaceholder')}
-          className="w-full bg-[#242424] border border-[#333] rounded-xl pl-11 pr-10 py-3.5 text-sm focus:outline-none focus:border-[var(--primary)] transition-colors placeholder:text-gray-500"
-        />
-        {search && (
-          <button
-            onClick={() => setSearch('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
-          >
-            <i className="fa-solid fa-xmark text-sm" />
-          </button>
-        )}
-      </div>
-
-      {/* View mode tabs + bulk actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex gap-1 bg-[#1a1a1a] rounded-xl p-1">
-          {(['all', 'active', 'ignored'] as ViewMode[]).map((mode) => {
-            const count =
-              mode === 'all'
-                ? totalCounts.total
-                : mode === 'active'
-                  ? totalCounts.active
-                  : totalCounts.ignored;
-            const isActive = viewMode === mode;
-            return (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  isActive
-                    ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                {t(`filters.viewMode.${mode}`)}
-                <span
-                  className={`ml-1.5 text-xs ${
-                    isActive ? 'opacity-80' : 'opacity-50'
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex gap-2">
+      {/* Section 1: Blacklist Management */}
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+              <i className="fa-solid fa-ban text-red-400 text-sm" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">{t('filters.blacklistTitle')}</h2>
+              <p className="text-xs text-gray-500">{t('filters.blacklistSubtitle')}</p>
+            </div>
+          </div>
           <button
             onClick={handleResetToDefaults}
             className="px-3 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-xs font-medium transition-all text-gray-400 hover:text-white"
-            title={t('filters.resetToDefaults')}
           >
             <i className="fa-solid fa-rotate-right mr-1.5" />
             {t('filters.resetDefaults')}
           </button>
-          <button
-            onClick={handleActivateAll}
-            className="px-3 py-2 bg-[#1a1a1a] border border-[#333] hover:border-green-500/50 rounded-lg text-xs font-medium transition-all text-gray-400 hover:text-green-400"
-            title={t('filters.activateAll')}
-          >
-            <i className="fa-solid fa-check-double mr-1.5" />
-            {t('filters.activateAll')}
-          </button>
-          <button
-            onClick={handleIgnoreAll}
-            className="px-3 py-2 bg-[#1a1a1a] border border-[#333] hover:border-red-500/50 rounded-lg text-xs font-medium transition-all text-gray-400 hover:text-red-400"
-            title={t('filters.ignoreAll')}
-          >
-            <i className="fa-solid fa-eye-slash mr-1.5" />
-            {t('filters.ignoreAll')}
-          </button>
         </div>
-      </div>
 
-      {/* Results count */}
-      {search && (
-        <p className="text-xs text-gray-500 mb-4">
-          {t('filters.showingResults', {
-            shown: displayTags.length,
-            total: totalCounts.total,
-          })}
-        </p>
-      )}
-
-      {/* Tags grid */}
-      {displayTags.length === 0 ? (
-        <div className="bg-[#242424] border border-[#333] rounded-2xl p-12 text-center">
-          <i className="fa-solid fa-filter-circle-xmark text-3xl text-gray-600 mb-3" />
-          <p className="text-gray-400 text-sm">{t('filters.noTagsFound')}</p>
+        {/* Search to add tags to blacklist */}
+        <div className="relative mb-4">
+          <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input
+            ref={searchRef}
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t('filters.searchToBlacklist')}
+            className="w-full bg-[#242424] border border-[#333] rounded-xl pl-11 pr-10 py-3 text-sm focus:outline-none focus:border-red-500/50 transition-colors placeholder:text-gray-500"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <i className="fa-solid fa-xmark text-sm" />
+            </button>
+          )}
         </div>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {displayTags.map((tag) => {
-            const ignored = isTagIgnored(tag);
-            return (
+
+        {/* Search results dropdown */}
+        {search && searchResults.length > 0 && (
+          <div className="bg-[#1a1a1a] border border-[#333] rounded-xl mb-4 max-h-48 overflow-y-auto">
+            {searchResults.slice(0, 10).map((tag) => (
               <button
                 key={tag.name}
-                onClick={() => handleToggleTag(tag.name, ignored)}
-                className={`group relative flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium transition-all cursor-pointer border ${
-                  ignored
-                    ? 'bg-red-500/5 border-red-500/20 text-red-400 hover:border-green-500/40 hover:bg-green-500/5 hover:text-green-300'
-                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-300'
-                }`}
+                onClick={() => {
+                  handleAddToBlacklist(tag.name);
+                  setSearch('');
+                }}
+                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-red-500/10 transition-colors text-sm text-left"
               >
-                {/* Toggle indicator */}
-                <span
-                  className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
-                    ignored
-                      ? 'bg-red-500 group-hover:bg-green-500'
-                      : 'bg-emerald-500 group-hover:bg-red-500'
+                <span className="text-gray-300">{tag.name}</span>
+                <span className="text-xs text-red-400">
+                  <i className="fa-solid fa-plus mr-1" />
+                  {t('filters.addToBlacklist')}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {search && searchResults.length === 0 && (
+          <p className="text-xs text-gray-500 mb-4">{t('filters.noTagsFound')}</p>
+        )}
+
+        {/* Blacklisted tag chips */}
+        {blacklistedTags.length === 0 ? (
+          <div className="bg-[#242424] border border-[#333] rounded-2xl p-8 text-center">
+            <i className="fa-solid fa-check-circle text-2xl text-emerald-500/50 mb-2" />
+            <p className="text-gray-400 text-sm">{t('filters.noBlacklistedTags')}</p>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {blacklistedTags.map((tag) => (
+              <button
+                key={tag.name}
+                onClick={() => handleRemoveFromBlacklist(tag.name)}
+                className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-all"
+              >
+                <span>{tag.name}</span>
+                <i className="fa-solid fa-xmark text-xs opacity-50 group-hover:opacity-100 transition-opacity" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        <p className="text-xs text-gray-600 mt-3">
+          {t('filters.blacklistCount', { count: blacklistedTags.length })}
+        </p>
+      </div>
+
+      {/* Section 2: Auto-computed tags (read-only) */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 bg-[var(--primary)]/20 rounded-lg flex items-center justify-center">
+            <i className="fa-solid fa-chart-simple text-[var(--primary)] text-sm" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-white">{t('filters.autoTagsTitle')}</h2>
+            <p className="text-xs text-gray-500">{t('filters.autoTagsSubtitle')}</p>
+          </div>
+        </div>
+
+        {autoTags.length === 0 ? (
+          <div className="bg-[#242424] border border-[#333] rounded-2xl p-8 text-center">
+            <i className="fa-solid fa-chart-line text-2xl text-gray-600 mb-2" />
+            <p className="text-gray-400 text-sm">{t('filters.noAutoTags')}</p>
+          </div>
+        ) : (
+          <div className="bg-[#242424] border border-[#333] rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 px-4 py-2.5 border-b border-[#333] text-xs text-gray-500 font-medium">
+              <span>{t('filters.tagName')}</span>
+              <span className="text-right">{t('filters.games')}</span>
+              <span className="w-[80px]">{t('filters.score')}</span>
+            </div>
+            <div className="max-h-[500px] overflow-y-auto">
+              {autoTags.map((tag, i) => (
+                <div
+                  key={tag.name}
+                  className={`grid grid-cols-[1fr_auto_auto] gap-x-4 px-4 py-2.5 items-center ${
+                    i < autoTags.length - 1 ? 'border-b border-[#222]' : ''
                   }`}
-                />
-                <span className="whitespace-nowrap">{tag.name}</span>
-                {tag.count > 0 && (
-                  <span
-                    className={`text-[10px] font-normal transition-colors ${
-                      ignored ? 'text-red-400/50' : 'text-emerald-400/50'
-                    }`}
-                  >
+                >
+                  <span className="text-sm text-gray-300 truncate">{tag.name}</span>
+                  <span className="text-xs text-gray-500 tabular-nums text-right">
                     {tag.count}
                   </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Legend */}
-      <div className="mt-8 flex items-center gap-6 text-xs text-gray-500">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span>{t('filters.legendActive')}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-red-500" />
-          <span>{t('filters.legendIgnored')}</span>
-        </div>
-        <div className="text-gray-600">|</div>
-        <span>{t('filters.legendHint')}</span>
+                  {scoreBar(tag.score)}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

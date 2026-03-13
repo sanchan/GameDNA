@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
+import { recalculateTasteProfile } from '../services/taste-profile';
 
 let globalIds = new Set<number>();
 let globalListeners: Array<() => void> = [];
@@ -44,6 +45,9 @@ export function useBookmarks() {
       queries.addBookmark(userId, gameId);
     }
     notify();
+
+    // Recalculate taste profile to reflect bookmark change
+    recalculateTasteProfile(userId);
   }, [userId]);
 
   const isBookmarked = useCallback((gameId: number) => bookmarkedIds.has(gameId), [bookmarkedIds]);

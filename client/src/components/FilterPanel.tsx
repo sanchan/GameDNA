@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { DiscoveryFilters } from '../../../shared/types';
+import type { DiscoveryFilters, GamingDNA } from '../../../shared/types';
 
 interface FilterPanelProps {
   filters: DiscoveryFilters;
   onApply: (filters: DiscoveryFilters) => void;
   className?: string;
+  dna?: GamingDNA | null;
 }
 
-const POPULAR_TAGS = [
+const FALLBACK_TAGS = [
   'Singleplayer',
   'Multiplayer',
   'Co-op',
@@ -25,7 +26,7 @@ const RELEASE_DATE_OPTIONS = [
   { key: 'last5Years', value: '5y' },
 ];
 
-export default function FilterPanel({ filters, onApply, className = '' }: FilterPanelProps) {
+export default function FilterPanel({ filters, onApply, className = '', dna }: FilterPanelProps) {
   const { t } = useTranslation();
   const [minPrice, setMinPrice] = useState<string>(filters.minPrice?.toString() ?? '');
   const [maxPrice, setMaxPrice] = useState<string>(filters.maxPrice?.toString() ?? '');
@@ -35,6 +36,15 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
   const [genres, setGenres] = useState<string>(filters.genres?.join(', ') ?? '');
   const [selectedTags, setSelectedTags] = useState<string[]>(filters.tags ?? []);
   const [releaseDate, setReleaseDate] = useState<string>('');
+
+  // Use user's top auto-computed tags (non-blacklisted, sorted by score) or fallback
+  const popularTags = dna?.allTags
+    ? dna.allTags
+        .filter((t) => !t.blacklisted && t.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8)
+        .map((t) => t.name)
+    : FALLBACK_TAGS;
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -173,11 +183,11 @@ export default function FilterPanel({ filters, onApply, className = '' }: Filter
               <p className="text-xs text-gray-400 mt-1">{t('filterPanel.separateWithCommas')}</p>
             </div>
 
-            {/* Popular Tags */}
+            {/* Your Top Tags */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold mb-3">{t('filterPanel.popularTags')}</label>
+              <label className="block text-sm font-semibold mb-3">{t('filterPanel.yourTopTags')}</label>
               <div className="flex flex-wrap gap-2">
-                {POPULAR_TAGS.map((tag) => {
+                {popularTags.map((tag) => {
                   const isActive = selectedTags.includes(tag);
                   return (
                     <button

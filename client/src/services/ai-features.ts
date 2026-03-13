@@ -4,7 +4,7 @@
 import { getDb } from '../db/index';
 import * as queries from '../db/queries';
 import { getAiEngine } from './ai-engine';
-import { getIgnoredTagsSet } from './tag-filter';
+import { getBlacklistedTagsSet } from './tag-filter';
 import { config } from './config';
 
 function parseJson<T>(val: unknown, fallback: T): T {
@@ -199,8 +199,8 @@ export async function aiScoreRecommendations(
   const profile = queries.getTasteProfile(userId);
   if (!profile) return null;
 
-  const ignoredTags = queries.getIgnoredTags(userId);
-  const ignoredSet = getIgnoredTagsSet(ignoredTags);
+  const blacklistedTags = queries.getBlacklistedTags(userId);
+  const blacklistSet = getBlacklistedTagsSet(blacklistedTags);
 
   const topGenresList = Object.entries(profile.genreScores)
     .sort(([, a], [, b]) => b - a)
@@ -208,7 +208,7 @@ export async function aiScoreRecommendations(
     .map(([name]) => name);
 
   const topTagsList = Object.entries(profile.tagScores)
-    .filter(([name]) => !ignoredSet.has(name.toLowerCase()))
+    .filter(([name]) => !blacklistSet.has(name.toLowerCase()))
     .sort(([, a], [, b]) => b - a)
     .slice(0, 8)
     .map(([name]) => name);
@@ -362,13 +362,13 @@ export async function* explainRecommendation(
     return;
   }
 
-  const ignoredTags = queries.getIgnoredTags(userId);
-  const ignoredSet = getIgnoredTagsSet(ignoredTags);
+  const blacklistedTags = queries.getBlacklistedTags(userId);
+  const blacklistSet = getBlacklistedTagsSet(blacklistedTags);
 
   const topGenresList = Object.entries(profile.genreScores)
     .sort(([, a], [, b]) => b - a).slice(0, 5).map(([name]) => name);
   const topTagsList = Object.entries(profile.tagScores)
-    .filter(([name]) => !ignoredSet.has(name.toLowerCase()))
+    .filter(([name]) => !blacklistSet.has(name.toLowerCase()))
     .sort(([, a], [, b]) => b - a).slice(0, 8).map(([name]) => name);
 
   const gameGenres = parseJson<string[]>(game.genres, []);

@@ -11,7 +11,7 @@ import type {
   DiscoveryMode,
 } from '../../../shared/types';
 import { config } from '../services/config';
-import { DEFAULT_IGNORED_TAGS, getIgnoredTagsSet } from '../services/tag-filter';
+import { DEFAULT_BLACKLISTED_TAGS, getBlacklistedTagsSet } from '../services/tag-filter';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -532,7 +532,10 @@ export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mod
     return rows.map((r) => ({ game: dbGameToGame(r), score: 0 }));
   }
 
-  // Get blacklist
+  // Get tag blacklist for filtering
+  const tagBlacklist = getBlacklistedTagsSet(getBlacklistedTags(userId));
+
+  // Get publisher/developer blacklist
   const blacklistedPubs = new Set(
     all<{ name: string }>("SELECT name FROM publisher_blacklist WHERE user_id = ? AND type = 'publisher'", [userId])
       .map((r) => r.name.toLowerCase()),
@@ -553,12 +556,22 @@ export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mod
       .map(([n]) => n.toLowerCase()),
   );
 
+  // When user explicitly selects tags in filters, don't blacklist-filter those tags
+  const explicitTags = filters.tags?.length ? new Set(filters.tags.map((t) => t.toLowerCase())) : null;
+
   const scored = rows
     .filter((row) => {
       const pubs = parseJson<string[]>(row.publishers, []);
       const devs = parseJson<string[]>(row.developers, []);
       if (pubs.some((p) => blacklistedPubs.has(p.toLowerCase()))) return false;
       if (devs.some((d) => blacklistedDevs.has(d.toLowerCase()))) return false;
+
+      // Exclude games that have any blacklisted tag (unless user explicitly chose those tags)
+      const gameTags = parseJson<string[]>(row.tags, []);
+      if (gameTags.some((t) => {
+        const lower = t.toLowerCase();
+        return tagBlacklist.has(lower) && (!explicitTags || !explicitTags.has(lower));
+      })) return false;
 
       if (maxHours) {
         const gameGenres = parseJson<string[]>(row.genres, []);
@@ -1054,9 +1067,8 @@ export function saveAiSummary(userId: number, summary: string): void {
 // ── Gaming DNA ──────────────────────────────────────────────────────────────
 
 export function getGamingDNA(userId: number): GamingDNA {
-  const userRow = get<{ ignored_tags: string }>('SELECT ignored_tags FROM users WHERE id = ?', [userId]);
-  const ignoredTags: string[] = userRow?.ignored_tags ? parseJson(userRow.ignored_tags, DEFAULT_IGNORED_TAGS) : DEFAULT_IGNORED_TAGS;
-  const ignoredSet = getIgnoredTagsSet(ignoredTags);
+  const blacklistedTags = getBlacklistedTags(userId);
+  const blacklistSet = getBlacklistedTagsSet(blacklistedTags);
 
   const profile = getTasteProfile(userId);
   const genreScores = profile?.genreScores ?? {};
@@ -1067,7 +1079,7 @@ export function getGamingDNA(userId: number): GamingDNA {
     .map(([name, score]) => ({ name, score }));
 
   const topTags = Object.entries(tagScores)
-    .filter(([name]) => !ignoredSet.has(name.toLowerCase()))
+    .filter(([name]) => !blacklistSet.has(name.toLowerCase()))
     .sort(([, a], [, b]) => b - a).slice(0, 8)
     .map(([name, score]) => ({ name, score }));
 
@@ -1086,7 +1098,7 @@ export function getGamingDNA(userId: number): GamingDNA {
 
   const allTagNames = new Set([...Object.keys(tagScores), ...Object.keys(tagCounts)]);
   const allTags = Array.from(allTagNames)
-    .map((name) => ({ name, score: tagScores[name] ?? 0, ignored: ignoredSet.has(name.toLowerCase()), count: tagCounts[name] || 0 }))
+    .map((name) => ({ name, score: tagScores[name] ?? 0, blacklisted: blacklistSet.has(name.toLowerCase()), count: tagCounts[name] || 0 }))
     .sort((a, b) => b.count - a.count || b.score - a.score);
 
   const stats = get<{ c: number; p: number }>(
@@ -1107,17 +1119,20 @@ export function getGamingDNA(userId: number): GamingDNA {
   };
 }
 
-// ── Ignored Tags ────────────────────────────────────────────────────────────
+// ── Blacklisted Tags ────────────────────────────────────────────────────────
 
-export function getIgnoredTags(userId: number): string[] {
+export function getBlacklistedTags(userId: number): string[] {
   const row = get<{ ignored_tags: string }>('SELECT ignored_tags FROM users WHERE id = ?', [userId]);
-  return row?.ignored_tags ? parseJson(row.ignored_tags, DEFAULT_IGNORED_TAGS) : DEFAULT_IGNORED_TAGS;
+  return row?.ignored_tags ? parseJson(row.ignored_tags, DEFAULT_BLACKLISTED_TAGS) : DEFAULT_BLACKLISTED_TAGS;
 }
 
-export function setTagIgnored(userId: number, tag: string, ignored: boolean): string[] {
-  const current = getIgnoredTags(userId);
+/** @deprecated Use getBlacklistedTags */
+export const getIgnoredTags = getBlacklistedTags;
+
+export function setTagBlacklisted(userId: number, tag: string, blacklisted: boolean): string[] {
+  const current = getBlacklistedTags(userId);
   let updated: string[];
-  if (ignored) {
+  if (blacklisted) {
     if (!current.some((t) => t.toLowerCase() === tag.toLowerCase())) {
       updated = [...current, tag];
     } else {
@@ -1130,17 +1145,15 @@ export function setTagIgnored(userId: number, tag: string, ignored: boolean): st
   return updated;
 }
 
-export function resetIgnoredTagsToDefaults(userId: number): void {
-  run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify(DEFAULT_IGNORED_TAGS), userId]);
+/** @deprecated Use setTagBlacklisted */
+export const setTagIgnored = setTagBlacklisted;
+
+export function resetBlacklistToDefaults(userId: number): void {
+  run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify(DEFAULT_BLACKLISTED_TAGS), userId]);
 }
 
-export function setAllTagsIgnored(userId: number, tagNames: string[]): void {
-  run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify(tagNames), userId]);
-}
-
-export function setAllTagsActive(userId: number): void {
-  run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify([]), userId]);
-}
+/** @deprecated Use resetBlacklistToDefaults */
+export const resetIgnoredTagsToDefaults = resetBlacklistToDefaults;
 
 // ── Library & Wishlist ──────────────────────────────────────────────────────
 
@@ -1294,7 +1307,7 @@ export function getSimilarGames(appid: number, userId: number, limit = 10): Arra
 // ── Export / Import ─────────────────────────────────────────────────────────
 
 export function exportUserData(userId: number) {
-  const ignoredTags = getIgnoredTags(userId);
+  const blacklistedTags = getBlacklistedTags(userId);
   const profile = getTasteProfile(userId);
 
   const swipes = all<{ game_id: number; name: string; decision: string; swiped_at: number }>(
@@ -1307,7 +1320,7 @@ export function exportUserData(userId: number) {
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
-    tags: { scores: profile?.tagScores ?? {}, ignored: ignoredTags },
+    tags: { scores: profile?.tagScores ?? {}, blacklisted: blacklistedTags },
     genres: { scores: profile?.genreScores ?? {} },
     swipeHistory: swipes.map((s) => ({
       gameId: s.game_id,
@@ -1319,15 +1332,17 @@ export function exportUserData(userId: number) {
 }
 
 export function importUserData(userId: number, data: {
-  tags?: { ignored?: string[] };
+  tags?: { ignored?: string[]; blacklisted?: string[] };
   swipeHistory?: { gameId: number; decision: string; swipedAt?: number }[];
 }): { importedTags: number; importedSwipes: number } {
   let importedTags = 0;
   let importedSwipes = 0;
 
-  if (data.tags?.ignored) {
-    run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify(data.tags.ignored), userId]);
-    importedTags = data.tags.ignored.length;
+  // Support both old 'ignored' and new 'blacklisted' keys
+  const tagList = data.tags?.blacklisted ?? data.tags?.ignored;
+  if (tagList) {
+    run('UPDATE users SET ignored_tags = ? WHERE id = ?', [JSON.stringify(tagList), userId]);
+    importedTags = tagList.length;
   }
 
   if (data.swipeHistory?.length) {

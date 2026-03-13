@@ -478,6 +478,7 @@ export default function Discovery() {
             filters={filters}
             onApply={setFilters}
             className="h-screen sticky top-0 xl:top-0 border-l border-[#333]"
+            dna={dna}
           />
         </div>
       )}
@@ -494,6 +495,7 @@ export default function Discovery() {
                 setFiltersOpen(false);
               }}
               className="h-full"
+              dna={dna}
             />
           </div>
         </div>
