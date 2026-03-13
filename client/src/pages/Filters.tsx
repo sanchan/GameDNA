@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/use-auth';
 import { useDb } from '../contexts/db-context';
 import { useGamingDNA } from '../hooks/use-profile';
 import * as queries from '../db/queries';
-import { DEFAULT_BLACKLISTED_TAGS } from '../services/tag-filter';
+import { DEFAULT_BLACKLISTED_TAGS, TAG_COLLECTIONS } from '../services/tag-filter';
 
 export default function Filters() {
   const { t } = useTranslation();
@@ -99,6 +99,33 @@ export default function Filters() {
     return { blacklistedTags: bl, autoTags: auto };
   }, [dna?.allTags, isBlacklisted, blacklistOverrides]);
 
+  // Derive collection toggle state from current blacklist
+  const collectionStates = useMemo(() => {
+    const blSet = new Set(blacklistedTags.map((t) => t.name.toLowerCase()));
+    const states: Record<string, boolean> = {};
+    for (const col of TAG_COLLECTIONS) {
+      states[col.id] = col.tags.every((tag) => blSet.has(tag.toLowerCase()));
+    }
+    return states;
+  }, [blacklistedTags]);
+
+  const handleToggleCollection = useCallback(
+    (colId: string) => {
+      if (!userId) return;
+      const col = TAG_COLLECTIONS.find((c) => c.id === colId);
+      if (!col) return;
+      const isEnabled = collectionStates[colId];
+      for (const tag of col.tags) {
+        if (isEnabled) {
+          handleRemoveFromBlacklist(tag);
+        } else {
+          handleAddToBlacklist(tag);
+        }
+      }
+    },
+    [userId, collectionStates, handleRemoveFromBlacklist, handleAddToBlacklist],
+  );
+
   // Search results from tag catalog (all known Steam tags, not just user's library)
   const catalogResults = useMemo(() => {
     const trimmed = search.trim();
@@ -186,6 +213,36 @@ export default function Filters() {
             <i className="fa-solid fa-rotate-right mr-1.5" />
             {t('filters.resetDefaults')}
           </button>
+        </div>
+
+        {/* Quick-toggle collections */}
+        <div className="space-y-2 mb-5">
+          {TAG_COLLECTIONS.map((col) => (
+            <div
+              key={col.id}
+              className="flex items-center justify-between p-3 bg-[#1a1a1a] border border-[#333] rounded-xl"
+            >
+              <div className="flex-1 min-w-0 mr-3">
+                <p className="text-sm font-medium text-white">{col.label}</p>
+                <p className="text-xs text-gray-500 truncate">{col.description}</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={!!collectionStates[col.id]}
+                onClick={() => handleToggleCollection(col.id)}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2 focus:ring-offset-[#111] ${
+                  collectionStates[col.id] ? 'bg-red-500' : 'bg-[#333]'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    collectionStates[col.id] ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          ))}
         </div>
 
         {/* Search to add tags to blacklist */}
