@@ -44,6 +44,29 @@ export default function Profile() {
   const [showSummaryHistory, setShowSummaryHistory] = useState(false);
   const [generatingSummary, setGeneratingSummary] = useState(false);
   const [refreshCache, setRefreshCache] = useState(false);
+  const [hiddenBars, setHiddenBars] = useState<Record<string, boolean>>({});
+  const [fadingBars, setFadingBars] = useState<Record<string, boolean>>({});
+
+  // Auto-hide completed progress bars after 3s
+  useEffect(() => {
+    const categories = syncProgress?.categories;
+    if (!categories) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (const key of Object.keys(categories)) {
+      if (categories[key]?.status === 'complete' && !hiddenBars[key] && !fadingBars[key]) {
+        setFadingBars(prev => ({ ...prev, [key]: true }));
+        timers.push(setTimeout(() => {
+          setHiddenBars(prev => ({ ...prev, [key]: true }));
+          setFadingBars(prev => ({ ...prev, [key]: false }));
+        }, 3000));
+      }
+      if (categories[key]?.status === 'syncing' && hiddenBars[key]) {
+        setHiddenBars(prev => ({ ...prev, [key]: false }));
+        setFadingBars(prev => ({ ...prev, [key]: false }));
+      }
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [syncProgress?.categories]);
 
   const handleExport = useCallback(() => {
     if (!userId) return;
@@ -594,7 +617,7 @@ export default function Profile() {
         {/* Sidebar (Right 1/3) */}
         <div className="lg:col-span-1 space-y-6">
           {/* Sync Library */}
-          <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 sticky top-24">
+          <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-bold text-white">{t('profile.syncLibraryCard')}</h3>
               <button
@@ -644,7 +667,7 @@ export default function Profile() {
 
                 return (
                   <div key={key} className="bg-[#1a1a1a] rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className={`flex items-center justify-between${(isSyncing || isError || (isComplete && !hiddenBars[key])) && !fadingBars[key] ? ' mb-2' : ''}`}>
                       <div className="flex items-center space-x-3">
                         <div className={`w-9 h-9 ${bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
                           <i className={`fa-solid ${icon} ${iconColor} text-sm`} />
@@ -682,22 +705,31 @@ export default function Profile() {
                         </div>
                       )}
                     </div>
-                    {/* Progress bar */}
-                    <div className="h-1.5 bg-[#333] rounded-full overflow-hidden">
+                    {/* Progress bar - hidden when idle, fades out after completion */}
+                    {(isSyncing || isError || (isComplete && !hiddenBars[key])) && (
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          isError ? 'bg-red-500' : isComplete ? 'bg-green-500' : isSyncing ? 'bg-[var(--primary)]' : 'bg-[#444]'
+                        className={`h-1.5 bg-[#333] rounded-full overflow-hidden mt-2 transition-all duration-500 ${
+                          fadingBars[key] ? 'opacity-0 max-h-0 mt-0' : 'opacity-100 max-h-4'
                         }`}
-                        style={{ width: `${isComplete ? 100 : catState.progress}%` }}
-                      />
-                    </div>
+                      >
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isError ? 'bg-red-500' : isComplete ? 'bg-green-500' : 'bg-[var(--primary)]'
+                          }`}
+                          style={{ width: `${isComplete ? 100 : catState.progress}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
 
-            {/* Data Actions */}
-            <div className="mt-5 pt-5 border-t border-[#333] space-y-3">
+          </div>
+
+          {/* Data Actions */}
+          <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 space-y-3">
+            <h3 className="text-lg font-bold text-white mb-5">{t('profile.dataActions', 'Data')}</h3>
               <button
                 onClick={handleExport}
                 className="w-full bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-xl p-3 flex items-center space-x-3 transition-all group"
@@ -724,10 +756,9 @@ export default function Profile() {
                   <p className="text-xs text-gray-400">{t('profile.restorePreferences')}</p>
                 </div>
               </button>
-            </div>
 
             {importResult && (
-              <div className="mt-3 bg-[#1a1a1a] border border-[#333] rounded-xl p-3">
+              <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-3">
                 <p className="text-xs text-gray-300">{importResult}</p>
               </div>
             )}
