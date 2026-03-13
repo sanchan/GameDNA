@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -44,7 +44,11 @@ interface GameCardProps {
   className?: string;
 }
 
-export default function GameCard({ game, score, className = '' }: GameCardProps) {
+export interface GameCardHandle {
+  openGallery: () => void;
+}
+
+const GameCard = forwardRef<GameCardHandle, GameCardProps>(function GameCard({ game, score, className = '' }, ref) {
   const { t } = useTranslation();
   const [mediaItems, setMediaItems] = useState<MediaItem[] | null>(null);
   const [mediaLoading, setMediaLoading] = useState(false);
@@ -110,11 +114,17 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
     setCurrentIndex((prev) => (prev + 1) % total);
   };
 
-  const handleFullscreen = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const openGallery = useCallback(() => {
     const items = mediaItems ?? loadMedia();
     if (!items || items.length === 0) return;
     setGalleryOpen(true);
+  }, [mediaItems, loadMedia]);
+
+  useImperativeHandle(ref, () => ({ openGallery }), [openGallery]);
+
+  const handleFullscreen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openGallery();
   };
 
   const showHeader = currentIndex === 0;
@@ -327,4 +337,6 @@ export default function GameCard({ game, score, className = '' }: GameCardProps)
       )}
     </div>
   );
-}
+});
+
+export default GameCard;
