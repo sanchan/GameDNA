@@ -61,6 +61,7 @@ export default function Discovery() {
 
   // Fetch recent swipes from local DB
   const [recentSwipesData, setRecentSwipesData] = useState<{ items: HistoryItem[] } | null>(null);
+  const [recentSwipesRevision, setRecentSwipesRevision] = useState(0);
   useEffect(() => {
     if (!userId) return;
     try {
@@ -74,7 +75,7 @@ export default function Discovery() {
         })),
       });
     } catch { /* ignore */ }
-  }, [userId, swipedCount]);
+  }, [userId, swipedCount, recentSwipesRevision]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -242,11 +243,10 @@ export default function Discovery() {
             {/* Filter toggle button */}
             <button
               onClick={() => setFiltersOpen(!filtersOpen)}
-              className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition-colors cursor-pointer ${
-                filtersOpen
+              className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition-colors cursor-pointer ${filtersOpen
                   ? 'bg-[var(--primary)]/15 border-[var(--primary)] text-[var(--primary)]'
                   : 'bg-[#242424] border-[#333] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[#444]'
-              }`}
+                }`}
             >
               <i className="fa-solid fa-filter" />
               <span className="hidden sm:inline">{t('common.filters')}</span>
@@ -402,15 +402,51 @@ export default function Discovery() {
                   className="bg-[#242424] border border-[#333] rounded-xl overflow-hidden hover:border-[#444] transition-colors"
                 >
                   {item.game.headerImage && (
-                    <img
-                      src={item.game.headerImage}
-                      alt={item.game.name}
-                      className="w-full aspect-video object-cover"
-                      loading="lazy"
-                    />
+                    <div className="relative group">
+                      <img
+                        src={item.game.headerImage}
+                        alt={item.game.name}
+                        className="w-full aspect-video object-cover transition-all group-hover:blur-[5px]"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => {
+                            queries.recordSwipe(userId!, item.game.id, 'no');
+                            setRecentSwipesRevision((r) => r + 1);
+                          }}
+                          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${item.decision === 'no' ? 'bg-red-500 text-white' : 'bg-white/20 text-red-400 hover:bg-red-500/30'}`}
+                          title={t('discovery.passed')}
+                        >
+                          <i className="fa-solid fa-thumbs-down text-sm" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            queries.recordSwipe(userId!, item.game.id, 'maybe');
+                            setRecentSwipesRevision((r) => r + 1);
+                          }}
+                          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${item.decision === 'maybe' ? 'bg-yellow-500 text-white' : 'bg-white/20 text-yellow-400 hover:bg-yellow-500/30'}`}
+                          title={t('discovery.maybe')}
+                        >
+                          <i className="fa-solid fa-minus text-sm" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            queries.recordSwipe(userId!, item.game.id, 'yes');
+                            setRecentSwipesRevision((r) => r + 1);
+                          }}
+                          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${item.decision === 'yes' ? 'bg-green-500 text-white' : 'bg-white/20 text-green-400 hover:bg-green-500/30'}`}
+                          title={t('discovery.liked')}
+                        >
+                          <i className="fa-solid fa-thumbs-up text-sm" />
+                        </button>
+                      </div>
+                    </div>
                   )}
                   <div className="p-3">
-                    <h4 className="text-sm font-semibold truncate mb-2">{item.game.name}</h4>
+                    <a href={`/game/${item.game.id}`} className="text-sm font-semibold truncate mb-2 block hover:text-[var(--primary)] transition-colors">
+                      {item.game.name}
+                    </a>
                     {decisionBadge(item.decision)}
                   </div>
                 </div>
