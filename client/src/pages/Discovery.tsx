@@ -25,7 +25,6 @@ export default function Discovery() {
   const { currentGame, currentScore, swipe, undo, canUndo, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded, discoveryMode, setDiscoveryMode, maxHours, setMaxHours } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const filterCount = useFilterCount(filters);
   const scrollKeyRef = useRef('discovery-scroll');
 
@@ -141,10 +140,6 @@ export default function Discovery() {
     setDragStyle({});
 
     if (!isDraggingRef.current) {
-      // It was a tap, not a drag — toggle preview
-      if (elapsed < 300 && Math.abs(dx) < 10 && Math.abs(dy) < 10) {
-        setShowPreview((prev) => !prev);
-      }
       return;
     }
 
@@ -162,11 +157,6 @@ export default function Discovery() {
       swipe('maybe');
     }
   }, [swipe]);
-
-  // Reset preview when game changes
-  useEffect(() => {
-    setShowPreview(false);
-  }, [currentGame?.id]);
 
   const handleLoadMore = () => {
     // In local-first mode, just refetch the queue with current filters
@@ -309,51 +299,6 @@ export default function Discovery() {
               >
                 <GameCard game={currentGame} score={currentScore ? currentScore * 100 : null} />
               </div>
-
-              {/* Preview panel — expanded game details */}
-              {showPreview && (
-                <div className="mt-4 bg-[#242424] border border-[#333] rounded-2xl p-6 discovery-swipe-in">
-                  {currentGame.shortDesc && (
-                    <p className="text-sm text-gray-300 mb-4 leading-relaxed">{currentGame.shortDesc}</p>
-                  )}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    {currentGame.releaseDate && (
-                      <div>
-                        <span className="text-gray-500">Release:</span>{' '}
-                        <span className="text-white">{currentGame.releaseDate}</span>
-                      </div>
-                    )}
-                    {currentGame.reviewScore !== null && (
-                      <div>
-                        <span className="text-gray-500">Reviews:</span>{' '}
-                        <span className="text-white">{currentGame.reviewScore}% positive</span>
-                      </div>
-                    )}
-                    {currentGame.developers.length > 0 && (
-                      <div>
-                        <span className="text-gray-500">Developer:</span>{' '}
-                        <span className="text-white">{currentGame.developers[0]}</span>
-                      </div>
-                    )}
-                    {currentGame.priceCents !== null && (
-                      <div>
-                        <span className="text-gray-500">Price:</span>{' '}
-                        <span className="text-white">
-                          {currentGame.priceCents === 0 ? 'Free' : `$${(currentGame.priceCents / 100).toFixed(2)}`}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  {currentGame.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-4">
-                      {currentGame.tags.slice(0, 8).map((tag) => (
-                        <span key={tag} className="bg-[#1a1a1a] text-gray-400 px-2 py-0.5 rounded text-xs">{tag}</span>
-                      ))}
-                    </div>
-                  )}
-                  <p className="text-xs text-gray-500 mt-3 text-center">Tap card again to collapse</p>
-                </div>
-              )}
             </>
           ) : (
             <div className="flex items-center justify-center text-center text-[var(--muted-foreground)] py-20">
