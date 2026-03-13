@@ -50,21 +50,23 @@ export default function Settings() {
     }
   }, [aiProvider]);
 
-  const handleSave = useCallback(() => {
-    if (!settings || !userId) return;
+  const saveNow = useCallback((
+    overrideSettings?: UserSettings,
+    overrideAiProvider?: AiProvider | null,
+  ) => {
+    const s = overrideSettings ?? settings;
+    const provider = overrideAiProvider !== undefined ? overrideAiProvider : aiProvider;
+    if (!s || !userId) return;
     setSaving(true);
     try {
-      queries.saveUserSettings(userId, settings);
-      // Persist AI provider config
-      if (aiProvider) {
-        queries.updateConfig({
-          aiProvider,
-          ollamaUrl: settings.ollamaUrl ?? null,
-          ollamaModel: settings.ollamaModel ?? null,
-          webllmModel: aiProvider === 'webllm' ? webllmModel : null,
-        });
-        refreshConfig?.();
-      }
+      queries.saveUserSettings(userId, s);
+      queries.updateConfig({
+        aiProvider: provider,
+        ollamaUrl: s.ollamaUrl ?? null,
+        ollamaModel: s.ollamaModel ?? null,
+        webllmModel: provider === 'webllm' ? webllmModel : null,
+      });
+      refreshConfig?.();
       toast('Settings saved', 'success');
     } catch {
       toast('Failed to save settings', 'error');
@@ -72,6 +74,8 @@ export default function Settings() {
       setSaving(false);
     }
   }, [settings, userId, toast, aiProvider, webllmModel, refreshConfig]);
+
+  const handleSave = useCallback(() => saveNow(), [saveNow]);
 
 
   if (authLoading) return null;
@@ -111,14 +115,14 @@ export default function Settings() {
               <label className="text-sm font-medium text-gray-300 mb-2 block">Theme</label>
               <div className="flex gap-3">
                 <button
-                  onClick={() => setSettings({ ...settings, theme: 'dark' })}
+                  onClick={() => { const s = { ...settings, theme: 'dark' as const }; setSettings(s); saveNow(s); }}
                   className={`flex-1 p-4 rounded-xl border transition-all text-center ${settings.theme === 'dark' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-moon text-xl mb-2" />
                   <span className="text-sm font-medium block">Dark</span>
                 </button>
                 <button
-                  onClick={() => setSettings({ ...settings, theme: 'light' })}
+                  onClick={() => { const s = { ...settings, theme: 'light' as const }; setSettings(s); saveNow(s); }}
                   className={`flex-1 p-4 rounded-xl border transition-all text-center ${settings.theme === 'light' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-sun text-xl mb-2" />
@@ -151,7 +155,7 @@ export default function Settings() {
               <label className="text-sm font-medium text-gray-300 mb-2 block">AI Provider</label>
               <div className="flex gap-3">
                 <button
-                  onClick={() => setAiProvider('ollama')}
+                  onClick={() => { setAiProvider('ollama'); saveNow(undefined, 'ollama'); }}
                   className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'ollama' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-server text-xl mb-2" />
@@ -159,7 +163,7 @@ export default function Settings() {
                   <span className="text-xs text-gray-500 block mt-1">Local server</span>
                 </button>
                 <button
-                  onClick={() => setAiProvider('webllm')}
+                  onClick={() => { setAiProvider('webllm'); saveNow(undefined, 'webllm'); }}
                   className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'webllm' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-microchip text-xl mb-2" />
@@ -167,7 +171,7 @@ export default function Settings() {
                   <span className="text-xs text-gray-500 block mt-1">In-browser (WebGPU)</span>
                 </button>
                 <button
-                  onClick={() => setAiProvider(null)}
+                  onClick={() => { setAiProvider(null); saveNow(undefined, null); }}
                   className={`flex-1 p-4 rounded-xl border transition-all text-center ${!aiProvider ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-ban text-xl mb-2" />
