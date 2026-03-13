@@ -80,6 +80,13 @@ export default function Recommendations() {
     if (rec) setExplainRec(rec);
   };
 
+  const handleExplanationSaved = (recId: number, explanation: string) => {
+    setRecs((prev) => prev.map((r) => r.id === recId ? { ...r, aiExplanation: explanation } : r));
+    if (explainRec?.id === recId) {
+      setExplainRec((prev) => prev ? { ...prev, aiExplanation: explanation } : prev);
+    }
+  };
+
   const handleDismiss = (recId: number) => {
     if (!userId) return;
     queries.dismissRecommendation(recId, userId);
@@ -269,6 +276,7 @@ export default function Recommendations() {
       )}
 
       <WhyThisGame
+        recId={explainRec?.id}
         gameId={explainRec?.game.id ?? 0}
         gameName={explainRec?.game.name ?? ''}
         gameImage={explainRec?.game.headerImage}
@@ -277,6 +285,7 @@ export default function Recommendations() {
         aiExplanation={explainRec?.aiExplanation}
         open={explainRec !== null}
         onClose={() => setExplainRec(null)}
+        onExplanationSaved={handleExplanationSaved}
       />
     </div>
   );

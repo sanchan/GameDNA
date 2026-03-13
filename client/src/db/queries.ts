@@ -651,6 +651,10 @@ export function upsertRecommendation(userId: number, gameId: number, score: numb
   );
 }
 
+export function updateRecommendationExplanation(recId: number, userId: number, explanation: string): void {
+  run('UPDATE recommendations SET ai_explanation = ? WHERE id = ? AND user_id = ?', [explanation, recId, userId]);
+}
+
 export function dismissRecommendation(recId: number, userId: number): void {
   run('UPDATE recommendations SET dismissed = 1 WHERE id = ? AND user_id = ?', [recId, userId]);
 }

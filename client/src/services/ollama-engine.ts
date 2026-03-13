@@ -13,6 +13,11 @@ export class OllamaEngine implements AiEngine {
     this.model = model ?? 'llama3.1:8b';
   }
 
+  isModelReady(): boolean {
+    // Ollama is always ready if reachable — model loading is server-side
+    return true;
+  }
+
   async checkHealth(): Promise<boolean> {
     try {
       const res = await fetch(`${this.url}/api/tags`);
