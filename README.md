@@ -124,6 +124,10 @@ This starts both the server (port 3000) and the client (port 5173).
 
 ---
 
+## Disclaimer
+
+GameDNA is **not affiliated with, endorsed by, or sponsored by Valve Corporation** or Steam. Steam, the Steam logo, and all related marks are trademarks and/or registered trademarks of Valve Corporation in the United States and/or other countries. All game images, descriptions, and metadata displayed in this application are sourced from the [Steam Web API](https://steamcommunity.com/dev) and remain the property of their respective owners. This application uses the Steam Web API in accordance with the [Steam Web API Terms of Use](https://steamcommunity.com/dev/apiterms).
+
 ## License
 
 This project is open source. See [LICENSE](LICENSE) for details.
