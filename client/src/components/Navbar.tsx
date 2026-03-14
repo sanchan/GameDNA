@@ -124,8 +124,10 @@ export default function Navbar() {
       {/* ─── Desktop: Fixed left sidebar ─── */}
       {user && (
         <aside className="hidden xl:flex fixed top-0 left-0 h-screen w-64 bg-[#1a1a1a] border-r border-[#333] flex-col z-40">
+          {/* Drag region (traffic-light safe zone) */}
+          <div className="h-[var(--tauri-titlebar-inset,0px)] shrink-0 w-full" data-tauri-drag-region />
           {/* Logo */}
-          <div className="px-5 h-16 flex items-center shrink-0 border-b border-[#333]">
+          <div className="px-5 h-16 flex items-center shrink-0 border-b border-[#333]" data-tauri-drag-region>
             <Link to="/" className="flex items-center gap-0">
               <span className="text-[var(--primary)] text-2xl font-black">{t('brand.game')}</span>
               <span className="text-white text-2xl font-black">{t('brand.dna')}</span>
@@ -217,7 +219,7 @@ export default function Navbar() {
 
       {/* ─── Mobile/Tablet: Top bar ─── */}
       <nav className="xl:hidden sticky top-0 z-40 bg-[#242424]/95 backdrop-blur-lg border-b border-[#333]">
-        <div className="px-4 sm:px-6 flex items-center justify-between h-16">
+        <div className="px-4 sm:px-6 flex items-center justify-between h-16 mt-[var(--tauri-titlebar-inset,0px)]" data-tauri-drag-region>
           {/* Left: Hamburger + Logo */}
           <div className="flex items-center gap-2">
             {user && (
@@ -290,6 +292,7 @@ export default function Navbar() {
             className={`absolute top-0 left-0 h-full w-72 bg-[#1a1a1a] border-r border-[#333] flex flex-col transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
           >
             {/* Sidebar header */}
+            <div className="pt-[var(--tauri-titlebar-inset,0px)] shrink-0" />
             <div className="flex items-center justify-between px-5 h-16 border-b border-[#333] shrink-0">
               <Link to="/" className="flex items-center gap-0" onClick={() => setSidebarOpen(false)}>
                 <span className="text-[var(--primary)] text-2xl font-black">{t('brand.game')}</span>

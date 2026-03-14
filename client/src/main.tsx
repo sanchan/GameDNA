@@ -5,6 +5,11 @@ import App from './App';
 import './i18n';
 import './index.css';
 
+// Detect Tauri runtime and add class for titlebar-inset styling
+if ('__TAURI_INTERNALS__' in window) {
+  document.documentElement.classList.add('tauri');
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
