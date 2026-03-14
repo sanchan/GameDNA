@@ -6,6 +6,7 @@ import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
 import { generateRecommendations } from '../services/recommendation';
 import GameGrid from '../components/GameGrid';
+import { Select } from '../components/Select';
 import WhyThisGame from '../components/WhyThisGame';
 import type { Recommendation } from '../../../shared/types';
 
@@ -145,43 +146,43 @@ export default function Recommendations() {
               <span>{t('recommendations.regenerateDismissed')}</span>
             </button>
           )}
-          <select
+          <Select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-3 bg-[#242424] border border-[#333] rounded-lg focus:outline-none focus:border-[var(--primary)] transition-colors"
-          >
-            <option value="best-match">{t('recommendations.sortOptions.bestMatch')}</option>
-            <option value="highest-rated">{t('recommendations.sortOptions.highestRated')}</option>
-            <option value="most-popular">{t('recommendations.sortOptions.mostPopular')}</option>
-            <option value="price-low">{t('recommendations.sortOptions.priceLow')}</option>
-            <option value="price-high">{t('recommendations.sortOptions.priceHigh')}</option>
-          </select>
+            onChange={setSortBy}
+            options={[
+              { value: 'best-match', label: t('recommendations.sortOptions.bestMatch') },
+              { value: 'highest-rated', label: t('recommendations.sortOptions.highestRated') },
+              { value: 'most-popular', label: t('recommendations.sortOptions.mostPopular') },
+              { value: 'price-low', label: t('recommendations.sortOptions.priceLow') },
+              { value: 'price-high', label: t('recommendations.sortOptions.priceHigh') },
+            ]}
+          />
         </div>
       </div>
 
       {recs.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 mb-6">
-          <select
+          <Select
             value={genreFilter}
-            onChange={(e) => setGenreFilter(e.target.value)}
-            className="px-4 py-2 bg-[#242424] border border-[#333] rounded-lg text-sm focus:outline-none focus:border-[var(--primary)] transition-colors"
-          >
-            <option value="all">{t('common.allGenres')}</option>
-            {allGenres.map((genre) => (
-              <option key={genre} value={genre}>{genre}</option>
-            ))}
-          </select>
-          <select
+            onChange={setGenreFilter}
+            size="sm"
+            options={[
+              { value: 'all', label: t('common.allGenres') },
+              ...allGenres.map((genre) => ({ value: genre, label: genre })),
+            ]}
+          />
+          <Select
             value={priceFilter}
-            onChange={(e) => setPriceFilter(e.target.value)}
-            className="px-4 py-2 bg-[#242424] border border-[#333] rounded-lg text-sm focus:outline-none focus:border-[var(--primary)] transition-colors"
-          >
-            <option value="all">{t('recommendations.allPrices')}</option>
-            <option value="under10">{t('recommendations.under10')}</option>
-            <option value="under20">{t('recommendations.under20')}</option>
-            <option value="under30">{t('recommendations.under30')}</option>
-            <option value="over30">{t('recommendations.over30')}</option>
-          </select>
+            onChange={setPriceFilter}
+            size="sm"
+            options={[
+              { value: 'all', label: t('recommendations.allPrices') },
+              { value: 'under10', label: t('recommendations.under10') },
+              { value: 'under20', label: t('recommendations.under20') },
+              { value: 'under30', label: t('recommendations.under30') },
+              { value: 'over30', label: t('recommendations.over30') },
+            ]}
+          />
         </div>
       )}
 
