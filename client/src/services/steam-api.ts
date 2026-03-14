@@ -189,6 +189,23 @@ export async function getAppDetails(appid: number, cc?: string): Promise<GameDet
     const genres = genresRaw.map((g) => g.description);
     const tags = [...genres, ...categoriesRaw.slice(0, 10).map((c) => c.description)];
 
+    // Map Steam content_descriptors to NSFW tags for filtering
+    const contentDescriptors = (d.content_descriptors as { ids?: number[] })?.ids ?? [];
+    const descriptorTagMap: Record<number, string[]> = {
+      1: ['Sexual Content', 'Nudity'],
+      3: ['NSFW', 'Adult Only'],
+      4: ['Sexual Content', 'Nudity', 'NSFW'],
+      5: ['Mature'],
+    };
+    for (const id of contentDescriptors) {
+      const mapped = descriptorTagMap[id];
+      if (mapped) {
+        for (const t of mapped) {
+          if (!tags.includes(t)) tags.push(t);
+        }
+      }
+    }
+
     const priceOverview = d.price_overview as { final?: number; currency?: string } | undefined;
     const recommendations = d.recommendations as { total?: number } | undefined;
     const releaseDate = d.release_date as { date?: string } | undefined;
