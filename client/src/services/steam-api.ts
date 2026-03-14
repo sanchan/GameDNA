@@ -3,7 +3,7 @@
 
 import { config } from './config';
 
-const PROXY_BASE = '/api/steam';
+const PROXY_BASE = `${import.meta.env.VITE_API_BASE || '/api'}/steam`;
 export const DAILY_LIMIT = 100_000;
 const DAILY_KEY = 'gamedna_api_calls';
 

@@ -7,10 +7,17 @@
     "dev": "bun run dev:proxy & bun run dev:client",
     "dev:proxy": "bun --watch server/proxy.ts",
     "dev:client": "vite --config client/vite.config.ts",
-    "build": "vite build --config client/vite.config.ts"
+    "build": "vite build --config client/vite.config.ts",
+    "tauri": "tauri",
+    "tauri:dev": "bun run dev:proxy & VITE_API_BASE=http://localhost:3000/api tauri dev",
+    "tauri:build": "VITE_API_BASE=http://localhost:3000/api tauri build",
+    "tauri:ios:init": "tauri ios init",
+    "tauri:ios:dev": "bun run dev:proxy & VITE_API_BASE=http://localhost:3000/api tauri ios dev",
+    "tauri:ios:build": "VITE_API_BASE=http://localhost:3000/api tauri ios build"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.1",
+    "@tauri-apps/cli": "^2",
     "@types/bun": "latest",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

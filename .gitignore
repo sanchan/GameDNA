@@ -36,5 +36,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Database
 data/
 
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
 # Other
 #ignore/

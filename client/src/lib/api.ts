@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 class ApiError extends Error {
