@@ -17,7 +17,7 @@ GameDNA was built with a core belief: **your gaming data belongs to you**.
 - **AI runs locally** — Recommendations are powered by a local Ollama instance (Llama 3.1 8B) running on your machine. Your gaming data is never sent to external AI services.
 - **Full control over your data** — Export your data as JSON at any time, or delete everything with a single click.
 
-![Privacy](docs/screenshots/help%20>%20privacy.png)
+![Privacy](docs/screenshots/help-privacy.png)
 
 ---
 
