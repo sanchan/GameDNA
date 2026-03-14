@@ -18,7 +18,7 @@ interface GenreGame {
 export default function Profile() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus, syncProgress, triggerSync } = useAuth();
-  const { userId } = useDb();
+  const { userId, config: dbConfig } = useDb();
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { data: dna, isLoading: dnaLoading, refetch: refetchDna } = useGamingDNA();
   const prevSyncStatus = useRef(syncStatus);
@@ -533,6 +533,23 @@ export default function Profile() {
 
         {/* Sidebar (Right 1/3) */}
         <div className="lg:col-span-1 space-y-6">
+          {/* API Key Warning */}
+          {dbConfig && !dbConfig.steamApiKey && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4">
+              <p className="text-sm text-red-400 mb-2">
+                <i className="fa-solid fa-triangle-exclamation mr-2" />
+                Steam API key unavailable — sync is disabled.
+              </p>
+              <Link
+                to="/settings"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--primary)] hover:underline"
+              >
+                <i className="fa-solid fa-gear" />
+                Re-enter your API key in Settings
+              </Link>
+            </div>
+          )}
+
           {/* Sync Library */}
           <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
             <div className="flex items-center justify-between mb-5">

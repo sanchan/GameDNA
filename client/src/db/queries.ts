@@ -2,7 +2,7 @@
 // Every write calls persistDb().
 
 import { getDb, persistDb } from './index';
-import { encryptApiKey, decryptApiKey, getDevicePassphrase } from './crypto';
+import { encryptApiKey, decryptApiKey, getDevicePassphrase, getLegacyDevicePassphrase } from './crypto';
 import type {
   Game, User, TasteProfile, Recommendation, GamingDNA, SwipeDecision,
   Collection, GameNote, GameStatusType, GameStatusEntry, UserSettings,
@@ -99,15 +99,28 @@ export async function getLocalConfig(): Promise<LocalConfig> {
 
   let steamApiKey: string | null = null;
   if (row.steam_api_key_encrypted && row.steam_api_key_iv && row.steam_api_key_salt) {
+    const encrypted = row.steam_api_key_encrypted as string;
+    const iv = row.steam_api_key_iv as string;
+    const salt = row.steam_api_key_salt as string;
+
+    // Try current passphrase first
     try {
-      steamApiKey = await decryptApiKey(
-        row.steam_api_key_encrypted as string,
-        row.steam_api_key_iv as string,
-        row.steam_api_key_salt as string,
-        getDevicePassphrase(),
-      );
+      steamApiKey = await decryptApiKey(encrypted, iv, salt, getDevicePassphrase());
     } catch {
-      console.warn('[config] Failed to decrypt API key');
+      // Try legacy passphrase (included userAgent which changes on browser updates)
+      try {
+        steamApiKey = await decryptApiKey(encrypted, iv, salt, getLegacyDevicePassphrase());
+        // Re-encrypt with stable passphrase so future loads succeed
+        const reEncrypted = await encryptApiKey(steamApiKey, getDevicePassphrase());
+        getDb().run(
+          'UPDATE local_config SET steam_api_key_encrypted = ?, steam_api_key_iv = ?, steam_api_key_salt = ? WHERE id = 1',
+          [reEncrypted.encrypted, reEncrypted.iv, reEncrypted.salt] as any[],
+        );
+        persistDb();
+        console.info('[config] Migrated API key to stable passphrase');
+      } catch {
+        console.warn('[config] Failed to decrypt API key — please re-enter it in Settings');
+      }
     }
   }
 
