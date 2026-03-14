@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAi } from '../hooks/use-ai';
+import { Select } from './Select';
 import type { WebLLMProgress } from '../services/webllm-engine';
 
 const WEBLLM_MODELS = [
@@ -73,16 +74,15 @@ export default function WebLLMSetup({ selectedModel, onModelChange }: Props) {
       {/* Model Selector */}
       <div>
         <label className="text-sm font-medium text-gray-300 mb-2 block">Model</label>
-        <select
+        <Select
           value={selectedModel}
-          onChange={(e) => onModelChange(e.target.value)}
-          disabled={loading}
-          className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--primary)]"
-        >
-          {WEBLLM_MODELS.map((m) => (
-            <option key={m.id} value={m.id}>{m.name} ({m.size})</option>
-          ))}
-        </select>
+          onChange={onModelChange}
+          size="sm"
+          options={WEBLLM_MODELS.map((m) => ({
+            value: m.id,
+            label: `${m.name} (${m.size})`,
+          }))}
+        />
       </div>
 
       {/* Download / Status */}

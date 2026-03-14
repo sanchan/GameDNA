@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/use-auth';
 import { useDb } from '../contexts/db-context';
 import { useToast } from '../components/Toast';
 import * as queries from '../db/queries';
+import { Select } from '../components/Select';
 import type { Game } from '../../../shared/types';
 
 interface BacklogEntry {
@@ -308,62 +309,60 @@ export default function Backlog() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="flex flex-col gap-2">
             <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('common.sortBy')}</label>
-            <select
+            <Select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
-            >
-              <option value="score-desc">{t('backlog.sortOptions.scoreDesc')}</option>
-              <option value="score-asc">{t('backlog.sortOptions.scoreAsc')}</option>
-              <option value="playtime-asc">{t('backlog.sortOptions.playtimeAsc')}</option>
-              <option value="playtime-desc">{t('backlog.sortOptions.playtimeDesc')}</option>
-              <option value="name-asc">{t('backlog.sortOptions.nameAsc')}</option>
-              <option value="name-desc">{t('backlog.sortOptions.nameDesc')}</option>
-            </select>
+              onChange={(v) => setSortBy(v as SortOption)}
+              options={[
+                { value: 'score-desc', label: t('backlog.sortOptions.scoreDesc') },
+                { value: 'score-asc', label: t('backlog.sortOptions.scoreAsc') },
+                { value: 'playtime-asc', label: t('backlog.sortOptions.playtimeAsc') },
+                { value: 'playtime-desc', label: t('backlog.sortOptions.playtimeDesc') },
+                { value: 'name-asc', label: t('backlog.sortOptions.nameAsc') },
+                { value: 'name-desc', label: t('backlog.sortOptions.nameDesc') },
+              ]}
+            />
           </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('backlog.playtimeFilter')}</label>
-            <select
+            <Select
               value={playtimeFilter}
-              onChange={(e) => setPlaytimeFilter(e.target.value as PlaytimeFilter)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
-            >
-              <option value="all">{t('backlog.playtimeOptions.allGames')}</option>
-              <option value="under5">{t('backlog.playtimeOptions.quickWins')}</option>
-              <option value="5to15">{t('backlog.playtimeOptions.shortGames')}</option>
-              <option value="15to40">{t('backlog.playtimeOptions.mediumGames')}</option>
-              <option value="40plus">{t('backlog.playtimeOptions.longGames')}</option>
-            </select>
+              onChange={(v) => setPlaytimeFilter(v as PlaytimeFilter)}
+              options={[
+                { value: 'all', label: t('backlog.playtimeOptions.allGames') },
+                { value: 'under5', label: t('backlog.playtimeOptions.quickWins') },
+                { value: '5to15', label: t('backlog.playtimeOptions.shortGames') },
+                { value: '15to40', label: t('backlog.playtimeOptions.mediumGames') },
+                { value: '40plus', label: t('backlog.playtimeOptions.longGames') },
+              ]}
+            />
           </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('backlog.matchScore')}</label>
-            <select
+            <Select
               value={scoreFilter}
-              onChange={(e) => setScoreFilter(e.target.value as ScoreFilter)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
-            >
-              <option value="all">{t('backlog.scoreOptions.allScores')}</option>
-              <option value="excellent">{t('backlog.scoreOptions.excellent')}</option>
-              <option value="great">{t('backlog.scoreOptions.great')}</option>
-              <option value="good">{t('backlog.scoreOptions.good')}</option>
-              <option value="fair">{t('backlog.scoreOptions.fair')}</option>
-            </select>
+              onChange={(v) => setScoreFilter(v as ScoreFilter)}
+              options={[
+                { value: 'all', label: t('backlog.scoreOptions.allScores') },
+                { value: 'excellent', label: t('backlog.scoreOptions.excellent') },
+                { value: 'great', label: t('backlog.scoreOptions.great') },
+                { value: 'good', label: t('backlog.scoreOptions.good') },
+                { value: 'fair', label: t('backlog.scoreOptions.fair') },
+              ]}
+            />
           </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('common.genre')}</label>
-            <select
+            <Select
               value={genreFilter}
-              onChange={(e) => setGenreFilter(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
-            >
-              <option value="all">{t('common.allGenres')}</option>
-              {allGenres.map((genre) => (
-                <option key={genre} value={genre}>{genre}</option>
-              ))}
-            </select>
+              onChange={setGenreFilter}
+              options={[
+                { value: 'all', label: t('common.allGenres') },
+                ...allGenres.map((genre) => ({ value: genre, label: genre })),
+              ]}
+            />
           </div>
         </div>
       </div>

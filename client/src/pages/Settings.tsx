@@ -11,6 +11,7 @@ import MigrationTool from '../components/MigrationTool';
 import type { AiProvider } from '../services/ai-engine';
 import type { UserSettings } from '../../../shared/types';
 import { DEFAULT_EXPLANATION_TEMPLATE } from '../services/ai-features';
+import { Select } from '../components/Select';
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
@@ -184,13 +185,14 @@ export default function Settings() {
             </div>
             <div>
               <label className="text-sm font-medium text-gray-300 mb-2 block">Language</label>
-              <select
+              <Select
                 value={settings.language}
-                onChange={(e) => setSettings({ ...settings, language: e.target.value })}
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--primary)]"
-              >
-                <option value="en">English</option>
-              </select>
+                onChange={(v) => setSettings({ ...settings, language: v })}
+                size="sm"
+                options={[
+                  { value: 'en', label: 'English' },
+                ]}
+              />
             </div>
           </div>
         </div>

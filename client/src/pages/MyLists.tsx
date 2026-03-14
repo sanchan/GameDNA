@@ -7,6 +7,7 @@ import { useDb } from '../contexts/db-context';
 import { useBookmarks } from '../hooks/use-bookmarks';
 import { useToast } from '../components/Toast';
 import * as queries from '../db/queries';
+import { Select } from '../components/Select';
 import type { Game, Collection } from '../../../shared/types';
 
 interface LibraryEntry {
@@ -232,28 +233,26 @@ export default function MyLists() {
             />
           </div>
           <div className="flex items-center gap-3">
-            <select
+            <Select
               value={genreFilter}
-              onChange={(e) => setGenreFilter(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
-            >
-              <option value="">{t('common.allGenres')}</option>
-              {allGenres.map((g) => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
-            <select
+              onChange={setGenreFilter}
+              options={[
+                { value: '', label: t('common.allGenres') },
+                ...allGenres.map((g) => ({ value: g, label: g })),
+              ]}
+            />
+            <Select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortKey)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-all"
-            >
-              <option value="recent">{t('myLists.sortRecent')}</option>
-              <option value="name-asc">{t('myLists.sortNameAsc')}</option>
-              <option value="name-desc">{t('myLists.sortNameDesc')}</option>
-              <option value="price-low">{t('myLists.sortPriceLow')}</option>
-              <option value="price-high">{t('myLists.sortPriceHigh')}</option>
-              <option value="rating">{t('myLists.sortRating')}</option>
-            </select>
+              onChange={(v) => setSortBy(v as SortKey)}
+              options={[
+                { value: 'recent', label: t('myLists.sortRecent') },
+                { value: 'name-asc', label: t('myLists.sortNameAsc') },
+                { value: 'name-desc', label: t('myLists.sortNameDesc') },
+                { value: 'price-low', label: t('myLists.sortPriceLow') },
+                { value: 'price-high', label: t('myLists.sortPriceHigh') },
+                { value: 'rating', label: t('myLists.sortRating') },
+              ]}
+            />
           </div>
         </div>
       </div>
