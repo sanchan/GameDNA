@@ -71,9 +71,18 @@ export async function decryptApiKey(
   return dec.decode(plaintext);
 }
 
-// Simple passphrase derived from browser fingerprint-like data.
+// Stable passphrase — does NOT use navigator.userAgent (changes on every browser update).
 // Not meant to be highly secure — just prevents casual access to the stored key.
 export function getDevicePassphrase(): string {
+  const parts = [
+    navigator.language,
+    'gamedna-local-v2',
+  ];
+  return parts.join('|');
+}
+
+// Legacy passphrase that included userAgent — used for migration only.
+export function getLegacyDevicePassphrase(): string {
   const parts = [
     navigator.userAgent,
     navigator.language,

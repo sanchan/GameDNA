@@ -22,6 +22,8 @@ export default function Settings() {
   const [aiProvider, setAiProvider] = useState<AiProvider | null>(null);
   const [webllmModel, setWebllmModel] = useState('Llama-3.2-1B-Instruct-q4f16_1-MLC');
   const ai = useAi();
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [savingApiKey, setSavingApiKey] = useState(false);
 
   useEffect(() => {
     if (!user || !userId) return;
@@ -191,6 +193,61 @@ export default function Settings() {
               </select>
             </div>
           </div>
+        </div>
+
+        {/* Steam API Key */}
+        <div className={`bg-[#242424] border rounded-2xl p-6 mb-6 ${!dbConfig?.steamApiKey ? 'border-red-500/50' : 'border-[#333]'}`}>
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <i className="fa-solid fa-key text-gray-400" />
+            Steam API Key
+          </h2>
+          {!dbConfig?.steamApiKey ? (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
+              <p className="text-sm text-red-400">
+                <i className="fa-solid fa-triangle-exclamation mr-2" />
+                Your Steam API key could not be decrypted (likely due to a browser update). Please re-enter it below to restore sync functionality.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-4">
+              <p className="text-sm text-green-400">
+                <i className="fa-solid fa-check-circle mr-2" />
+                Steam API key is configured and working.
+              </p>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <input
+              type="password"
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              placeholder={dbConfig?.steamApiKey ? 'Enter new key to replace current one' : 'Enter your Steam API key'}
+              className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
+            />
+            <button
+              onClick={async () => {
+                if (!apiKeyInput.trim()) return;
+                setSavingApiKey(true);
+                try {
+                  await queries.saveLocalConfig({ steamApiKey: apiKeyInput.trim() });
+                  await refreshConfig?.();
+                  setApiKeyInput('');
+                  toast('Steam API key saved', 'success');
+                } catch {
+                  toast('Failed to save API key', 'error');
+                } finally {
+                  setSavingApiKey(false);
+                }
+              }}
+              disabled={!apiKeyInput.trim() || savingApiKey}
+              className="px-4 py-2.5 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg text-sm font-bold transition-all hover:opacity-90 disabled:opacity-50"
+            >
+              {savingApiKey ? 'Saving...' : 'Save Key'}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Get your key from <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] hover:underline">steamcommunity.com/dev/apikey</a>
+          </p>
         </div>
 
         {/* AI Configuration */}
