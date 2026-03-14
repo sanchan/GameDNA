@@ -13,12 +13,14 @@
     "windows": [
       {
         "title": "GameDNA",
-        "width": 1200,
-        "height": 800,
+        "width": 1500,
+        "height": 1100,
         "minWidth": 400,
         "minHeight": 600,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "titleBarStyle": "overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {
