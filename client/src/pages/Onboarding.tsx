@@ -184,7 +184,7 @@ export default function Onboarding() {
 
     // Start data sync
     const cats: SyncCategory[] = ['library', 'wishlist', 'backlog', 'tags'];
-    triggerSync(cats).catch(() => {});
+    triggerSync(cats).catch(() => { });
 
     // Start AI model download if webllm selected
     if (selectedAiProvider === 'webllm') {
@@ -243,9 +243,8 @@ export default function Onboarding() {
             return (
               <div
                 key={s}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  s === step ? 'bg-[var(--primary)]' : i < currentIdx ? 'bg-[var(--primary)]/70' : 'bg-[var(--border)]'
-                }`}
+                className={`w-3 h-3 rounded-full transition-colors ${s === step ? 'bg-[var(--primary)]' : i < currentIdx ? 'bg-[var(--primary)]/70' : 'bg-[var(--border)]'
+                  }`}
               />
             );
           })}
@@ -270,7 +269,7 @@ export default function Onboarding() {
                   </div>
                   <div>
                     <p className="text-[var(--foreground)] font-medium">Your data stays local</p>
-                    <p className="text-[var(--muted-foreground)] text-sm">Everything is stored in your browser. No accounts, no servers.</p>
+                    <p className="text-[var(--muted-foreground)] text-sm">Everything is stored in your local machine. No accounts, no servers.</p>
                   </div>
                 </div>
                 <div className="flex gap-3 items-start">
@@ -375,7 +374,7 @@ export default function Onboarding() {
             <>
               <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">Steam API Key</h2>
               <p className="text-[var(--muted-foreground)] mb-6">
-                We need your Steam Web API key to access your game library. It's stored encrypted, locally in your browser only.
+                We need your Steam Web API key to access your game library. It's stored encrypted, locally in your local machine only.
               </p>
 
               <div className="mb-4">
@@ -589,14 +588,12 @@ export default function Onboarding() {
                         role="switch"
                         aria-checked={!!enabledCollections[col.id]}
                         onClick={() => setEnabledCollections((prev) => ({ ...prev, [col.id]: !prev[col.id] }))}
-                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2 focus:ring-offset-[var(--card)] ${
-                          enabledCollections[col.id] ? 'bg-red-500' : 'bg-[var(--border)]'
-                        }`}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2 focus:ring-offset-[var(--card)] ${enabledCollections[col.id] ? 'bg-red-500' : 'bg-[var(--border)]'
+                          }`}
                       >
                         <span
-                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            enabledCollections[col.id] ? 'translate-x-5' : 'translate-x-0'
-                          }`}
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${enabledCollections[col.id] ? 'translate-x-5' : 'translate-x-0'
+                            }`}
                         />
                       </button>
                     </div>
@@ -634,9 +631,8 @@ export default function Onboarding() {
                       return (
                         <span
                           key={tag}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 border border-red-500/30 text-red-400 ${
-                            !fromCollection ? 'cursor-pointer hover:bg-red-500/20' : ''
-                          }`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 border border-red-500/30 text-red-400 ${!fromCollection ? 'cursor-pointer hover:bg-red-500/20' : ''
+                            }`}
                           onClick={() => { if (!fromCollection) handleRemoveCustomTag(tag); }}
                         >
                           {tag}
@@ -701,18 +697,16 @@ export default function Onboarding() {
 
                   return (
                     <div key={key} className="flex items-center gap-3 p-3 bg-[var(--background)] border border-[var(--border)] rounded-xl">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                        status === 'complete' ? 'bg-green-500/20' :
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${status === 'complete' ? 'bg-green-500/20' :
                         status === 'syncing' ? 'bg-[var(--primary)]/20' :
-                        status === 'error' ? 'bg-red-500/20' :
-                        'bg-[var(--border)]'
-                      }`}>
-                        <i className={`fa-solid ${
-                          status === 'complete' ? 'fa-check text-green-400' :
+                          status === 'error' ? 'bg-red-500/20' :
+                            'bg-[var(--border)]'
+                        }`}>
+                        <i className={`fa-solid ${status === 'complete' ? 'fa-check text-green-400' :
                           status === 'syncing' ? 'fa-spinner fa-spin text-[var(--primary)]' :
-                          status === 'error' ? 'fa-xmark text-red-400' :
-                          `${icon} text-[var(--muted-foreground)]`
-                        } text-sm`} />
+                            status === 'error' ? 'fa-xmark text-red-400' :
+                              `${icon} text-[var(--muted-foreground)]`
+                          } text-sm`} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-[var(--foreground)]">{label}</p>
@@ -743,18 +737,16 @@ export default function Onboarding() {
                 {/* AI Model download */}
                 {selectedAiProvider === 'webllm' && (
                   <div className="flex items-center gap-3 p-3 bg-[var(--background)] border border-[var(--border)] rounded-xl">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                      aiDownloadDone && !aiDownloadError ? 'bg-green-500/20' :
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${aiDownloadDone && !aiDownloadError ? 'bg-green-500/20' :
                       aiDownloadStarted && !aiDownloadDone ? 'bg-[var(--primary)]/20' :
-                      aiDownloadError ? 'bg-red-500/20' :
-                      'bg-[var(--border)]'
-                    }`}>
-                      <i className={`fa-solid ${
-                        aiDownloadDone && !aiDownloadError ? 'fa-check text-green-400' :
+                        aiDownloadError ? 'bg-red-500/20' :
+                          'bg-[var(--border)]'
+                      }`}>
+                      <i className={`fa-solid ${aiDownloadDone && !aiDownloadError ? 'fa-check text-green-400' :
                         aiDownloadStarted && !aiDownloadDone ? 'fa-spinner fa-spin text-[var(--primary)]' :
-                        aiDownloadError ? 'fa-xmark text-red-400' :
-                        'fa-microchip text-[var(--muted-foreground)]'
-                      } text-sm`} />
+                          aiDownloadError ? 'fa-xmark text-red-400' :
+                            'fa-microchip text-[var(--muted-foreground)]'
+                        } text-sm`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[var(--foreground)]">AI Model</p>
@@ -794,8 +786,8 @@ export default function Onboarding() {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-[var(--foreground)] font-medium">
                       {syncState.step === 'complete' ? 'Sync complete!' :
-                       syncState.step === 'error' ? 'Sync encountered errors' :
-                       syncState.detail || 'Syncing...'}
+                        syncState.step === 'error' ? 'Sync encountered errors' :
+                          syncState.detail || 'Syncing...'}
                     </span>
                     <span className="text-sm text-[var(--primary)] font-medium">{syncState.progress}%</span>
                   </div>

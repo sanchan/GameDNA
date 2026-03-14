@@ -567,7 +567,7 @@ const en = {
     principlesTitle: 'Our Privacy Principles',
     localFirst: {
       title: 'Local-First Architecture',
-      desc: 'All your personal data — swipe history, taste profile, preferences, and cached game metadata — is stored locally in your browser using an in-browser SQLite database. Nothing is sent to or stored on external servers.',
+      desc: 'All your personal data — swipe history, taste profile, preferences, and cached game metadata — is stored locally in your local machine using an in-browser SQLite database. Nothing is sent to or stored on external servers.',
     },
     noTracking: {
       title: 'No Tracking or Analytics',
@@ -575,7 +575,7 @@ const en = {
     },
     localAi: {
       title: 'AI Runs Locally',
-      desc: 'AI features (Ollama or WebLLM) run entirely on your machine or in your browser. Your gaming data is never sent to external AI services for processing.',
+      desc: 'AI features (Ollama or WebLLM) run entirely on your machine or in your local machine. Your gaming data is never sent to external AI services for processing.',
     },
     fullControl: {
       title: 'Full Control Over Your Data',
@@ -596,7 +596,7 @@ const en = {
       messages: 'Private messages or friend lists',
     },
     dataStorageTitle: 'Where Your Data Lives',
-    dataStorageDesc: 'Everything stays in your browser. GameDNA uses OPFS (Origin Private File System) to store an SQLite database locally. Your Steam API key is only sent to our proxy server to authenticate Steam API requests and is never logged or persisted. Game metadata from Steam is cached locally for up to 7 days to minimize API calls.',
+    dataStorageDesc: 'Everything stays in your local machine. GameDNA uses OPFS (Origin Private File System) to store an SQLite database locally. Your Steam API key is only sent to our proxy server to authenticate Steam API requests and is never logged or persisted. Game metadata from Steam is cached locally for up to 7 days to minimize API calls.',
     yourRightsTitle: 'Your Data, Your Choice',
     yourRightsDesc: 'You can export, review, or delete all your data at any time from the Settings page. No account deletion request needed — just clear your data and it\'s gone.',
     goToSettings: 'Go to Settings',

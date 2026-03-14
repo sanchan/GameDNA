@@ -70,7 +70,7 @@ export default function Legal() {
               <h3 className="font-semibold text-white mb-1">Where data is stored</h3>
               <p>
                 All your personal data — swipe history, taste profile, preferences, and cached game metadata — is stored
-                <strong> locally in your browser</strong> using an in-browser SQLite database (OPFS).
+                <strong> locally in your local machine</strong> using an in-browser SQLite database (OPFS).
                 No personal data is sent to or stored on our servers. Your Steam API key, if provided, is sent
                 only to our proxy server to authenticate requests to the Steam Web API and is never logged or persisted.
               </p>
@@ -90,7 +90,7 @@ export default function Legal() {
               <h3 className="font-semibold text-white mb-1">Third-party services</h3>
               <ul className="list-disc list-inside space-y-1 ml-2">
                 <li><strong>Steam Web API</strong> — to fetch game metadata, your library, and wishlist data</li>
-                <li><strong>Ollama / WebLLM</strong> (optional) — AI features run locally on your machine or in your browser; no data is sent to external AI services</li>
+                <li><strong>Ollama / WebLLM</strong> (optional) — AI features run locally on your machine or in your local machine; no data is sent to external AI services</li>
               </ul>
             </section>
 
@@ -99,7 +99,7 @@ export default function Legal() {
               <p>
                 You can export all your data at any time from <Link to="/settings" className="text-[var(--primary)] hover:underline">Settings</Link> (Export Database or Export JSON).
                 You can also delete all data using "Clear All Data" in Settings. Since data is stored locally,
-                clearing your browser data will also remove all GameDNA data.
+                clearing your local machine data will also remove all GameDNA data.
               </p>
             </section>
 
