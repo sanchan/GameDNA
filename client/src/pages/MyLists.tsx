@@ -229,7 +229,7 @@ export default function MyLists() {
               placeholder={t('myLists.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-[var(--primary)] transition-all"
+              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg pl-12 pr-4 py-2.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-[var(--primary)] transition-all"
             />
           </div>
           <div className="flex items-center gap-3">
