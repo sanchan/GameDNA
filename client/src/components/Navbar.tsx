@@ -28,11 +28,11 @@ export default function Navbar() {
   const navLinks = [
     { to: '/discover', label: t('nav.discovery') },
     { to: '/recommendations', label: t('nav.recommendations') },
+    { to: '/cauldron', label: t('nav.cauldron') },
     { to: '/lists', label: t('nav.myLists') },
     { to: '/history', label: t('nav.history') },
     { to: '/backlog', label: t('nav.backlog') },
     { to: '/chat', label: t('nav.chat') },
-    { to: '/cauldron', label: t('nav.cauldron') },
     { to: '/filters', label: t('nav.filters') },
     { to: '/stats', label: t('nav.stats') },
     { to: '/profile', label: t('nav.profile') },
