@@ -56,7 +56,7 @@ export function DbProvider({ children }: { children: ReactNode }) {
   const refreshConfig = useCallback(async () => {
     const cfg = await queries.getLocalConfig();
     setLocalConfig(cfg);
-    if (cfg.setupComplete && cfg.steamId) {
+    if (cfg.steamId) {
       const uid = queries.ensureUser(cfg.steamId, cfg.displayName ?? undefined, cfg.avatarUrl ?? undefined, cfg.profileUrl ?? undefined, cfg.countryCode ?? undefined);
       setUserId(uid);
     }

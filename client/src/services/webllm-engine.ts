@@ -68,6 +68,11 @@ export class WebLLMEngine implements AiEngine {
     }
   }
 
+  /** Download (if needed) and load the model. Progress reported via onProgress callback. */
+  async load(): Promise<void> {
+    await this.ensureLoaded();
+  }
+
   /** Returns true only if the model is loaded and ready to generate. */
   isModelReady(): boolean {
     return this.engine !== null;

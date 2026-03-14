@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
+import { useDb } from '../contexts/db-context';
 import { useTranslation } from 'react-i18next';
 import { getDailyApiUsage, DAILY_LIMIT } from '../services/steam-api';
+import { exportDb, resetDb } from '../db/index';
+import * as queries from '../db/queries';
 
 const navIcons: Record<string, string> = {
   '/discover': 'fa-solid fa-compass',
@@ -20,10 +23,50 @@ const navIcons: Record<string, string> = {
 };
 
 export default function Navbar() {
-  const { user, loading, login, logout, syncStatus, syncProgress } = useAuth();
+  const { user, loading, login, syncStatus, syncProgress } = useAuth();
+  const { userId } = useDb();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [signOutOpen, setSignOutOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const { t } = useTranslation();
+
+  const handleSignOut = useCallback(async () => {
+    setSigningOut(true);
+    try {
+      await resetDb();
+      window.location.href = '/';
+    } catch {
+      setSigningOut(false);
+    }
+  }, []);
+
+  const handleExportDb = useCallback(() => {
+    try {
+      const data = exportDb();
+      const blob = new Blob([data as unknown as BlobPart], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gamedna-backup-${new Date().toISOString().slice(0, 10)}.db`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleExportJson = useCallback(() => {
+    if (!userId) return;
+    try {
+      const data = queries.exportUserData(userId);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gamedna-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* ignore */ }
+  }, [userId]);
 
   const navLinks = [
     { to: '/discover', label: t('nav.discovery') },
@@ -162,7 +205,7 @@ export default function Navbar() {
               </div>
             </div>
             <button
-              onClick={logout}
+              onClick={() => setSignOutOpen(true)}
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
             >
               <i className="fa-solid fa-right-from-bracket w-5 text-center text-base" />
@@ -320,11 +363,74 @@ export default function Navbar() {
             {/* Logout button at bottom */}
             <div className="px-3 py-4 border-t border-[#333] shrink-0">
               <button
-                onClick={() => { logout(); setSidebarOpen(false); }}
+                onClick={() => { setSidebarOpen(false); setSignOutOpen(true); }}
                 className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
               >
                 <i className="fa-solid fa-right-from-bracket w-5 text-center text-base" />
                 {t('common.signOut')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Sign Out confirmation dialog ─── */}
+      {signOutOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center shrink-0">
+                <i className="fa-solid fa-triangle-exclamation text-red-400" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Sign out of GameDNA?</h3>
+            </div>
+
+            <p className="text-sm text-gray-400 mb-4">
+              All local data will be <span className="text-red-400 font-medium">permanently deleted</span>, including your library, ratings, taste profile, and settings.
+            </p>
+
+            <div className="bg-[#1a1a1a] rounded-xl p-4 mb-6">
+              <p className="text-sm font-medium text-gray-300 mb-3">Export your data first:</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleExportDb}
+                  className="flex items-center gap-2 px-3 py-2 bg-[#242424] border border-[#444] text-gray-300 rounded-lg text-sm font-medium hover:border-[var(--primary)] hover:text-white transition-colors"
+                >
+                  <i className="fa-solid fa-database text-xs" />
+                  Download .db backup
+                </button>
+                <button
+                  onClick={handleExportJson}
+                  disabled={!userId}
+                  className="flex items-center gap-2 px-3 py-2 bg-[#242424] border border-[#444] text-gray-300 rounded-lg text-sm font-medium hover:border-[var(--primary)] hover:text-white transition-colors disabled:opacity-50"
+                >
+                  <i className="fa-solid fa-file-export text-xs" />
+                  Download .json export
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setSignOutOpen(false)}
+                disabled={signingOut}
+                className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-300 border border-[#444] hover:bg-[#333] transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSignOut}
+                disabled={signingOut}
+                className="px-4 py-2.5 rounded-lg text-sm font-bold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {signingOut ? (
+                  <span className="flex items-center gap-2">
+                    <i className="fa-solid fa-spinner fa-spin" />
+                    Signing out...
+                  </span>
+                ) : (
+                  'Sign Out'
+                )}
               </button>
             </div>
           </div>
