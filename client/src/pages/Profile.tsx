@@ -18,13 +18,16 @@ interface GenreGame {
 export default function Profile() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus, syncProgress, triggerSync } = useAuth();
-  const { userId, config: dbConfig } = useDb();
+  const { userId, config: dbConfig, refreshConfig } = useDb();
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { data: dna, isLoading: dnaLoading, refetch: refetchDna } = useGamingDNA();
   const prevSyncStatus = useRef(syncStatus);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [showSteamId, setShowSteamId] = useState(false);
 
   // Interactive radar state
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
@@ -254,16 +257,66 @@ export default function Profile() {
               )}
               <div className="flex-1">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-3">
-                  <h1 className="text-3xl lg:text-4xl font-black text-white">
-                    {user.displayName ?? 'Gamer'}
-                  </h1>
+                  {editingName ? (
+                    <form
+                      className="flex items-center gap-2"
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        const trimmed = nameInput.trim();
+                        await queries.saveLocalConfig({ customDisplayName: trimmed || null });
+                        await refreshConfig();
+                        setEditingName(false);
+                      }}
+                    >
+                      <input
+                        autoFocus
+                        value={nameInput}
+                        onChange={(e) => setNameInput(e.target.value)}
+                        placeholder={dbConfig?.displayName ?? 'Gamer'}
+                        className="bg-[#1a1a1a] border border-[#444] rounded-lg px-3 py-2 text-2xl lg:text-3xl font-black text-white focus:border-[var(--primary)] outline-none w-64"
+                      />
+                      <button type="submit" className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-500 text-white transition-colors">
+                        <i className="fa-solid fa-check" />
+                      </button>
+                      <button type="button" onClick={() => setEditingName(false)} className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#333] hover:bg-[#444] text-gray-300 transition-colors">
+                        <i className="fa-solid fa-xmark" />
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="flex items-center gap-2 group">
+                      <h1 className="text-3xl lg:text-4xl font-black text-white">
+                        {user.displayName || 'Gamer'}
+                      </h1>
+                      <button
+                        onClick={() => {
+                          setNameInput(dbConfig?.customDisplayName || '');
+                          setEditingName(true);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-[#333] opacity-0 group-hover:opacity-100 transition-all"
+                        title={t('common.edit')}
+                      >
+                        <i className="fa-solid fa-pen text-sm" />
+                      </button>
+                    </div>
+                  )}
                   <div className="flex items-center space-x-2">
                     <div className="w-10 h-10 bg-[var(--primary)]/20 rounded-lg flex items-center justify-center">
                       <i className="fa-brands fa-steam text-[var(--primary)] text-xl" />
                     </div>
                     <div>
                       <p className="text-sm text-gray-400">{t('profile.steamId')}</p>
-                      <p className="text-sm font-bold">{user.steamId}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold font-mono">
+                          {showSteamId ? user.steamId : '••••••••••••••••••'}
+                        </p>
+                        <button
+                          onClick={() => setShowSteamId(!showSteamId)}
+                          className="text-gray-500 hover:text-white transition-colors"
+                          title={showSteamId ? t('common.hide') : t('common.show')}
+                        >
+                          <i className={`fa-solid ${showSteamId ? 'fa-eye-slash' : 'fa-eye'} text-xs`} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

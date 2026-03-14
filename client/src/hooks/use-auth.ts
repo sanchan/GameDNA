@@ -38,7 +38,7 @@ export function useAuth() {
 
   const user: User | null = useMemo(
     () => userId ? queries.getUser(userId) : null,
-    [userId],
+    [userId, config?.customDisplayName],
   );
 
   const syncProgress: SyncProgress | null = useMemo(() => syncState ? {
