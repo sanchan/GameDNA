@@ -75,6 +75,7 @@ export interface LocalConfig {
   steamId: string | null;
   steamApiKey: string | null; // decrypted
   displayName: string | null;
+  customDisplayName: string | null;
   avatarUrl: string | null;
   profileUrl: string | null;
   countryCode: string | null;
@@ -89,7 +90,7 @@ export async function getLocalConfig(): Promise<LocalConfig> {
   const row = get<Record<string, unknown>>('SELECT * FROM local_config WHERE id = 1');
   if (!row) {
     return {
-      steamId: null, steamApiKey: null, displayName: null, avatarUrl: null,
+      steamId: null, steamApiKey: null, displayName: null, customDisplayName: null, avatarUrl: null,
       profileUrl: null, countryCode: null,
       aiProvider: 'webllm', ollamaUrl: 'http://localhost:11434',
       ollamaModel: 'llama3.1:8b', webllmModel: 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
@@ -128,6 +129,7 @@ export async function getLocalConfig(): Promise<LocalConfig> {
     steamId: (row.steam_id as string) ?? null,
     steamApiKey,
     displayName: (row.display_name as string) ?? null,
+    customDisplayName: (row.custom_display_name as string) ?? null,
     avatarUrl: (row.avatar_url as string) ?? null,
     profileUrl: (row.profile_url as string) ?? null,
     countryCode: (row.country_code as string) ?? null,
@@ -143,6 +145,7 @@ export async function saveLocalConfig(updates: Partial<{
   steamId: string;
   steamApiKey: string;
   displayName: string;
+  customDisplayName: string | null;
   avatarUrl: string;
   profileUrl: string;
   countryCode: string;
@@ -183,6 +186,7 @@ export async function saveLocalConfig(updates: Partial<{
       vals.push(encFields.encrypted, encFields.iv, encFields.salt);
     }
     if (updates.displayName !== undefined) { sets.push('display_name = ?'); vals.push(updates.displayName); }
+    if (updates.customDisplayName !== undefined) { sets.push('custom_display_name = ?'); vals.push(updates.customDisplayName); }
     if (updates.avatarUrl !== undefined) { sets.push('avatar_url = ?'); vals.push(updates.avatarUrl); }
     if (updates.profileUrl !== undefined) { sets.push('profile_url = ?'); vals.push(updates.profileUrl); }
     if (updates.countryCode !== undefined) { sets.push('country_code = ?'); vals.push(updates.countryCode); }
@@ -260,10 +264,12 @@ export function ensureUser(steamId: string, displayName?: string, avatarUrl?: st
 export function getUser(userId: number): User | null {
   const row = get<Record<string, unknown>>('SELECT * FROM users WHERE id = ?', [userId]);
   if (!row) return null;
+  const configRow = get<Record<string, unknown>>('SELECT custom_display_name FROM local_config WHERE id = 1');
+  const customName = configRow?.custom_display_name as string | undefined;
   return {
     id: row.id as number,
     steamId: row.steam_id as string,
-    displayName: (row.display_name as string) ?? null,
+    displayName: customName || ((row.display_name as string) ?? null),
     avatarUrl: (row.avatar_url as string) ?? null,
     profileUrl: (row.profile_url as string) ?? null,
   };

@@ -244,4 +244,5 @@ export const MIGRATIONS_SQL = [
   `ALTER TABLE games ADD COLUMN screenshots TEXT`,
   `ALTER TABLE games ADD COLUMN movies TEXT`,
   `ALTER TABLE users RENAME COLUMN ignored_tags TO blacklisted_tags`,
+  `ALTER TABLE local_config ADD COLUMN custom_display_name TEXT`,
 ];
