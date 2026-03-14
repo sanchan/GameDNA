@@ -10,7 +10,7 @@
     "build": "vite build --config client/vite.config.ts",
     "tauri": "tauri",
     "tauri:dev": "bun run dev:proxy & VITE_API_BASE=http://localhost:3000/api tauri dev",
-    "tauri:build": "VITE_API_BASE=http://localhost:3000/api tauri build",
+    "tauri:build": "NO_STRIP=1 VITE_API_BASE=http://localhost:3000/api tauri build",
     "tauri:ios:init": "tauri ios init",
     "tauri:ios:dev": "bun run dev:proxy & VITE_API_BASE=http://localhost:3000/api tauri ios dev",
     "tauri:ios:build": "VITE_API_BASE=http://localhost:3000/api tauri ios build"
