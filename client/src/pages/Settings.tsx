@@ -49,7 +49,7 @@ export default function Settings() {
         ollamaUrl: settings?.ollamaUrl ?? undefined,
         ollamaModel: settings?.ollamaModel ?? undefined,
         webllmModel,
-      }).catch(() => {});
+      }).catch(() => { });
     }
   }, [aiProvider]);
 
@@ -264,20 +264,20 @@ export default function Settings() {
               <label className="text-sm font-medium text-gray-300 mb-2 block">AI Provider</label>
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setAiProvider('ollama'); saveNow(undefined, 'ollama'); }}
-                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'ollama' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
-                >
-                  <i className="fa-solid fa-server text-xl mb-2" />
-                  <span className="text-sm font-medium block">Ollama</span>
-                  <span className="text-xs text-gray-500 block mt-1">Local server</span>
-                </button>
-                <button
                   onClick={() => { setAiProvider('webllm'); saveNow(undefined, 'webllm'); }}
                   className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'webllm' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
                 >
                   <i className="fa-solid fa-microchip text-xl mb-2" />
                   <span className="text-sm font-medium block">WebLLM</span>
                   <span className="text-xs text-gray-500 block mt-1">In-browser (WebGPU)</span>
+                </button>
+                <button
+                  onClick={() => { setAiProvider('ollama'); saveNow(undefined, 'ollama'); }}
+                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${aiProvider === 'ollama' ? 'border-[var(--primary)] bg-[#1a1a1a]' : 'border-[#333] hover:border-[#444]'}`}
+                >
+                  <i className="fa-solid fa-server text-xl mb-2" />
+                  <span className="text-sm font-medium block">Ollama</span>
+                  <span className="text-xs text-gray-500 block mt-1">Local server</span>
                 </button>
                 <button
                   onClick={() => { setAiProvider(null); saveNow(undefined, null); }}

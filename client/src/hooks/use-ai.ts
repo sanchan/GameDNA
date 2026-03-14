@@ -46,23 +46,28 @@ export function useAi(): UseAiState {
         webllmModel: cfg?.webllmModel ?? dbConfig?.webllmModel ?? undefined,
       });
 
-      // Attach progress callback for WebLLM
-      if (prov === 'webllm' && 'onProgress' in engine) {
-        (engine as any).onProgress = (progress: WebLLMProgress) => {
-          setDownloadProgress(progress);
-        };
-      }
-
       const ok = await engine.checkHealth();
       setHealthy(ok);
-      setReady(ok);
-      setProvider(prov);
 
       if (!ok) {
         setError(prov === 'webllm'
           ? 'WebGPU is not available in this browser.'
           : 'Cannot connect to Ollama. Make sure it is running.');
+        setReady(false);
+        setProvider(prov);
+        return;
       }
+
+      // For WebLLM: attach progress callback and eagerly download/load the model
+      if (prov === 'webllm' && 'load' in engine) {
+        (engine as any).onProgress = (progress: WebLLMProgress) => {
+          setDownloadProgress(progress);
+        };
+        await (engine as any).load();
+      }
+
+      setReady(true);
+      setProvider(prov);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to initialize AI engine');
       setHealthy(false);

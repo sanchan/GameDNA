@@ -4,11 +4,13 @@ import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
 import { importDb } from '../db/index';
 import { getPlayerSummary, resolveVanityUrl } from '../services/steam-api';
+import { useAi } from '../hooks/use-ai';
 import type { AiProvider } from '../services/ai-engine';
+import type { SyncCategory } from '../services/sync-manager';
 import { TAG_COLLECTIONS } from '../services/tag-filter';
 import { Select } from '../components/Select';
 
-type Step = 'welcome' | 'steam-id' | 'api-key' | 'preferences' | 'import';
+type Step = 'welcome' | 'steam-id' | 'api-key' | 'preferences' | 'sync' | 'import';
 
 const WEBLLM_MODELS = [
   { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 1B', size: '~700MB' },
@@ -19,8 +21,13 @@ const WEBLLM_MODELS = [
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { refreshConfig } = useDb();
+  const { refreshConfig, triggerSync, syncStatus, syncState } = useDb();
+  const ai = useAi();
   const [step, setStep] = useState<Step>('welcome');
+  const [syncStarted, setSyncStarted] = useState(false);
+  const [aiDownloadStarted, setAiDownloadStarted] = useState(false);
+  const [aiDownloadDone, setAiDownloadDone] = useState(false);
+  const [aiDownloadError, setAiDownloadError] = useState<string | null>(null);
   const [steamInput, setSteamInput] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [resolvedId, setResolvedId] = useState<string | null>(null);
@@ -122,7 +129,7 @@ export default function Onboarding() {
     }
   }, [resolvedId, apiKey]);
 
-  const finishSetup = useCallback(async () => {
+  const saveConfigAndContinue = useCallback(async () => {
     if (!resolvedId || !apiKey.trim()) return;
     setError(null);
     setLoading(true);
@@ -142,7 +149,7 @@ export default function Onboarding() {
         ollamaUrl: selectedAiProvider === 'ollama' ? ollamaUrl : undefined,
         ollamaModel: selectedAiProvider === 'ollama' ? ollamaModel : undefined,
         webllmModel: selectedAiProvider === 'webllm' ? webllmModel : undefined,
-        setupComplete: true,
+        setupComplete: false,
       });
 
       // Ensure user row exists and save user settings (theme)
@@ -164,13 +171,43 @@ export default function Onboarding() {
       }
 
       await refreshConfig();
-      navigate('/');
+      setStep('sync');
     } catch (e) {
       setError(`Setup failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
-  }, [resolvedId, apiKey, refreshConfig, navigate, playerName, playerAvatar, theme, selectedAiProvider, ollamaUrl, ollamaModel, webllmModel, allBlacklistedTags]);
+  }, [resolvedId, apiKey, refreshConfig, playerName, playerAvatar, theme, selectedAiProvider, ollamaUrl, ollamaModel, webllmModel, allBlacklistedTags]);
+
+  const handleStartSync = useCallback(async () => {
+    setSyncStarted(true);
+
+    // Start data sync
+    const cats: SyncCategory[] = ['library', 'wishlist', 'backlog', 'tags'];
+    triggerSync(cats).catch(() => {});
+
+    // Start AI model download if webllm selected
+    if (selectedAiProvider === 'webllm') {
+      setAiDownloadStarted(true);
+      setAiDownloadError(null);
+      ai.initEngine('webllm', { webllmModel })
+        .then(() => setAiDownloadDone(true))
+        .catch((e) => {
+          setAiDownloadError(e instanceof Error ? e.message : 'Download failed');
+          setAiDownloadDone(true);
+        });
+    }
+  }, [triggerSync, selectedAiProvider, ai, webllmModel]);
+
+  const dataSyncComplete = syncStatus === 'synced' || syncStatus === 'error';
+  const aiSyncComplete = selectedAiProvider !== 'webllm' || !aiDownloadStarted || aiDownloadDone;
+  const isSyncing = syncStarted && (!dataSyncComplete || !aiSyncComplete);
+
+  const completeSetup = useCallback(async () => {
+    await queries.saveLocalConfig({ setupComplete: true });
+    await refreshConfig();
+    navigate('/');
+  }, [refreshConfig, navigate]);
 
   const handleImportBackup = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -200,14 +237,18 @@ export default function Onboarding() {
       <div className="max-w-lg w-full">
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-8">
-          {(['welcome', 'steam-id', 'api-key', 'preferences'] as Step[]).map((s, i) => (
-            <div
-              key={s}
-              className={`w-3 h-3 rounded-full transition-colors ${
-                s === step ? 'bg-[var(--primary)]' : i < ['welcome', 'steam-id', 'api-key', 'preferences'].indexOf(step) ? 'bg-[var(--primary)]/70' : 'bg-[var(--border)]'
-              }`}
-            />
-          ))}
+          {(['welcome', 'steam-id', 'api-key', 'preferences', 'sync'] as Step[]).map((s, i) => {
+            const steps: Step[] = ['welcome', 'steam-id', 'api-key', 'preferences', 'sync'];
+            const currentIdx = steps.indexOf(step);
+            return (
+              <div
+                key={s}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  s === step ? 'bg-[var(--primary)]' : i < currentIdx ? 'bg-[var(--primary)]/70' : 'bg-[var(--border)]'
+                }`}
+              />
+            );
+          })}
         </div>
 
         <div className="bg-[var(--card)] rounded-2xl p-8 shadow-xl border border-[var(--border)]">
@@ -627,13 +668,197 @@ export default function Onboarding() {
                   Back
                 </button>
                 <button
-                  onClick={finishSetup}
+                  onClick={saveConfigAndContinue}
                   disabled={loading}
                   className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-300"
                 >
-                  {loading ? 'Setting up...' : 'Complete Setup'}
+                  {loading ? 'Saving...' : 'Continue'}
                 </button>
               </div>
+            </>
+          )}
+
+          {step === 'sync' && (
+            <>
+              <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">Sync Your Data</h2>
+              <p className="text-[var(--muted-foreground)] mb-6">
+                Sync your Steam library and download your AI model to get started. This may take a few minutes.
+              </p>
+
+              {/* Sync categories */}
+              <div className="space-y-3 mb-6">
+                {/* Data sync categories */}
+                {([
+                  { key: 'library', icon: 'fa-gamepad', label: 'Steam Library', desc: 'Your owned games and playtime' },
+                  { key: 'wishlist', icon: 'fa-heart', label: 'Wishlist', desc: 'Your Steam wishlist' },
+                  { key: 'backlog', icon: 'fa-database', label: 'Game Details', desc: 'Metadata, tags, and descriptions' },
+                  { key: 'tags', icon: 'fa-chart-pie', label: 'Taste Profile & Recommendations', desc: 'Analyze your gaming taste and generate picks' },
+                ] as const).map(({ key, icon, label, desc }) => {
+                  const catState = syncState?.categories?.[key];
+                  const status = catState?.status ?? 'idle';
+                  const progress = catState?.progress ?? 0;
+                  const detail = catState?.detail ?? '';
+
+                  return (
+                    <div key={key} className="flex items-center gap-3 p-3 bg-[var(--background)] border border-[var(--border)] rounded-xl">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                        status === 'complete' ? 'bg-green-500/20' :
+                        status === 'syncing' ? 'bg-[var(--primary)]/20' :
+                        status === 'error' ? 'bg-red-500/20' :
+                        'bg-[var(--border)]'
+                      }`}>
+                        <i className={`fa-solid ${
+                          status === 'complete' ? 'fa-check text-green-400' :
+                          status === 'syncing' ? 'fa-spinner fa-spin text-[var(--primary)]' :
+                          status === 'error' ? 'fa-xmark text-red-400' :
+                          `${icon} text-[var(--muted-foreground)]`
+                        } text-sm`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[var(--foreground)]">{label}</p>
+                        {status === 'syncing' && detail ? (
+                          <p className="text-xs text-[var(--muted-foreground)] truncate">{detail}</p>
+                        ) : (
+                          <p className="text-xs text-[var(--muted-foreground)]">{desc}</p>
+                        )}
+                        {status === 'syncing' && (
+                          <div className="w-full h-1 bg-[var(--border)] rounded-full mt-1.5 overflow-hidden">
+                            <div
+                              className="h-full bg-[var(--primary)] rounded-full transition-all duration-300"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      {status === 'complete' && (
+                        <span className="text-xs text-green-400 font-medium shrink-0">Done</span>
+                      )}
+                      {status === 'error' && (
+                        <span className="text-xs text-red-400 font-medium shrink-0">Error</span>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* AI Model download */}
+                {selectedAiProvider === 'webllm' && (
+                  <div className="flex items-center gap-3 p-3 bg-[var(--background)] border border-[var(--border)] rounded-xl">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                      aiDownloadDone && !aiDownloadError ? 'bg-green-500/20' :
+                      aiDownloadStarted && !aiDownloadDone ? 'bg-[var(--primary)]/20' :
+                      aiDownloadError ? 'bg-red-500/20' :
+                      'bg-[var(--border)]'
+                    }`}>
+                      <i className={`fa-solid ${
+                        aiDownloadDone && !aiDownloadError ? 'fa-check text-green-400' :
+                        aiDownloadStarted && !aiDownloadDone ? 'fa-spinner fa-spin text-[var(--primary)]' :
+                        aiDownloadError ? 'fa-xmark text-red-400' :
+                        'fa-microchip text-[var(--muted-foreground)]'
+                      } text-sm`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[var(--foreground)]">AI Model</p>
+                      {aiDownloadStarted && !aiDownloadDone && ai.downloadProgress ? (
+                        <>
+                          <p className="text-xs text-[var(--muted-foreground)] truncate">{ai.downloadProgress.text}</p>
+                          <div className="w-full h-1 bg-[var(--border)] rounded-full mt-1.5 overflow-hidden">
+                            <div
+                              className="h-full bg-[var(--primary)] rounded-full transition-all duration-300"
+                              style={{ width: `${ai.downloadProgress.progress * 100}%` }}
+                            />
+                          </div>
+                        </>
+                      ) : aiDownloadError ? (
+                        <p className="text-xs text-red-400">{aiDownloadError}</p>
+                      ) : aiDownloadDone ? (
+                        <p className="text-xs text-green-400">Model ready</p>
+                      ) : (
+                        <p className="text-xs text-[var(--muted-foreground)]">
+                          {WEBLLM_MODELS.find((m) => m.id === webllmModel)?.name ?? webllmModel} ({WEBLLM_MODELS.find((m) => m.id === webllmModel)?.size ?? '?'})
+                        </p>
+                      )}
+                    </div>
+                    {aiDownloadDone && !aiDownloadError && (
+                      <span className="text-xs text-green-400 font-medium shrink-0">Done</span>
+                    )}
+                    {aiDownloadError && (
+                      <span className="text-xs text-red-400 font-medium shrink-0">Error</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Overall progress */}
+              {syncStarted && syncState && (
+                <div className="mb-6 p-3 bg-[var(--primary)]/10 border border-[var(--primary)]/30 rounded-xl">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-[var(--foreground)] font-medium">
+                      {syncState.step === 'complete' ? 'Sync complete!' :
+                       syncState.step === 'error' ? 'Sync encountered errors' :
+                       syncState.detail || 'Syncing...'}
+                    </span>
+                    <span className="text-sm text-[var(--primary)] font-medium">{syncState.progress}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[var(--primary)] rounded-full transition-all duration-500"
+                      style={{ width: `${syncState.progress}%` }}
+                    />
+                  </div>
+                  {syncState.gamesCount > 0 && (
+                    <p className="text-xs text-[var(--muted-foreground)] mt-1.5">
+                      {syncState.gamesCount} games{syncState.wishlistCount > 0 ? `, ${syncState.wishlistCount} wishlisted` : ''}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {error && (
+                <div className="mb-4 p-3 bg-[var(--destructive)]/10 border border-[var(--destructive-foreground)]/30 rounded-xl text-[var(--destructive-foreground)] text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                {!syncStarted && (
+                  <button
+                    onClick={() => { setStep('preferences'); setError(null); }}
+                    className="px-6 py-3 bg-[var(--background)] text-[var(--foreground)] rounded-xl font-medium border border-[var(--border)] hover:bg-[var(--accent)] transition-colors"
+                  >
+                    Back
+                  </button>
+                )}
+                {!syncStarted ? (
+                  <button
+                    onClick={handleStartSync}
+                    className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] text-white rounded-xl font-medium transition-all duration-300"
+                  >
+                    <i className="fa-solid fa-rotate mr-2" />
+                    Sync Now
+                  </button>
+                ) : (
+                  <button
+                    onClick={completeSetup}
+                    disabled={isSyncing}
+                    className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-300"
+                  >
+                    {isSyncing ? (
+                      <><i className="fa-solid fa-spinner fa-spin mr-2" />Syncing...</>
+                    ) : (
+                      'Complete Setup'
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {!syncStarted && (
+                <button
+                  onClick={completeSetup}
+                  className="w-full mt-3 py-2 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                >
+                  Skip for now
+                </button>
+              )}
             </>
           )}
         </div>

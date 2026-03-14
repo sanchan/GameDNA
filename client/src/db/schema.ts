@@ -225,6 +225,7 @@ CREATE TABLE IF NOT EXISTS local_config (
   steam_api_key_iv TEXT,
   steam_api_key_salt TEXT,
   display_name TEXT,
+  custom_display_name TEXT,
   avatar_url TEXT,
   profile_url TEXT,
   country_code TEXT,

@@ -21,6 +21,8 @@ export default function WebLLMSetup({ selectedModel, onModelChange }: Props) {
   const { loading, ready, error, downloadProgress, initEngine } = useAi();
   const [webgpuAvailable, setWebgpuAvailable] = useState<boolean | null>(null);
   const [storageUsage, setStorageUsage] = useState<{ usage: number; quota: number } | null>(null);
+  const [modelCached, setModelCached] = useState<boolean | null>(null);
+  const [loadedModel, setLoadedModel] = useState<string | null>(null);
 
   useEffect(() => {
     // Check WebGPU
@@ -38,13 +40,33 @@ export default function WebLLMSetup({ selectedModel, onModelChange }: Props) {
     }).catch(() => {});
   }, []);
 
+  // Check if selected model is cached whenever it changes
+  useEffect(() => {
+    setModelCached(null);
+    caches.open('webllm/model')
+      .then((cache) => cache.keys())
+      .then((keys) => setModelCached(keys.some((k) => k.url.includes(selectedModel))))
+      .catch(() => setModelCached(false));
+  }, [selectedModel]);
+
+  // Track which model is currently loaded
+  const isCurrentModelLoaded = ready && loadedModel === selectedModel;
+
   const handleDownload = useCallback(() => {
-    initEngine('webllm', { webllmModel: selectedModel });
+    initEngine('webllm', { webllmModel: selectedModel }).then(() => {
+      setLoadedModel(selectedModel);
+      // Refresh storage usage after download
+      navigator.storage?.estimate?.().then((est) => {
+        setStorageUsage({ usage: est.usage ?? 0, quota: est.quota ?? 0 });
+      }).catch(() => {});
+    });
   }, [initEngine, selectedModel]);
 
   const handleDeleteCache = useCallback(async () => {
     try {
       await caches.delete('webllm/model');
+      setModelCached(false);
+      setLoadedModel(null);
       const est = await navigator.storage.estimate();
       setStorageUsage({ usage: est.usage ?? 0, quota: est.quota ?? 0 });
     } catch { /* ignore */ }
@@ -103,17 +125,34 @@ export default function WebLLMSetup({ selectedModel, onModelChange }: Props) {
           </p>
         </div>
       ) : (
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleDownload}
-            disabled={loading || !webgpuAvailable}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[var(--primary)]/20 border border-[var(--primary)]/50 text-[var(--primary)] rounded-xl text-sm font-medium hover:bg-[var(--primary)]/30 transition-colors disabled:opacity-50"
-          >
-            <i className={`fa-solid ${loading ? 'fa-spinner fa-spin' : ready ? 'fa-check' : 'fa-download'}`} />
-            {loading ? 'Loading...' : ready ? 'Model Ready' : 'Download & Load Model'}
-          </button>
-          {ready && (
-            <span className="text-xs text-green-400 font-medium">Engine active</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleDownload}
+              disabled={loading || !webgpuAvailable || isCurrentModelLoaded}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--primary)]/20 border border-[var(--primary)]/50 text-[var(--primary)] rounded-xl text-sm font-medium hover:bg-[var(--primary)]/30 transition-colors disabled:opacity-50"
+            >
+              <i className={`fa-solid ${
+                loading ? 'fa-spinner fa-spin' :
+                isCurrentModelLoaded ? 'fa-check' :
+                modelCached ? 'fa-bolt' : 'fa-download'
+              }`} />
+              {loading ? 'Loading...' :
+               isCurrentModelLoaded ? 'Model Ready' :
+               modelCached ? 'Load Model' : 'Download & Load Model'}
+            </button>
+            {isCurrentModelLoaded && (
+              <span className="text-xs text-green-400 font-medium">Engine active</span>
+            )}
+          </div>
+          {/* Cache status hint */}
+          {!isCurrentModelLoaded && !loading && modelCached !== null && (
+            <p className="text-xs text-gray-500">
+              {modelCached
+                ? <><i className="fa-solid fa-hard-drive mr-1 text-gray-400" />Model cached — ready to load</>
+                : <><i className="fa-solid fa-cloud-arrow-down mr-1 text-gray-400" />Model not downloaded yet — {WEBLLM_MODELS.find(m => m.id === selectedModel)?.size ?? 'unknown size'}</>
+              }
+            </p>
           )}
         </div>
       )}
