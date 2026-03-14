@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { getDailyApiUsage, DAILY_LIMIT } from '../services/steam-api';
 import { exportDb, resetDb } from '../db/index';
 import * as queries from '../db/queries';
+import { Logo } from './Logo';
 
 const navIcons: Record<string, string> = {
   '/discover': 'fa-solid fa-compass',
@@ -128,9 +129,8 @@ export default function Navbar() {
           <div className="h-[var(--tauri-titlebar-inset,0px)] shrink-0 w-full" data-tauri-drag-region />
           {/* Logo */}
           <div className="px-5 h-16 flex items-center shrink-0 border-b border-[#333]" data-tauri-drag-region>
-            <Link to="/" className="flex items-center gap-0">
-              <span className="text-[var(--primary)] text-2xl font-black">{t('brand.game')}</span>
-              <span className="text-white text-2xl font-black">{t('brand.dna')}</span>
+            <Link to="/">
+              <Logo />
             </Link>
           </div>
 
@@ -231,9 +231,8 @@ export default function Navbar() {
                 <i className="fa-solid fa-bars text-xl" />
               </button>
             )}
-            <Link to="/" className="flex items-center gap-0 shrink-0">
-              <span className="text-[var(--primary)] text-2xl font-black">{t('brand.game')}</span>
-              <span className="text-white text-2xl font-black">{t('brand.dna')}</span>
+            <Link to="/" className="shrink-0">
+              <Logo />
             </Link>
           </div>
 
@@ -294,9 +293,8 @@ export default function Navbar() {
             {/* Sidebar header */}
             <div className="pt-[var(--tauri-titlebar-inset,0px)] shrink-0" />
             <div className="flex items-center justify-between px-5 h-16 border-b border-[#333] shrink-0">
-              <Link to="/" className="flex items-center gap-0" onClick={() => setSidebarOpen(false)}>
-                <span className="text-[var(--primary)] text-2xl font-black">{t('brand.game')}</span>
-                <span className="text-white text-2xl font-black">{t('brand.dna')}</span>
+              <Link to="/" onClick={() => setSidebarOpen(false)}>
+                <Logo />
               </Link>
               <button
                 onClick={() => setSidebarOpen(false)}

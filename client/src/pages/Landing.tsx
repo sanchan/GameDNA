@@ -2,6 +2,7 @@ import { useDb } from '../contexts/db-context';
 import { useAuth } from '../hooks/use-auth';
 import { Navigate, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { Logo } from '../components/Logo';
 
 export default function Landing() {
   const { user, loading } = useAuth();
@@ -26,9 +27,8 @@ export default function Landing() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           {/* Left column - Hero content */}
           <div className="order-2 lg:order-1">
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black mb-6">
-              <span className="text-[var(--primary)]">{t('brand.game')}</span>
-              <span className="text-white">{t('brand.dna')}</span>
+            <h1 className="mb-6">
+              <Logo size="lg" />
             </h1>
 
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
