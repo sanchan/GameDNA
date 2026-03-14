@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Select } from './Select';
 import type { DiscoveryFilters, GamingDNA } from '../../../shared/types';
 
 interface FilterPanelProps {
@@ -209,17 +210,15 @@ export default function FilterPanel({ filters, onApply, className = '', dna }: F
             {/* Release Date */}
             <div className="mb-6">
               <label className="block text-sm font-semibold mb-3">{t('filterPanel.releaseDate')}</label>
-              <select
+              <Select
                 value={releaseDate}
-                onChange={(e) => setReleaseDate(e.target.value)}
-                className={inputClass}
-              >
-                {RELEASE_DATE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(`filterPanel.releaseDateOptions.${opt.key}`)}
-                  </option>
-                ))}
-              </select>
+                onChange={setReleaseDate}
+                size="sm"
+                options={RELEASE_DATE_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: t(`filterPanel.releaseDateOptions.${opt.key}`),
+                }))}
+              />
             </div>
 
             {/* Buttons */}

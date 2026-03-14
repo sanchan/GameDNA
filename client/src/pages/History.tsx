@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/use-auth';
 import { useDb } from '../contexts/db-context';
 import { useToast } from '../components/Toast';
 import * as queries from '../db/queries';
+import { Select } from '../components/Select';
 import type { SwipeDecision } from '../../../shared/types';
 import type { Game } from '../../../shared/types';
 
@@ -287,46 +288,46 @@ export default function History() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="flex flex-col gap-2">
             <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('history.dateRange')}</label>
-            <select
+            <Select
               value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-all"
-            >
-              <option value="all">{t('history.dateRangeOptions.allTime')}</option>
-              <option value="7days">{t('history.dateRangeOptions.last7Days')}</option>
-              <option value="30days">{t('history.dateRangeOptions.last30Days')}</option>
-              <option value="3months">{t('history.dateRangeOptions.last3Months')}</option>
-              <option value="6months">{t('history.dateRangeOptions.last6Months')}</option>
-              <option value="year">{t('history.dateRangeOptions.lastYear')}</option>
-            </select>
+              onChange={setDateRange}
+              options={[
+                { value: 'all', label: t('history.dateRangeOptions.allTime') },
+                { value: '7days', label: t('history.dateRangeOptions.last7Days') },
+                { value: '30days', label: t('history.dateRangeOptions.last30Days') },
+                { value: '3months', label: t('history.dateRangeOptions.last3Months') },
+                { value: '6months', label: t('history.dateRangeOptions.last6Months') },
+                { value: 'year', label: t('history.dateRangeOptions.lastYear') },
+              ]}
+            />
           </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('history.decisionType')}</label>
-            <select
+            <Select
               value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-all"
-            >
-              <option value="all">{t('history.decisionOptions.allDecisions')}</option>
-              <option value="yes">{t('history.decisionOptions.yesInterested')}</option>
-              <option value="maybe">{t('history.decisionOptions.maybeConsider')}</option>
-              <option value="no">{t('history.decisionOptions.noNotInterested')}</option>
-            </select>
+              onChange={setFilter}
+              options={[
+                { value: 'all', label: t('history.decisionOptions.allDecisions') },
+                { value: 'yes', label: t('history.decisionOptions.yesInterested') },
+                { value: 'maybe', label: t('history.decisionOptions.maybeConsider') },
+                { value: 'no', label: t('history.decisionOptions.noNotInterested') },
+              ]}
+            />
           </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('common.sortBy')}</label>
-            <select
+            <Select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-all"
-            >
-              <option value="newest">{t('history.sortOptions.mostRecent')}</option>
-              <option value="oldest">{t('history.sortOptions.oldestFirst')}</option>
-              <option value="name">{t('history.sortOptions.nameAsc')}</option>
-              <option value="name-desc">{t('history.sortOptions.nameDesc')}</option>
-            </select>
+              onChange={setSortBy}
+              options={[
+                { value: 'newest', label: t('history.sortOptions.mostRecent') },
+                { value: 'oldest', label: t('history.sortOptions.oldestFirst') },
+                { value: 'name', label: t('history.sortOptions.nameAsc') },
+                { value: 'name-desc', label: t('history.sortOptions.nameDesc') },
+              ]}
+            />
           </div>
         </div>
       </div>

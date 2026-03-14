@@ -12,6 +12,7 @@ import GameCard from '../components/GameCard';
 import type { GameCardHandle } from '../components/GameCard';
 import SwipeControls from '../components/SwipeControls';
 import FilterPanel, { useFilterCount } from '../components/FilterPanel';
+import { Select } from '../components/Select';
 import type { Game, SwipeDecision } from '../../../shared/types';
 
 interface HistoryItem {
@@ -300,31 +301,33 @@ export default function Discovery() {
             )}
 
             {/* Discovery Mode selector */}
-            <select
+            <Select
               value={discoveryMode}
-              onChange={(e) => { setDiscoveryMode(e.target.value as any); refetchQueue(); }}
-              className="bg-[#242424] border border-[#333] rounded-lg px-3 py-2 text-xs text-gray-300 cursor-pointer focus:outline-none focus:border-[var(--primary)]"
-            >
-              <option value="default">All Games</option>
-              <option value="hidden_gems">Hidden Gems</option>
-              <option value="new_releases">New Releases</option>
-              <option value="genre_deep_dive">Genre Deep Dive</option>
-              <option value="contrarian">Contrarian</option>
-            </select>
+              onChange={(v) => { setDiscoveryMode(v as any); refetchQueue(); }}
+              size="sm"
+              options={[
+                { value: 'default', label: 'All Games' },
+                { value: 'hidden_gems', label: 'Hidden Gems' },
+                { value: 'new_releases', label: 'New Releases' },
+                { value: 'genre_deep_dive', label: 'Genre Deep Dive' },
+                { value: 'contrarian', label: 'Contrarian' },
+              ]}
+            />
 
             {/* Time filter */}
-            <select
-              value={maxHours ?? ''}
-              onChange={(e) => { setMaxHours(e.target.value ? Number(e.target.value) : undefined); refetchQueue(); }}
-              className="bg-[#242424] border border-[#333] rounded-lg px-3 py-2 text-xs text-gray-300 cursor-pointer focus:outline-none focus:border-[var(--primary)]"
-            >
-              <option value="">Any Length</option>
-              <option value="2">Under 2h</option>
-              <option value="5">Under 5h</option>
-              <option value="10">Under 10h</option>
-              <option value="20">Under 20h</option>
-              <option value="50">Under 50h</option>
-            </select>
+            <Select
+              value={maxHours?.toString() ?? ''}
+              onChange={(v) => { setMaxHours(v ? Number(v) : undefined); refetchQueue(); }}
+              size="sm"
+              options={[
+                { value: '', label: 'Any Length' },
+                { value: '2', label: 'Under 2h' },
+                { value: '5', label: 'Under 5h' },
+                { value: '10', label: 'Under 10h' },
+                { value: '20', label: 'Under 20h' },
+                { value: '50', label: 'Under 50h' },
+              ]}
+            />
 
             {/* Filter toggle button */}
             <button

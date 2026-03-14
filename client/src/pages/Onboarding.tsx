@@ -6,6 +6,7 @@ import { importDb } from '../db/index';
 import { getPlayerSummary, resolveVanityUrl } from '../services/steam-api';
 import type { AiProvider } from '../services/ai-engine';
 import { TAG_COLLECTIONS } from '../services/tag-filter';
+import { Select } from '../components/Select';
 
 type Step = 'welcome' | 'steam-id' | 'api-key' | 'preferences' | 'import';
 
@@ -473,15 +474,15 @@ export default function Onboarding() {
                 {selectedAiProvider === 'webllm' && (
                   <div className="mt-3">
                     <label className="text-sm text-[var(--muted-foreground)] mb-2 block">Model</label>
-                    <select
+                    <Select
                       value={webllmModel}
-                      onChange={(e) => setWebllmModel(e.target.value)}
-                      className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                    >
-                      {WEBLLM_MODELS.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name} ({m.size})</option>
-                      ))}
-                    </select>
+                      onChange={setWebllmModel}
+                      size="sm"
+                      options={WEBLLM_MODELS.map((m) => ({
+                        value: m.id,
+                        label: `${m.name} (${m.size})`,
+                      }))}
+                    />
                     <p className="text-xs text-[var(--muted-foreground)] mt-1.5">
                       The model will be downloaded when you first use an AI feature.
                     </p>

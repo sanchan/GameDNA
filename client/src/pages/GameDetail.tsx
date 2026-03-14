@@ -10,6 +10,7 @@ import { useBookmarks } from '../hooks/use-bookmarks';
 import { useToast } from '../components/Toast';
 import { cacheGame } from '../services/game-cache';
 import MediaGallery from '../components/MediaGallery';
+import { Select } from '../components/Select';
 import type { Game, SwipeDecision, GameStatusType, GameNote, Collection } from '../../../shared/types';
 
 interface MediaItem {
@@ -459,20 +460,18 @@ export default function GameDetail() {
 
               {/* Game Status Dropdown */}
               {user && statusLoaded && (
-                <div className="relative">
-                  <select
-                    value={gameStatus || ''}
-                    onChange={(e) => handleSetStatus(e.target.value as GameStatusType || null)}
-                    className="appearance-none bg-[#1a1a1a] border border-[#444] text-gray-300 px-4 py-2.5 pr-8 rounded-xl text-sm font-medium cursor-pointer focus:outline-none focus:border-[var(--primary)]"
-                  >
-                    <option value="">Set Status...</option>
-                    <option value="playing">Playing</option>
-                    <option value="completed">Completed</option>
-                    <option value="plan_to_play">Plan to Play</option>
-                    <option value="abandoned">Abandoned</option>
-                  </select>
-                  <i className="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] pointer-events-none" />
-                </div>
+                <Select
+                  value={gameStatus || ''}
+                  onChange={(v) => handleSetStatus(v as GameStatusType || null)}
+                  size="sm"
+                  options={[
+                    { value: '', label: 'Set Status...' },
+                    { value: 'playing', label: 'Playing' },
+                    { value: 'completed', label: 'Completed' },
+                    { value: 'plan_to_play', label: 'Plan to Play' },
+                    { value: 'abandoned', label: 'Abandoned' },
+                  ]}
+                />
               )}
 
               {/* Add to Collection */}
