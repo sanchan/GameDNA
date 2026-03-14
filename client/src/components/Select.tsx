@@ -63,7 +63,7 @@ export function Select({ value, onChange, options, className = '', size = 'md' }
     item?.scrollIntoView({ block: 'nearest' })
   }, [focusedIndex])
 
-  const padding = size === 'sm' ? 'px-3 py-1.5 text-sm' : 'px-4 py-2.5'
+  const padding = size === 'sm' ? 'px-3 py-2 text-sm' : 'px-4 py-2.5'
 
   return (
     <div ref={ref} className={`relative ${className}`}>

@@ -463,7 +463,6 @@ export default function GameDetail() {
                 <Select
                   value={gameStatus || ''}
                   onChange={(v) => handleSetStatus(v as GameStatusType || null)}
-                  size="sm"
                   options={[
                     { value: '', label: 'Set Status...' },
                     { value: 'playing', label: 'Playing' },

@@ -131,7 +131,7 @@ export default function Recommendations() {
           <button
             onClick={() => handleGenerate(false)}
             disabled={generating || syncStatus === 'syncing'}
-            className="flex items-center justify-center space-x-2 px-6 py-3 bg-[var(--primary)] hover:opacity-80 text-[var(--primary-foreground)] rounded-lg font-semibold transition-all disabled:opacity-50"
+            className="flex items-center justify-center space-x-2 px-6 py-2.5 bg-[var(--primary)] hover:opacity-80 text-[var(--primary-foreground)] rounded-lg font-semibold transition-all disabled:opacity-50"
           >
             <i className="fa-solid fa-rotate-right" />
             <span>{generating ? t('recommendations.generating') : t('recommendations.regenerate')}</span>
@@ -140,7 +140,7 @@ export default function Recommendations() {
             <button
               onClick={() => handleGenerate(true)}
               disabled={generating}
-              className="flex items-center justify-center space-x-2 px-5 py-3 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg font-semibold transition-all disabled:opacity-50"
+              className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg font-semibold transition-all disabled:opacity-50"
             >
               <i className="fa-solid fa-arrows-rotate" />
               <span>{t('recommendations.regenerateDismissed')}</span>
