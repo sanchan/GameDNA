@@ -152,11 +152,10 @@ export async function runSync(
       cats.backlog = { status: 'syncing', progress: 5, detail: 'Caching game details...' };
       onProgress(deriveOverall(cats, gamesCount, wishlistCount));
 
-      // Cache top played games
+      // Cache all played games (sorted by playtime so most-played finish first)
       const topPlayedAppids = ownedGames
         .filter((g) => g.playtime_forever > 60)
         .sort((a, b) => b.playtime_forever - a.playtime_forever)
-        .slice(0, 50)
         .map((g) => g.appid);
 
       if (topPlayedAppids.length > 0) {
