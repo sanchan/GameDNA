@@ -528,11 +528,7 @@ export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mod
 
   const rows = all<Record<string, unknown>>(sql, params);
 
-  if (!hasProfile) {
-    return rows.map((r) => ({ game: dbGameToGame(r), score: 0 }));
-  }
-
-  // Get tag blacklist for filtering
+  // Get tag blacklist for filtering (applies even without taste profile)
   const tagBlacklist = getBlacklistedTagsSet(getBlacklistedTags(userId));
 
   // Get publisher/developer blacklist
@@ -545,6 +541,38 @@ export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mod
       .map((r) => r.name.toLowerCase()),
   );
 
+  // When user explicitly selects tags in filters, don't blacklist-filter those tags
+  const explicitTags = filters.tags?.length ? new Set(filters.tags.map((t) => t.toLowerCase())) : null;
+
+  // Filter by blacklists (applies even without taste profile)
+  const filtered = rows.filter((row) => {
+    const pubs = parseJson<string[]>(row.publishers, []);
+    const devs = parseJson<string[]>(row.developers, []);
+    if (pubs.some((p) => blacklistedPubs.has(p.toLowerCase()))) return false;
+    if (devs.some((d) => blacklistedDevs.has(d.toLowerCase()))) return false;
+
+    // Exclude games that have any blacklisted tag (unless user explicitly chose those tags)
+    const gameTags = parseJson<string[]>(row.tags, []);
+    if (gameTags.some((t) => {
+      const lower = t.toLowerCase();
+      return tagBlacklist.has(lower) && (!explicitTags || !explicitTags.has(lower));
+    })) return false;
+
+    if (maxHours) {
+      const gameGenres = parseJson<string[]>(row.genres, []);
+      const estHours = gameGenres.reduce<number>((min, g) => {
+        const est = (config.estimatedPlaytimeByGenre as Record<string, number>)[g.toLowerCase()];
+        return est ? Math.min(min, est) : min;
+      }, config.estimatedPlaytimeDefault);
+      if (estHours > maxHours) return false;
+    }
+    return true;
+  });
+
+  if (!hasProfile) {
+    return filtered.map((r) => ({ game: dbGameToGame(r), score: 0 }));
+  }
+
   const topGenres = new Set(
     Object.entries(profile!.genreScores)
       .sort(([, a], [, b]) => b - a).slice(0, 10)
@@ -556,33 +584,7 @@ export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mod
       .map(([n]) => n.toLowerCase()),
   );
 
-  // When user explicitly selects tags in filters, don't blacklist-filter those tags
-  const explicitTags = filters.tags?.length ? new Set(filters.tags.map((t) => t.toLowerCase())) : null;
-
-  const scored = rows
-    .filter((row) => {
-      const pubs = parseJson<string[]>(row.publishers, []);
-      const devs = parseJson<string[]>(row.developers, []);
-      if (pubs.some((p) => blacklistedPubs.has(p.toLowerCase()))) return false;
-      if (devs.some((d) => blacklistedDevs.has(d.toLowerCase()))) return false;
-
-      // Exclude games that have any blacklisted tag (unless user explicitly chose those tags)
-      const gameTags = parseJson<string[]>(row.tags, []);
-      if (gameTags.some((t) => {
-        const lower = t.toLowerCase();
-        return tagBlacklist.has(lower) && (!explicitTags || !explicitTags.has(lower));
-      })) return false;
-
-      if (maxHours) {
-        const gameGenres = parseJson<string[]>(row.genres, []);
-        const estHours = gameGenres.reduce<number>((min, g) => {
-          const est = (config.estimatedPlaytimeByGenre as Record<string, number>)[g.toLowerCase()];
-          return est ? Math.min(min, est) : min;
-        }, config.estimatedPlaytimeDefault);
-        if (estHours > maxHours) return false;
-      }
-      return true;
-    })
+  const scored = filtered
     .map((row) => {
       const gameGenres = parseJson<string[]>(row.genres, []);
       const gameTags = parseJson<string[]>(row.tags, []);
