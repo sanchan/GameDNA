@@ -42,3 +42,6 @@ src-tauri/gen/
 
 # Other
 #ignore/
+
+# Claude Code
+.claude/
