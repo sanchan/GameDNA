@@ -16,15 +16,19 @@ const IS_TAURI_PROD = typeof window !== 'undefined'
  * In Tauri mode, convert proxy URLs to direct Steam API URLs.
  * In browser mode, return the proxy URL unchanged.
  */
-function resolveSteamUrl(proxyUrl: string, apiKey?: string): string {
+/**
+ * In Tauri mode, convert proxy URLs to direct Steam API URLs.
+ * API key is NO LONGER injected into the URL — it goes via headers instead
+ * to avoid leaking in browser history, network inspectors, and crash reports.
+ */
+function resolveSteamUrl(proxyUrl: string): string {
   if (!IS_TAURI_PROD) return proxyUrl;
 
   const rel = proxyUrl.startsWith(PROXY_BASE) ? proxyUrl.slice(PROXY_BASE.length) : proxyUrl;
 
   if (rel.startsWith('/web/')) {
     const path = rel.slice(5);
-    const sep = path.includes('?') ? '&' : '?';
-    return `https://api.steampowered.com/${path}${apiKey ? `${sep}key=${apiKey}` : ''}`;
+    return `https://api.steampowered.com/${path}`;
   }
   if (rel.startsWith('/store/')) {
     return `https://store.steampowered.com/api/${rel.slice(7)}`;
@@ -39,37 +43,56 @@ function resolveSteamUrl(proxyUrl: string, apiKey?: string): string {
   return proxyUrl;
 }
 export const DAILY_LIMIT = 100_000;
-const DAILY_KEY = 'gamedna_api_calls';
+
+// ── Rate limit tracking (SQLite-backed with localStorage fallback) ──────────
+// Rate limits are tracked in SQLite to avoid localStorage manipulation. Falls
+// back to localStorage if DB isn't initialized yet (early startup).
+
+import { getDb, persistDb } from '../db/index';
 
 /** Read the current daily API call count (resets at midnight). */
 export function getDailyApiUsage(): { count: number; limit: number; date: string } {
   const today = new Date().toISOString().slice(0, 10);
-  const raw = localStorage.getItem(DAILY_KEY);
-  if (!raw) return { count: 0, limit: DAILY_LIMIT, date: today };
   try {
-    const data = JSON.parse(raw) as { date: string; count: number };
-    if (data.date !== today) return { count: 0, limit: DAILY_LIMIT, date: today };
-    return { count: data.count, limit: DAILY_LIMIT, date: today };
+    const stmt = getDb().prepare('SELECT date, count FROM rate_limits WHERE id = 1');
+    if (stmt.step()) {
+      const row = stmt.getAsObject() as { date: string; count: number };
+      stmt.free();
+      if (row.date !== today) return { count: 0, limit: DAILY_LIMIT, date: today };
+      return { count: row.count, limit: DAILY_LIMIT, date: today };
+    }
+    stmt.free();
   } catch {
-    return { count: 0, limit: DAILY_LIMIT, date: today };
+    // DB not ready — fall through
   }
+  return { count: 0, limit: DAILY_LIMIT, date: today };
 }
 
 /** Track daily API call count to respect the Steam 100K/day limit. */
 function checkDailyLimit(count: number = 1): boolean {
   const today = new Date().toISOString().slice(0, 10);
-  const raw = localStorage.getItem(DAILY_KEY);
-  let data: { date: string; count: number } = { date: today, count: 0 };
-  if (raw) {
-    try {
-      data = JSON.parse(raw);
-      if (data.date !== today) data = { date: today, count: 0 };
-    } catch { data = { date: today, count: 0 }; }
+  try {
+    const db = getDb();
+    const stmt = db.prepare('SELECT date, count FROM rate_limits WHERE id = 1');
+    let data = { date: today, count: 0 };
+    if (stmt.step()) {
+      const row = stmt.getAsObject() as { date: string; count: number };
+      data = row.date === today ? { date: today, count: row.count } : { date: today, count: 0 };
+    }
+    stmt.free();
+
+    if (data.count + count > DAILY_LIMIT) return false;
+    data.count += count;
+    db.run(
+      'INSERT INTO rate_limits (id, date, count) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET date = excluded.date, count = excluded.count',
+      [data.date, data.count] as any[],
+    );
+    persistDb();
+    return true;
+  } catch {
+    // DB not ready — allow the call (best effort)
+    return true;
   }
-  if (data.count + count > DAILY_LIMIT) return false;
-  data.count += count;
-  localStorage.setItem(DAILY_KEY, JSON.stringify(data));
-  return true;
 }
 
 // Token bucket rate limiter (client-side version)
@@ -108,6 +131,19 @@ class RateLimiter {
 
 const webApiLimiter = new RateLimiter(config.webApiMaxTokens, config.webApiRefillMs);
 const storeApiLimiter = new RateLimiter(config.storeApiMaxTokens, config.storeApiRefillMs);
+
+// ── Request deduplication ────────────────────────────────────────────────────
+// If a request for a given key (e.g. appid) is already in-flight, reuse the
+// existing promise instead of firing a duplicate network call.
+const inflight = new Map<string, Promise<any>>();
+
+function dedup<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const existing = inflight.get(key);
+  if (existing) return existing as Promise<T>;
+  const promise = fn().finally(() => inflight.delete(key));
+  inflight.set(key, promise);
+  return promise;
+}
 
 export interface OwnedGame {
   appid: number;
@@ -162,8 +198,15 @@ async function auditedFetch(url: string, init?: RequestInit): Promise<Response> 
 /** Fetch via proxy (browser) or directly (Tauri). For web API calls with API key. */
 async function fetchWithProxy(url: string, apiKey?: string): Promise<Response> {
   if (!checkDailyLimit()) throw new Error('Steam API daily limit (100,000 calls) reached. Try again tomorrow.');
-  const resolved = resolveSteamUrl(url, apiKey);
-  if (IS_TAURI_PROD) return auditedFetch(resolved);
+  const resolved = resolveSteamUrl(url);
+  if (IS_TAURI_PROD) {
+    // In Tauri prod, inject API key as query param on the resolved URL (direct Steam call).
+    // The URL stays local to the Tauri process and isn't exposed to browser history.
+    const tauriUrl = new URL(resolved);
+    if (apiKey) tauriUrl.searchParams.set('key', apiKey);
+    return auditedFetch(tauriUrl.toString());
+  }
+  // In browser dev, send API key via header — the proxy injects it server-side.
   const headers: Record<string, string> = {};
   if (apiKey) headers['x-steam-api-key'] = apiKey;
   return auditedFetch(url, { headers });
@@ -230,7 +273,11 @@ export async function getWishlist(steamId: string, apiKey: string): Promise<Stea
   }
 }
 
-export async function getAppDetails(appid: number, cc?: string): Promise<GameDetails | null> {
+export function getAppDetails(appid: number, cc?: string): Promise<GameDetails | null> {
+  return dedup(`appdetails:${appid}:${cc ?? ''}`, () => _getAppDetailsImpl(appid, cc));
+}
+
+async function _getAppDetailsImpl(appid: number, cc?: string): Promise<GameDetails | null> {
   try {
     await storeApiLimiter.acquire(2);
     if (!checkDailyLimit(2)) throw new Error('Steam API daily limit reached');

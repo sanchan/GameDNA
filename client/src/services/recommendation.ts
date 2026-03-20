@@ -1,36 +1,17 @@
 // Client-side recommendation engine — layers 1-3.
 // Layer 3 uses the pluggable AI engine (Ollama or WebLLM) when available.
+//
+// Improvements over the original:
+// - User-configurable scoring weights (stored in DB, falls back to config.ts defaults)
+// - Cold start detection: returns early with a flag when < threshold swipes
+// - Diversity/exploration: reserves a portion of slots for outside-comfort-zone picks
+// - Improved negative signal handling via co-occurrence tracking
 
-import { getDb } from '../db/index';
 import * as db from '../db/queries';
+import { parseJson, queryAll, weightedMatch } from '../db/helpers';
 import { getBlacklistedTagsSet } from './tag-filter';
 import { config } from './config';
 import { aiScoreRecommendations } from './ai-features';
-
-function parseJson<T>(val: unknown, fallback: T): T {
-  if (typeof val !== 'string' || !val) return fallback;
-  try { return JSON.parse(val); } catch { return fallback; }
-}
-
-function queryAll<T = Record<string, unknown>>(sql: string, params?: unknown[]): T[] {
-  const results: T[] = [];
-  const stmt = getDb().prepare(sql);
-  if (params) stmt.bind(params as any[]);
-  while (stmt.step()) results.push(stmt.getAsObject() as T);
-  stmt.free();
-  return results;
-}
-
-function weightedMatch(gameItems: string[], profileMap: Map<string, number>): number {
-  if (profileMap.size === 0) return 0;
-  let matched = 0;
-  for (const item of gameItems) {
-    const score = profileMap.get(item.toLowerCase());
-    if (score !== undefined && score > 0) matched += score;
-  }
-  const totalWeight = Array.from(profileMap.values()).reduce((s, v) => s + Math.max(v, 0), 0);
-  return totalWeight > 0 ? matched / totalWeight : 0;
-}
 
 export interface ScoreBreakdown {
   genreMatch: number;
@@ -40,12 +21,14 @@ export interface ScoreBreakdown {
   matchedGenres: string[];
   matchedTags: string[];
   reviewCredibility: number;
+  isExploration?: boolean;
 }
 
 function heuristicScoreWithBreakdown(
   game: Record<string, unknown>,
   topGenres: Map<string, number>,
   topTags: Map<string, number>,
+  weights: db.ScoringWeights,
 ): { score: number; breakdown: ScoreBreakdown } {
   const gameGenres = parseJson<string[]>(game.genres, []);
   const gameTags = parseJson<string[]>(game.tags, []);
@@ -78,8 +61,10 @@ function heuristicScoreWithBreakdown(
     return s !== undefined && s > 0;
   });
 
-  const w = config.scoring;
-  const score = w.genreWeight * genreMatch + w.tagWeight * tagMatch + w.reviewWeight * reviewNorm + w.recencyWeight * recency;
+  const score = weights.genreWeight * genreMatch
+    + weights.tagWeight * tagMatch
+    + weights.reviewWeight * reviewNorm
+    + weights.recencyWeight * recency;
 
   return {
     score,
@@ -95,10 +80,23 @@ function heuristicScoreWithBreakdown(
   };
 }
 
+/** Check if user is in cold start (< threshold swipes). Returns progress info. */
+export function getColdStartStatus(userId: number): { isColdStart: boolean; current: number; threshold: number } {
+  const count = db.getSwipeCount(userId);
+  return {
+    isColdStart: count < config.coldStartThreshold,
+    current: count,
+    threshold: config.coldStartThreshold,
+  };
+}
+
 export async function generateRecommendations(userId: number, onlyDismissed = false): Promise<number> {
   // Layer 1: Get taste profile
   const profile = db.getTasteProfile(userId);
   if (!profile) return 0;
+
+  // Load user-configurable scoring weights (falls back to defaults)
+  const weights = db.getScoringWeights(userId);
 
   // Load blacklisted tags
   const blacklistedTags = db.getBlacklistedTags(userId);
@@ -150,13 +148,48 @@ export async function generateRecommendations(userId: number, onlyDismissed = fa
     return !gameTags.some((t) => blacklistSet.has(t.toLowerCase()));
   });
 
-  const scored = filtered
-    .map((game) => {
-      const { score, breakdown } = heuristicScoreWithBreakdown(game, topGenres, topTags);
-      return { game, hScore: score, breakdown };
-    })
+  // Score all candidates
+  const allScored = filtered.map((game) => {
+    const { score, breakdown } = heuristicScoreWithBreakdown(game, topGenres, topTags, weights);
+    return { game, hScore: score, breakdown };
+  });
+
+  // ── Diversity: reserve exploration slots ────────────────────────────────
+  // Pick top matches for the main slots, then fill exploration slots with
+  // high-rated games that are OUTSIDE the user's typical genres.
+  const explorationRatio = weights.explorationRatio;
+  const totalSlots = config.recHeuristicTopN;
+  const explorationSlots = Math.max(1, Math.round(totalSlots * explorationRatio));
+  const mainSlots = totalSlots - explorationSlots;
+
+  // Main picks: sorted by heuristic score
+  const mainPicks = [...allScored]
     .sort((a, b) => b.hScore - a.hScore)
-    .slice(0, config.recHeuristicTopN);
+    .slice(0, mainSlots);
+
+  const mainIds = new Set(mainPicks.map((s) => s.game.id as number));
+
+  // Exploration picks: high review score, LOW genre/tag match (outside comfort zone)
+  const explorationPicks = allScored
+    .filter((s) => {
+      const id = s.game.id as number;
+      if (mainIds.has(id)) return false;
+      const reviewScore = (s.game.review_score as number) ?? 0;
+      return reviewScore >= 80 && s.breakdown.genreMatch < 0.3;
+    })
+    .sort((a, b) => {
+      // Prefer highly reviewed games the user wouldn't normally see
+      const aReview = (a.game.review_score as number) ?? 0;
+      const bReview = (b.game.review_score as number) ?? 0;
+      return bReview - aReview;
+    })
+    .slice(0, explorationSlots)
+    .map((s) => ({
+      ...s,
+      breakdown: { ...s.breakdown, isExploration: true },
+    }));
+
+  const scored = [...mainPicks, ...explorationPicks];
 
   if (scored.length === 0) return 0;
 
@@ -183,4 +216,103 @@ export async function generateRecommendations(userId: number, onlyDismissed = fa
 
   db.batchPersist();
   return count;
+}
+
+// ── "Why NOT this game?" reverse explainer ──────────────────────────────────
+
+export function explainWhyNot(userId: number, gameId: number): {
+  factors: { name: string; current: number; needed: number; description: string }[];
+  summary: string;
+} | null {
+  const profile = db.getTasteProfile(userId);
+  if (!profile) return null;
+
+  const weights = db.getScoringWeights(userId);
+  const blacklistedTags = db.getBlacklistedTags(userId);
+  const blacklistSet = getBlacklistedTagsSet(blacklistedTags);
+
+  const topGenres = new Map(
+    Object.entries(profile.genreScores)
+      .filter(([, s]) => s > 0)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, config.recTopGenresCount)
+      .map(([name, score]) => [name.toLowerCase(), score] as [string, number]),
+  );
+
+  const topTags = new Map(
+    Object.entries(profile.tagScores)
+      .filter(([name, s]) => s > 0 && !blacklistSet.has(name.toLowerCase()))
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, config.recTopTagsCount)
+      .map(([name, score]) => [name.toLowerCase(), score] as [string, number]),
+  );
+
+  const game = queryAll('SELECT * FROM games WHERE id = ?', [gameId])[0];
+  if (!game) return null;
+
+  const { breakdown } = heuristicScoreWithBreakdown(game, topGenres, topTags, weights);
+
+  const factors: { name: string; current: number; needed: number; description: string }[] = [];
+
+  if (breakdown.genreMatch < 0.5) {
+    const gameGenres = parseJson<string[]>(game.genres, []);
+    const missingGenres = gameGenres.filter((g) => !topGenres.has(g.toLowerCase()));
+    factors.push({
+      name: 'Genre Match',
+      current: Math.round(breakdown.genreMatch * 100),
+      needed: 50,
+      description: missingGenres.length > 0
+        ? `Your profile doesn't strongly favor ${missingGenres.slice(0, 3).join(', ')}. Swipe Yes on more ${missingGenres[0]} games to boost this.`
+        : 'Your genre preferences don\'t align strongly with this game.',
+    });
+  }
+
+  if (breakdown.tagMatch < 0.4) {
+    const gameTags = parseJson<string[]>(game.tags, []);
+    const missingTags = gameTags.filter((t) => !topTags.has(t.toLowerCase()));
+    factors.push({
+      name: 'Tag Match',
+      current: Math.round(breakdown.tagMatch * 100),
+      needed: 40,
+      description: missingTags.length > 0
+        ? `Tags like ${missingTags.slice(0, 3).join(', ')} aren't in your top preferences yet.`
+        : 'The game\'s tags don\'t match your taste profile.',
+    });
+  }
+
+  if (breakdown.reviewScore < 0.7) {
+    factors.push({
+      name: 'Community Reviews',
+      current: Math.round(breakdown.reviewScore * 100),
+      needed: 70,
+      description: `This game has a ${Math.round(breakdown.reviewScore * 100)}% review score, which is below the threshold for strong recommendations.`,
+    });
+  }
+
+  if (breakdown.recency < 0.3) {
+    factors.push({
+      name: 'Release Recency',
+      current: Math.round(breakdown.recency * 100),
+      needed: 30,
+      description: 'This game is older, which slightly reduces its recommendation score. This doesn\'t mean it\'s bad — just that newer games get a small boost.',
+    });
+  }
+
+  // Check if blacklisted tags are blocking it
+  const gameTags = parseJson<string[]>(game.tags, []);
+  const blockedTags = gameTags.filter((t) => blacklistSet.has(t.toLowerCase()));
+  if (blockedTags.length > 0) {
+    factors.push({
+      name: 'Blacklisted Tags',
+      current: 0,
+      needed: 0,
+      description: `This game has blacklisted tags: ${blockedTags.join(', ')}. Remove them from your blacklist in Tag Filters to see this game.`,
+    });
+  }
+
+  const summary = factors.length === 0
+    ? 'This game actually scores well! It may already be in your recommendations.'
+    : `${factors.length} factor${factors.length > 1 ? 's' : ''} keeping this game from your recommendations.`;
+
+  return { factors, summary };
 }

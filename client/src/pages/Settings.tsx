@@ -15,6 +15,7 @@ import { Select } from '../components/Select';
 import { useTheme, type Theme } from '../hooks/use-theme';
 import ThemePicker from '../components/ThemePicker';
 import { getAuditLog, clearAuditLog, subscribeAuditLog, type ApiAuditEntry } from '../services/api-audit';
+import { isValidSteamApiKeyFormat, isValidOllamaUrl } from '../db/crypto';
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
@@ -29,6 +30,8 @@ export default function Settings() {
   const ai = useAi();
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [savingApiKey, setSavingApiKey] = useState(false);
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+  const [testingConnection, setTestingConnection] = useState(false);
 
   useEffect(() => {
     if (!user || !userId) return;
@@ -220,10 +223,16 @@ export default function Settings() {
             />
             <button
               onClick={async () => {
-                if (!apiKeyInput.trim()) return;
+                const key = apiKeyInput.trim();
+                if (!key) return;
+                if (!isValidSteamApiKeyFormat(key)) {
+                  setApiKeyError('Invalid format — Steam API keys are 32 hexadecimal characters.');
+                  return;
+                }
+                setApiKeyError(null);
                 setSavingApiKey(true);
                 try {
-                  await queries.saveLocalConfig({ steamApiKey: apiKeyInput.trim() });
+                  await queries.saveLocalConfig({ steamApiKey: key });
                   await refreshConfig?.();
                   setApiKeyInput('');
                   toast('Steam API key saved', 'success');
@@ -239,8 +248,14 @@ export default function Settings() {
               {savingApiKey ? 'Saving...' : 'Save Key'}
             </button>
           </div>
+          {apiKeyError && (
+            <p className="text-xs text-red-400 mt-2">
+              <i className="fa-solid fa-triangle-exclamation mr-1" />
+              {apiKeyError}
+            </p>
+          )}
           <p className="text-xs text-gray-500 mt-2">
-            Get your key from <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] hover:underline">steamcommunity.com/dev/apikey</a>
+            Get your key from <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] hover:underline">steamcommunity.com/dev/apikey</a>. Keys are 32 hex characters (e.g. A1B2C3D4...).
           </p>
         </div>
 
@@ -295,6 +310,28 @@ export default function Settings() {
                       placeholder="http://localhost:11434"
                       className="flex-1 bg-[var(--background)] border border-[var(--border)] rounded-lg px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
                     />
+                    <button
+                      onClick={async () => {
+                        if (!settings.ollamaUrl || !isValidOllamaUrl(settings.ollamaUrl)) {
+                          toast('Invalid Ollama URL format', 'error');
+                          return;
+                        }
+                        setTestingConnection(true);
+                        try {
+                          await ai.initEngine('ollama', { ollamaUrl: settings.ollamaUrl, ollamaModel: settings.ollamaModel ?? undefined });
+                          const ok = await ai.checkHealth?.();
+                          toast(ok ? 'Ollama connection successful' : 'Ollama is unreachable', ok ? 'success' : 'error');
+                        } catch {
+                          toast('Ollama connection failed', 'error');
+                        } finally {
+                          setTestingConnection(false);
+                        }
+                      }}
+                      disabled={testingConnection}
+                      className="px-3 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap bg-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted-foreground)]/20 transition-colors disabled:opacity-50"
+                    >
+                      {testingConnection ? 'Testing...' : 'Test'}
+                    </button>
                     <div className={`px-3 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap ${ai.healthy ? 'bg-green-500/20 text-green-400' : ai.healthy === false ? 'bg-red-500/20 text-red-400' : 'bg-[var(--muted)] text-[var(--text-muted)]'}`}>
                       {ai.healthy ? 'Connected' : ai.healthy === false ? 'Offline' : 'Checking...'}
                     </div>
@@ -372,6 +409,12 @@ export default function Settings() {
             <p className="text-xs text-gray-500 mt-1">How long to cache game metadata. Default: 604800 (7 days)</p>
           </div>
         </div>
+
+        {/* Scoring Weights */}
+        <ScoringWeightsSection userId={userId} toast={toast} />
+
+        {/* Data Transparency */}
+        <DataTransparencySection userId={userId} />
 
         {/* Data Management */}
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-6">
@@ -470,6 +513,222 @@ export default function Settings() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function WeightSlider({ label, desc, value, onChange, min = 0, max = 1, step = 0.05 }: {
+  label: string; desc: string; value: number;
+  onChange: (v: number) => void; min?: number; max?: number; step?: number;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <label className="text-sm font-medium text-[var(--text-body)]">{label}</label>
+        <span className="text-sm font-mono text-[var(--primary)]">{value.toFixed(2)}</span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="range-slider w-full"
+      />
+      <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+    </div>
+  );
+}
+
+function ScoringWeightsSection({ userId, toast }: { userId: number | null; toast: (msg: string, type: 'success' | 'error') => void }) {
+  const [weights, setWeights] = useState<queries.ScoringWeights | null>(null);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    setWeights(queries.getScoringWeights(userId));
+  }, [userId]);
+
+  if (!weights) return null;
+
+  // Ensure the 4 main weights sum to ~1.0
+  const normalizeMainWeights = (w: queries.ScoringWeights): queries.ScoringWeights => {
+    const sum = w.genreWeight + w.tagWeight + w.reviewWeight + w.recencyWeight;
+    if (sum === 0) return w;
+    return {
+      ...w,
+      genreWeight: Math.round((w.genreWeight / sum) * 100) / 100,
+      tagWeight: Math.round((w.tagWeight / sum) * 100) / 100,
+      reviewWeight: Math.round((w.reviewWeight / sum) * 100) / 100,
+      recencyWeight: Math.round((w.recencyWeight / sum) * 100) / 100,
+    };
+  };
+
+  const handleSave = () => {
+    if (!userId || !weights) return;
+    const normalized = normalizeMainWeights(weights);
+    setWeights(normalized);
+    queries.saveScoringWeights(userId, normalized);
+    toast('Scoring weights saved', 'success');
+  };
+
+  const handleReset = () => {
+    const defaults: queries.ScoringWeights = {
+      genreWeight: 0.4, tagWeight: 0.3, reviewWeight: 0.2, recencyWeight: 0.1,
+      temporalDecayRate: 0.01, explorationRatio: 0.15,
+    };
+    setWeights(defaults);
+    if (userId) {
+      queries.saveScoringWeights(userId, defaults);
+      toast('Scoring weights reset to defaults', 'success');
+    }
+  };
+
+  const decayLabel = weights.temporalDecayRate >= 0.02
+    ? 'Fast (tastes change often)'
+    : weights.temporalDecayRate <= 0.005
+    ? 'Slow (I know what I like)'
+    : 'Medium';
+
+  return (
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-[var(--foreground)] flex items-center gap-2">
+          <i className="fa-solid fa-sliders text-[var(--text-muted)]" />
+          Scoring Weights
+        </h2>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-sm text-[var(--primary)] hover:underline"
+        >
+          {expanded ? 'Collapse' : 'Customize'}
+        </button>
+      </div>
+      <p className="text-sm text-[var(--text-muted)] mb-4">
+        Control how recommendations are scored. These weights determine the importance of each factor.
+        Weights auto-normalize to sum to 100%.
+      </p>
+
+      {expanded && (
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <WeightSlider label="Genre Match" desc="How much genres matter" value={weights.genreWeight}
+              onChange={(v) => setWeights({ ...weights, genreWeight: v })} />
+            <WeightSlider label="Tag Match" desc="How much tags matter" value={weights.tagWeight}
+              onChange={(v) => setWeights({ ...weights, tagWeight: v })} />
+            <WeightSlider label="Community Reviews" desc="How much reviews matter" value={weights.reviewWeight}
+              onChange={(v) => setWeights({ ...weights, reviewWeight: v })} />
+            <WeightSlider label="Release Recency" desc="Preference for newer games" value={weights.recencyWeight}
+              onChange={(v) => setWeights({ ...weights, recencyWeight: v })} />
+          </div>
+
+          <div className="border-t border-[var(--border)] pt-4">
+            <WeightSlider label="Exploration Ratio" desc="Percentage of recommendations reserved for outside-your-comfort-zone picks" value={weights.explorationRatio}
+              onChange={(v) => setWeights({ ...weights, explorationRatio: v })} max={0.5} />
+          </div>
+
+          <div className="border-t border-[var(--border)] pt-4">
+            <WeightSlider label={`Temporal Decay — ${decayLabel}`} desc="How fast old swipes lose influence. Higher = recent swipes matter much more than old ones."
+              value={weights.temporalDecayRate}
+              onChange={(v) => setWeights({ ...weights, temporalDecayRate: v })}
+              min={0.001} max={0.05} step={0.001} />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button onClick={handleReset} className="px-4 py-2 rounded-lg text-sm text-[var(--text-muted)] hover:text-red-400 transition-colors">
+              Reset to Defaults
+            </button>
+            <button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition-opacity">
+              Save Weights
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!expanded && (
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: 'Genre', value: weights.genreWeight },
+            { label: 'Tags', value: weights.tagWeight },
+            { label: 'Reviews', value: weights.reviewWeight },
+            { label: 'Recency', value: weights.recencyWeight },
+          ].map((w) => (
+            <span key={w.label} className="px-3 py-1 bg-[var(--background)] rounded-full text-xs text-[var(--text-body)]">
+              {w.label}: {Math.round(w.value * 100)}%
+            </span>
+          ))}
+          <span className="px-3 py-1 bg-[var(--primary)]/10 rounded-full text-xs text-[var(--primary)]">
+            Exploration: {Math.round(weights.explorationRatio * 100)}%
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DataTransparencySection({ userId }: { userId: number | null }) {
+  const [stats, setStats] = useState<ReturnType<typeof queries.getDataTransparencyStats> | null>(null);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    setStats(queries.getDataTransparencyStats(userId));
+  }, [userId]);
+
+  if (!stats) return null;
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return (
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-[var(--foreground)] flex items-center gap-2">
+          <i className="fa-solid fa-shield-halved text-[var(--text-muted)]" />
+          Data Transparency
+        </h2>
+        <button onClick={() => setExpanded(!expanded)} className="text-sm text-[var(--primary)] hover:underline">
+          {expanded ? 'Collapse' : 'View Details'}
+        </button>
+      </div>
+
+      <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 mb-4">
+        <p className="text-sm text-green-400">
+          <i className="fa-solid fa-lock mr-2" />
+          No data leaves your device except Steam API calls shown in the audit log.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="text-center">
+          <div className="text-lg font-bold text-[var(--foreground)]">{formatBytes(stats.dbSizeBytes)}</div>
+          <div className="text-xs text-[var(--text-muted)]">Database Size</div>
+        </div>
+        <div className="text-center">
+          <div className="text-lg font-bold text-[var(--foreground)]">{stats.apiUsage.count.toLocaleString()}</div>
+          <div className="text-xs text-[var(--text-muted)]">API Calls Today</div>
+        </div>
+        <div className="text-center">
+          <div className="text-lg font-bold text-[var(--foreground)]">{stats.errorCount}</div>
+          <div className="text-xs text-[var(--text-muted)]">Errors (7d)</div>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="space-y-2 mt-4 border-t border-[var(--border)] pt-4">
+          <h3 className="text-sm font-medium text-[var(--text-body)] mb-2">What's stored locally</h3>
+          {stats.counts.map((c) => (
+            <div key={c.table} className="flex items-center justify-between bg-[var(--background)] rounded-lg px-3 py-2">
+              <span className="text-sm text-[var(--text-body)]">{c.label}</span>
+              <span className="text-sm font-mono text-[var(--text-muted)]">{c.count.toLocaleString()} rows</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

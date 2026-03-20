@@ -2,7 +2,7 @@
 // Every write calls persistDb().
 
 import { getDb, persistDb } from './index';
-import { encryptApiKey, decryptApiKey, getDevicePassphrase, getLegacyDevicePassphrase } from './crypto';
+import { encryptApiKey, decryptApiKey, getDevicePassphrase, getV2DevicePassphrase, getLegacyDevicePassphrase } from './crypto';
 import type {
   Game, User, TasteProfile, Recommendation, GamingDNA, SwipeDecision,
   Collection, GameNote, GameStatusType, GameStatusEntry, UserSettings,
@@ -115,23 +115,31 @@ export async function getLocalConfig(): Promise<LocalConfig> {
     const iv = row.steam_api_key_iv as string;
     const salt = row.steam_api_key_salt as string;
 
-    // Try current passphrase first
-    try {
-      steamApiKey = await decryptApiKey(encrypted, iv, salt, getDevicePassphrase());
-    } catch {
-      // Try legacy passphrase (included userAgent which changes on browser updates)
+    // Try passphrases in order: v3 (with PIN) → v2 (no PIN) → v1 (legacy userAgent)
+    const passphrases = [
+      getDevicePassphrase(),    // v3: language + constant + optional PIN
+      getV2DevicePassphrase(),  // v2: language + constant (no PIN)
+      getLegacyDevicePassphrase(), // v1: userAgent + language + screen (legacy)
+    ];
+
+    for (let i = 0; i < passphrases.length; i++) {
       try {
-        steamApiKey = await decryptApiKey(encrypted, iv, salt, getLegacyDevicePassphrase());
-        // Re-encrypt with stable passphrase so future loads succeed
-        const reEncrypted = await encryptApiKey(steamApiKey, getDevicePassphrase());
-        getDb().run(
-          'UPDATE local_config SET steam_api_key_encrypted = ?, steam_api_key_iv = ?, steam_api_key_salt = ? WHERE id = 1',
-          [reEncrypted.encrypted, reEncrypted.iv, reEncrypted.salt] as any[],
-        );
-        persistDb();
-        console.info('[config] Migrated API key to stable passphrase');
+        steamApiKey = await decryptApiKey(encrypted, iv, salt, passphrases[i]);
+        // Re-encrypt with current passphrase if we used an older one
+        if (i > 0) {
+          const reEncrypted = await encryptApiKey(steamApiKey, passphrases[0]);
+          getDb().run(
+            'UPDATE local_config SET steam_api_key_encrypted = ?, steam_api_key_iv = ?, steam_api_key_salt = ? WHERE id = 1',
+            [reEncrypted.encrypted, reEncrypted.iv, reEncrypted.salt] as any[],
+          );
+          persistDb();
+          console.info(`[config] Migrated API key from v${3 - i} to current passphrase`);
+        }
+        break;
       } catch {
-        console.warn('[config] Failed to decrypt API key — please re-enter it in Settings');
+        if (i === passphrases.length - 1) {
+          console.warn('[config] Failed to decrypt API key — please re-enter it in Settings');
+        }
       }
     }
   }
@@ -573,6 +581,8 @@ export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mod
     const yr = new Date().getFullYear() - 1;
     sql += ' AND release_date >= ?';
     params.push(yr.toString());
+  } else if (mode === 'undiscovered_gems') {
+    sql += ' AND review_count <= 1000 AND review_score >= 85';
   }
 
   const profile = getTasteProfile(userId);
@@ -663,10 +673,11 @@ export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mod
         }
       }
 
-      if (mode === 'contrarian') genreMatch = 1 - genreMatch;
+      if (mode === 'contrarian' || mode === 'challenge_my_taste') genreMatch = 1 - genreMatch;
       else if (mode === 'genre_deep_dive' && filters.genres?.length) genreMatch *= 2;
 
-      const score = 0.4 * genreMatch + 0.3 * tagMatch + 0.2 * reviewNorm + 0.1 * recency;
+      const userWeights = getScoringWeights(userId);
+      const score = userWeights.genreWeight * genreMatch + userWeights.tagWeight * tagMatch + userWeights.reviewWeight * reviewNorm + userWeights.recencyWeight * recency;
       return { game: dbGameToGame(row), score };
     });
 
@@ -1503,4 +1514,139 @@ export function getUserProfile(userId: number) {
       wishlistCount: stats?.w ?? 0,
     },
   };
+}
+
+// ── Scoring Weights ─────────────────────────────────────────────────────────
+
+export interface ScoringWeights {
+  genreWeight: number;
+  tagWeight: number;
+  reviewWeight: number;
+  recencyWeight: number;
+  temporalDecayRate: number;
+  explorationRatio: number;
+}
+
+const DEFAULT_WEIGHTS: ScoringWeights = {
+  genreWeight: 0.4,
+  tagWeight: 0.3,
+  reviewWeight: 0.2,
+  recencyWeight: 0.1,
+  temporalDecayRate: 0.01,
+  explorationRatio: 0.15,
+};
+
+export function getScoringWeights(userId: number): ScoringWeights {
+  const row = get<Record<string, unknown>>(
+    'SELECT * FROM scoring_weights WHERE user_id = ?',
+    [userId],
+  );
+  if (!row) return { ...DEFAULT_WEIGHTS };
+  return {
+    genreWeight: (row.genre_weight as number) ?? DEFAULT_WEIGHTS.genreWeight,
+    tagWeight: (row.tag_weight as number) ?? DEFAULT_WEIGHTS.tagWeight,
+    reviewWeight: (row.review_weight as number) ?? DEFAULT_WEIGHTS.reviewWeight,
+    recencyWeight: (row.recency_weight as number) ?? DEFAULT_WEIGHTS.recencyWeight,
+    temporalDecayRate: (row.temporal_decay_rate as number) ?? DEFAULT_WEIGHTS.temporalDecayRate,
+    explorationRatio: (row.exploration_ratio as number) ?? DEFAULT_WEIGHTS.explorationRatio,
+  };
+}
+
+export function saveScoringWeights(userId: number, weights: ScoringWeights): void {
+  getDb().run(
+    `INSERT INTO scoring_weights (user_id, genre_weight, tag_weight, review_weight, recency_weight, temporal_decay_rate, exploration_ratio, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET
+       genre_weight=excluded.genre_weight, tag_weight=excluded.tag_weight,
+       review_weight=excluded.review_weight, recency_weight=excluded.recency_weight,
+       temporal_decay_rate=excluded.temporal_decay_rate, exploration_ratio=excluded.exploration_ratio,
+       updated_at=excluded.updated_at`,
+    [userId, weights.genreWeight, weights.tagWeight, weights.reviewWeight,
+     weights.recencyWeight, weights.temporalDecayRate, weights.explorationRatio, nowUnix()] as any[],
+  );
+  persistDb();
+}
+
+// ── Cold Start ──────────────────────────────────────────────────────────────
+
+/** Get the user's total swipe count to check cold start status. */
+export function getSwipeCount(userId: number): number {
+  const row = get<{ c: number }>('SELECT count(*) as c FROM swipe_history WHERE user_id = ?', [userId]);
+  return row?.c ?? 0;
+}
+
+// ── Error Log ───────────────────────────────────────────────────────────────
+
+export function logError(source: string, message: string, context?: string, level: string = 'error'): void {
+  getDb().run(
+    'INSERT INTO error_log (source, message, context, level) VALUES (?, ?, ?, ?)',
+    [source, message, context ?? null, level] as any[],
+  );
+  persistDb();
+}
+
+export function getErrorLog(limit: number = 50): { id: number; timestamp: number; source: string; message: string; context: string | null; level: string }[] {
+  return all<{ id: number; timestamp: number; source: string; message: string; context: string | null; level: string }>(
+    'SELECT * FROM error_log ORDER BY timestamp DESC LIMIT ?',
+    [limit],
+  );
+}
+
+export function getErrorCount(sinceDaysAgo: number = 7): number {
+  const since = nowUnix() - sinceDaysAgo * 86400;
+  const row = get<{ c: number }>('SELECT count(*) as c FROM error_log WHERE timestamp > ?', [since]);
+  return row?.c ?? 0;
+}
+
+export function clearErrorLog(): void {
+  run('DELETE FROM error_log');
+}
+
+// ── Data Transparency ───────────────────────────────────────────────────────
+
+export function getDataTransparencyStats(userId: number) {
+  const tables = [
+    { name: 'games', label: 'Cached Games' },
+    { name: 'user_games', label: 'Library Games', where: `user_id = ${userId}` },
+    { name: 'swipe_history', label: 'Swipe Records', where: `user_id = ${userId}` },
+    { name: 'bookmarks', label: 'Bookmarks', where: `user_id = ${userId}` },
+    { name: 'recommendations', label: 'Recommendations', where: `user_id = ${userId}` },
+    { name: 'chat_messages', label: 'Chat Messages', where: `user_id = ${userId}` },
+    { name: 'collections', label: 'Collections', where: `user_id = ${userId}` },
+    { name: 'price_alerts', label: 'Price Alerts', where: `user_id = ${userId}` },
+    { name: 'error_log', label: 'Error Log Entries' },
+  ];
+
+  const counts: { table: string; label: string; count: number }[] = [];
+  for (const t of tables) {
+    const sql = t.where
+      ? `SELECT count(*) as c FROM ${t.name} WHERE ${t.where}`
+      : `SELECT count(*) as c FROM ${t.name}`;
+    const row = get<{ c: number }>(sql);
+    counts.push({ table: t.name, label: t.label, count: row?.c ?? 0 });
+  }
+
+  // DB size in bytes
+  let dbSizeBytes = 0;
+  try {
+    const data = getDb().export();
+    dbSizeBytes = data.byteLength;
+  } catch { /* ignore */ }
+
+  // API usage today
+  const apiUsage = getDailyApiUsageFromDb();
+
+  // Error count this week
+  const errorCount = getErrorCount(7);
+
+  return { counts, dbSizeBytes, apiUsage, errorCount };
+}
+
+function getDailyApiUsageFromDb(): { count: number; date: string } {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const row = get<{ date: string; count: number }>('SELECT date, count FROM rate_limits WHERE id = 1');
+    if (row && row.date === today) return { count: row.count, date: today };
+  } catch { /* ignore */ }
+  return { count: 0, date: today };
 }

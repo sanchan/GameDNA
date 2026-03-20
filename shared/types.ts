@@ -167,7 +167,7 @@ export interface PublisherBlacklist {
   type: 'publisher' | 'developer';
 }
 
-export type DiscoveryMode = 'default' | 'hidden_gems' | 'new_releases' | 'genre_deep_dive' | 'contrarian';
+export type DiscoveryMode = 'default' | 'hidden_gems' | 'new_releases' | 'genre_deep_dive' | 'contrarian' | 'challenge_my_taste' | 'undiscovered_gems';
 
 export interface DashboardStats {
   totalGames: number;

@@ -219,6 +219,36 @@ CREATE TABLE IF NOT EXISTS tag_catalog (
   updated_at INTEGER DEFAULT (unixepoch())
 );
 
+-- Rate limit tracking (moved from localStorage for security)
+CREATE TABLE IF NOT EXISTS rate_limits (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  date TEXT NOT NULL,
+  count INTEGER DEFAULT 0
+);
+
+-- Error log for local diagnostics (privacy-safe)
+CREATE TABLE IF NOT EXISTS error_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  timestamp INTEGER DEFAULT (unixepoch()),
+  source TEXT NOT NULL,
+  message TEXT NOT NULL,
+  context TEXT,
+  level TEXT DEFAULT 'error'
+);
+CREATE INDEX IF NOT EXISTS error_log_ts_idx ON error_log(timestamp);
+
+-- User-configurable scoring weights (overrides config.ts defaults)
+CREATE TABLE IF NOT EXISTS scoring_weights (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id),
+  genre_weight REAL DEFAULT 0.4,
+  tag_weight REAL DEFAULT 0.3,
+  review_weight REAL DEFAULT 0.2,
+  recency_weight REAL DEFAULT 0.1,
+  temporal_decay_rate REAL DEFAULT 0.01,
+  exploration_ratio REAL DEFAULT 0.15,
+  updated_at INTEGER DEFAULT (unixepoch())
+);
+
 -- Local-only table for app configuration (not in server schema)
 CREATE TABLE IF NOT EXISTS local_config (
   id INTEGER PRIMARY KEY CHECK (id = 1),

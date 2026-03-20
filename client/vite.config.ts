@@ -41,10 +41,10 @@ function steamProxyPlugin(): Plugin {
         }
 
         try {
-          const upstream = await fetch(targetUrl.toString());
+          const upstream = await fetch(targetUrl.toString(), { signal: AbortSignal.timeout(30_000) });
           res.writeHead(upstream.status, {
             'Content-Type': upstream.headers.get('Content-Type') ?? 'application/json',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': req.headers.origin === 'http://localhost:5173' ? 'http://localhost:5173' : 'http://localhost:4173',
           });
           const body = await upstream.text();
           res.end(body);

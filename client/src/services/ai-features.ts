@@ -1,25 +1,11 @@
 // AI features — ported from server/routes/ai-features.ts + recommendation layer 3 + chat logic.
 // Uses the pluggable AiEngine interface (Ollama or WebLLM).
 
-import { getDb } from '../db/index';
 import * as queries from '../db/queries';
+import { parseJson, queryAll } from '../db/helpers';
 import { getAiEngine } from './ai-engine';
 import { getBlacklistedTagsSet } from './tag-filter';
 import { config } from './config';
-
-function parseJson<T>(val: unknown, fallback: T): T {
-  if (typeof val !== 'string' || !val) return fallback;
-  try { return JSON.parse(val); } catch { return fallback; }
-}
-
-function queryAll<T = Record<string, unknown>>(sql: string, params?: unknown[]): T[] {
-  const results: T[] = [];
-  const stmt = getDb().prepare(sql);
-  if (params) stmt.bind(params as any[]);
-  while (stmt.step()) results.push(stmt.getAsObject() as T);
-  stmt.free();
-  return results;
-}
 
 // ── Auto-categorize games ───────────────────────────────────────────────────
 

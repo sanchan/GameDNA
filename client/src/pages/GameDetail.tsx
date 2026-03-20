@@ -11,6 +11,7 @@ import { useToast } from '../components/Toast';
 import { cacheGame } from '../services/game-cache';
 import MediaGallery from '../components/MediaGallery';
 import { Select } from '../components/Select';
+import WhyNotThisGame from '../components/WhyNotThisGame';
 import type { Game, SwipeDecision, GameStatusType, GameNote, Collection } from '../../../shared/types';
 
 interface MediaItem {
@@ -72,6 +73,7 @@ export default function GameDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [swiped, setSwiped] = useState<SwipeDecision | null>(null);
+  const [showWhyNot, setShowWhyNot] = useState(false);
   const [swiping, setSwiping] = useState(false);
   const { toast } = useToast();
 
@@ -416,94 +418,95 @@ export default function GameDetail() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Action Row */}
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-8 shadow-2xl -mt-20 relative z-20">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            {/* Left: utility buttons */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => toggleBookmark(game.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-colors text-sm font-medium ${
-                  bookmarked
-                    ? 'bg-[var(--primary)]/20 border-[var(--primary)]/40 text-[var(--primary)]'
-                    : 'border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
-                }`}
-              >
-                <i className={`fa-${bookmarked ? 'solid' : 'regular'} fa-bookmark`} />
-                {t('common.bookmark')}
-              </button>
+          {/* Row 1: Utility buttons */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <button
+              onClick={() => toggleBookmark(game.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-colors text-sm font-medium ${
+                bookmarked
+                  ? 'bg-[var(--primary)]/20 border-[var(--primary)]/40 text-[var(--primary)]'
+                  : 'border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              <i className={`fa-${bookmarked ? 'solid' : 'regular'} fa-bookmark`} />
+              {t('common.bookmark')}
+            </button>
 
-              <a
-                href={`steam://addtowishlist/${game.id}`}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm font-medium"
-              >
-                <i className="fa-regular fa-heart" />
-                {t('common.wishlist')}
-              </a>
+            <a
+              href={`steam://addtowishlist/${game.id}`}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm font-medium"
+            >
+              <i className="fa-regular fa-heart" />
+              {t('common.wishlist')}
+            </a>
 
-              <a
-                href={`https://store.steampowered.com/app/${game.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm font-medium"
-              >
-                <i className="fa-brands fa-steam" />
-                {t('common.openInSteam')}
-              </a>
+            <a
+              href={`https://store.steampowered.com/app/${game.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm font-medium"
+            >
+              <i className="fa-brands fa-steam" />
+              {t('common.openInSteam')}
+            </a>
 
-              <button
-                onClick={handleSyncGame}
-                disabled={syncing}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm font-medium disabled:opacity-50"
-              >
-                <i className={`fa-solid fa-arrows-rotate ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? t('common.syncing', 'Syncing...') : t('gameDetail.syncGame', 'Sync')}
-              </button>
+            <button
+              onClick={handleSyncGame}
+              disabled={syncing}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              <i className={`fa-solid fa-arrows-rotate ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? t('common.syncing', 'Syncing...') : t('gameDetail.syncGame', 'Sync')}
+            </button>
 
-              {/* Game Status Dropdown */}
-              {user && statusLoaded && (
-                <Select
-                  value={gameStatus || ''}
-                  onChange={(v) => handleSetStatus(v as GameStatusType || null)}
-                  options={[
-                    { value: '', label: 'Set Status...' },
-                    { value: 'playing', label: 'Playing' },
-                    { value: 'completed', label: 'Completed' },
-                    { value: 'plan_to_play', label: 'Plan to Play' },
-                    { value: 'abandoned', label: 'Abandoned' },
-                  ]}
-                />
-              )}
+            {/* Game Status Dropdown */}
+            {user && statusLoaded && (
+              <Select
+                value={gameStatus || ''}
+                onChange={(v) => handleSetStatus(v as GameStatusType || null)}
+                triggerClassName="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm font-medium cursor-pointer select-none whitespace-nowrap"
+                options={[
+                  { value: '', label: 'Set Status...' },
+                  { value: 'playing', label: 'Playing' },
+                  { value: 'completed', label: 'Completed' },
+                  { value: 'plan_to_play', label: 'Plan to Play' },
+                  { value: 'abandoned', label: 'Abandoned' },
+                ]}
+              />
+            )}
 
-              {/* Add to Collection */}
-              {user && collections.length > 0 && (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowCollections(!showCollections)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm font-medium"
-                  >
-                    <i className="fa-solid fa-folder-plus" />
-                    Collection
-                  </button>
-                  {showCollections && (
-                    <div className="absolute top-full mt-1 right-0 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl z-30 min-w-[180px]">
-                      {collections.map((col) => (
-                        <button
-                          key={col.id}
-                          onClick={() => handleAddToCollection(col.id)}
-                          className="w-full text-left px-4 py-2.5 text-sm text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors first:rounded-t-xl last:rounded-b-xl"
-                        >
-                          <i className={`fa-solid ${col.icon} mr-2`} style={{ color: col.color }} />
-                          {col.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            {/* Add to Collection */}
+            {user && collections.length > 0 && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowCollections(!showCollections)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--muted)] text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm font-medium"
+                >
+                  <i className="fa-solid fa-folder-plus" />
+                  Collection
+                </button>
+                {showCollections && (
+                  <div className="absolute top-full mt-1 right-0 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl z-30 min-w-[180px]">
+                    {collections.map((col) => (
+                      <button
+                        key={col.id}
+                        onClick={() => handleAddToCollection(col.id)}
+                        className="w-full text-left px-4 py-2.5 text-sm text-[var(--text-body)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors first:rounded-t-xl last:rounded-b-xl"
+                      >
+                        <i className={`fa-solid ${col.icon} mr-2`} style={{ color: col.color }} />
+                        {col.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
-            {/* Right: decision buttons */}
+          {/* Row 2: Swipe decision + Why Not */}
+          <div className="flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4">
             {user && !swiped && (
-              <div className="flex items-center gap-2">
+              <>
                 <button
                   onClick={() => handleSwipe('no')}
                   disabled={swiping}
@@ -528,13 +531,24 @@ export default function GameDetail() {
                   <i className="fa-solid fa-check" />
                   {t('gameDetail.interested')}
                 </button>
-              </div>
+              </>
             )}
 
             {swiped && (
               <p className="text-sm text-[var(--text-muted)]">
                 You marked this as <span className="font-semibold text-[var(--foreground)]">{swiped}</span>.
               </p>
+            )}
+
+            {/* Why Not — pushed to the right */}
+            {user && game && (
+              <button
+                onClick={() => setShowWhyNot(true)}
+                className="ml-auto text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors flex items-center gap-1"
+              >
+                <i className="fa-solid fa-circle-question" />
+                Why isn't this recommended?
+              </button>
             )}
           </div>
         </div>
@@ -847,6 +861,11 @@ export default function GameDetail() {
           initialIndex={galleryIndex}
           onClose={() => setGalleryOpen(false)}
         />,
+        document.body,
+      )}
+
+      {showWhyNot && game && createPortal(
+        <WhyNotThisGame gameId={game.id} onClose={() => setShowWhyNot(false)} />,
         document.body,
       )}
     </div>

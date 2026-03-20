@@ -36,7 +36,7 @@ export async function cacheGame(appid: number, cc?: string): Promise<boolean> {
     } catch (e) {
       lastError = e;
       if (attempt < config.cacheRetryAttempts) {
-        const delay = config.cacheRetryBaseDelayMs * Math.pow(2, attempt);
+        const delay = config.cacheRetryBaseDelayMs * Math.pow(2, attempt) + Math.random() * 500;
         console.warn(`[game-cache] Retry ${attempt + 1}/${config.cacheRetryAttempts} for appid ${appid} in ${delay}ms`);
         await new Promise((r) => setTimeout(r, delay));
       }

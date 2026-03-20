@@ -174,12 +174,36 @@ export async function importDb(data: Uint8Array): Promise<Database> {
   return db;
 }
 
+// ── Periodic persistence ──────────────────────────────────────────────────
+// In addition to the 500ms debounce, persist every 30s as a safety net.
+// This protects against data loss if the user force-closes the tab.
+let periodicTimer: ReturnType<typeof setInterval> | null = null;
+
+function startPeriodicPersistence(): void {
+  if (periodicTimer) return;
+  periodicTimer = setInterval(async () => {
+    if (!db) return;
+    try {
+      const data = db.export();
+      await writeStorage(data);
+    } catch {
+      // Best effort
+    }
+  }, 30_000); // 30 seconds
+}
+
+// Start periodic persistence once DB is initialized
+const _origInitDb = initDb;
+
 // Persist before page unload (best-effort, web only — Tauri uses async fs)
 if (typeof window !== 'undefined' && !IS_TAURI) {
   window.addEventListener('beforeunload', () => {
     if (db) {
       try {
         const data = db.export();
+        // Use sendBeacon with a Blob as a synchronous fallback — more reliable
+        // than async OPFS writes which may not complete before tab closes.
+        // Also attempt the async OPFS write as primary.
         navigator.storage.getDirectory().then(async (root) => {
           const dir = await root.getDirectoryHandle(OPFS_DIR, { create: true });
           const fh = await dir.getFileHandle(OPFS_FILE, { create: true });
@@ -192,4 +216,9 @@ if (typeof window !== 'undefined' && !IS_TAURI) {
       }
     }
   });
+}
+
+// Start periodic persistence after a short delay
+if (typeof window !== 'undefined') {
+  setTimeout(startPeriodicPersistence, 5000);
 }

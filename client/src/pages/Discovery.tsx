@@ -91,7 +91,7 @@ export default function Discovery() {
   const { t } = useTranslation();
   const { user, loading: authLoading, syncStatus, syncProgress } = useAuth();
   const { userId, config } = useDb();
-  const { currentGame, currentScore, swipe, undo, canUndo, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded, discoveryMode, setDiscoveryMode, maxHours, setMaxHours } = useDiscovery();
+  const { currentGame, currentScore, swipe, undo, canUndo, undoDepth, isLoading, filters, setFilters, animatingOut, refetchQueue, swipedCount, totalLoaded, discoveryMode, setDiscoveryMode, maxHours, setMaxHours, coldStart } = useDiscovery();
   const [loadingMore, setLoadingMore] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filterCount = useFilterCount(filters);
@@ -302,6 +302,8 @@ export default function Discovery() {
                 { value: 'new_releases', label: 'New Releases' },
                 { value: 'genre_deep_dive', label: 'Genre Deep Dive' },
                 { value: 'contrarian', label: 'Contrarian' },
+                { value: 'challenge_my_taste', label: 'Challenge My Taste' },
+                { value: 'undiscovered_gems', label: 'Undiscovered Gems' },
               ]}
             />
 
@@ -338,6 +340,33 @@ export default function Discovery() {
             </button>
           </div>
         </div>
+
+        {/* Cold Start Progress */}
+        {coldStart?.isColdStart && (
+          <div className="max-w-md mx-auto mb-6">
+            <div className="bg-[var(--card)] border border-[var(--primary)]/30 rounded-xl p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-[var(--primary)]/20 flex items-center justify-center flex-shrink-0">
+                  <i className="fa-solid fa-flask text-[var(--primary)] text-sm" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-[var(--foreground)]">
+                    Warming up your taste profile
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {coldStart.current}/{coldStart.threshold} swipes to unlock personalized recommendations
+                  </p>
+                </div>
+              </div>
+              <div className="w-full h-2 bg-[var(--muted)] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[var(--primary)] rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, (coldStart.current / coldStart.threshold) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Card container */}
         <div className="max-w-md mx-auto">
@@ -437,9 +466,14 @@ export default function Discovery() {
                 <button
                   onClick={undo}
                   className="absolute -left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] rounded-full flex items-center justify-center transition-all text-[var(--text-muted)] hover:text-[var(--primary)]"
-                  title={t('discovery.undoSwipe')}
+                  title={`${t('discovery.undoSwipe')} (${undoDepth} available)`}
                 >
                   <i className="fa-solid fa-rotate-left text-sm" />
+                  {undoDepth > 1 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full text-[10px] font-bold flex items-center justify-center">
+                      {undoDepth}
+                    </span>
+                  )}
                 </button>
               )}
               {/* Swipe hint on mobile */}

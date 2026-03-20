@@ -84,6 +84,8 @@ const en = {
   discovery: {
     title: 'Discover Games',
     subtitle: 'Swipe through personalized recommendations',
+    coldStartTitle: 'Warming up your taste profile',
+    coldStartProgress: '{{current}}/{{threshold}} swipes to unlock personalized recommendations',
     gamesSwiped: 'Games Swiped',
     liked: 'Liked',
     maybeLater: 'Maybe Later',
@@ -104,6 +106,8 @@ const en = {
     undoSuccess: 'Undid swipe on "{{name}}"',
     noSwipesToUndo: 'No swipes to undo',
     swipeHint: 'Swipe left to pass, right to like, or tap to preview',
+    challengeMyTaste: 'Challenge My Taste',
+    undiscoveredGems: 'Undiscovered Gems',
   },
 
   // Swipe controls
@@ -420,6 +424,37 @@ const en = {
     aiExplanation: 'AI Explanation',
     highConfidence: 'High Confidence',
     regenerate: 'Regenerate',
+  },
+
+  // Settings
+  settings: {
+    scoringWeights: 'Scoring Weights',
+    scoringWeightsDesc: 'Control how recommendations are scored. Weights auto-normalize to sum to 100%.',
+    genreWeight: 'Genre Match',
+    tagWeight: 'Tag Match',
+    reviewWeight: 'Community Reviews',
+    recencyWeight: 'Release Recency',
+    explorationRatio: 'Exploration Ratio',
+    explorationDesc: 'Percentage of recommendations for outside-your-comfort-zone picks',
+    temporalDecay: 'Temporal Decay',
+    temporalDecayFast: 'Fast (tastes change often)',
+    temporalDecaySlow: 'Slow (I know what I like)',
+    temporalDecayMedium: 'Medium',
+    resetDefaults: 'Reset to Defaults',
+    saveWeights: 'Save Weights',
+    dataTransparency: 'Data Transparency',
+    noDataLeaves: 'No data leaves your device except Steam API calls shown in the audit log.',
+    dbSize: 'Database Size',
+    apiCallsToday: 'API Calls Today',
+    errorsWeek: 'Errors (7d)',
+    storedLocally: "What's stored locally",
+    testConnection: 'Test',
+    testingConnection: 'Testing...',
+    invalidApiKeyFormat: 'Invalid format — Steam API keys are 32 hexadecimal characters.',
+    invalidOllamaUrl: 'Invalid Ollama URL format',
+    connectionSuccess: 'Ollama connection successful',
+    connectionFailed: 'Ollama is unreachable',
+    whyNotRecommended: "Why isn't this recommended?",
   },
 
   // GameCard component

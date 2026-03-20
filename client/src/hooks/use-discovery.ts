@@ -5,6 +5,7 @@ import { useDb } from '../contexts/db-context';
 import { useToast } from '../components/Toast';
 import * as queries from '../db/queries';
 import { recalculateTasteProfile } from '../services/taste-profile';
+import { getColdStartStatus } from '../services/recommendation';
 import type { Game, SwipeDecision, DiscoveryFilters, DiscoveryMode } from '../../../shared/types';
 
 interface ScoredGame {
@@ -22,14 +23,34 @@ const SWIPE_LABELS: Record<SwipeDecision, string> = {
 let cachedQueue: ScoredGame[] = [];
 let cachedSwipedCount = 0;
 let cachedTotalLoaded = 0;
+// Undo stack: keep up to 10 undoable swipes
+let undoStack: { game: Game; decision: SwipeDecision }[] = [];
+const MAX_UNDO_DEPTH = 10;
+
+// Persist filters to localStorage
+const FILTER_STORAGE_KEY = 'gamedna_discovery_filters';
+const MODE_STORAGE_KEY = 'gamedna_discovery_mode';
+
+function loadPersistedFilters(): DiscoveryFilters {
+  try {
+    const raw = localStorage.getItem(FILTER_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function loadPersistedMode(): DiscoveryMode {
+  try {
+    return (localStorage.getItem(MODE_STORAGE_KEY) as DiscoveryMode) ?? 'default';
+  } catch { return 'default'; }
+}
 
 export function useDiscovery() {
   const queryClient = useQueryClient();
   const { syncStatus } = useAuth();
   const { userId } = useDb();
   const { toast } = useToast();
-  const [filters, setFilters] = useState<DiscoveryFilters>({});
-  const [discoveryMode, setDiscoveryMode] = useState<DiscoveryMode>('default');
+  const [filters, setFiltersState] = useState<DiscoveryFilters>(loadPersistedFilters);
+  const [discoveryMode, setDiscoveryModeState] = useState<DiscoveryMode>(loadPersistedMode);
   const [maxHours, setMaxHours] = useState<number | undefined>(undefined);
   const [queue, setQueue] = useState<ScoredGame[]>(cachedQueue);
   const [swipedCount, setSwipedCount] = useState(cachedSwipedCount);
@@ -37,6 +58,26 @@ export function useDiscovery() {
   const [animatingOut, setAnimatingOut] = useState<'left' | 'right' | 'down' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const prevSyncStatus = useRef(syncStatus);
+
+  // Cold start status
+  const [coldStart, setColdStart] = useState<{ isColdStart: boolean; current: number; threshold: number } | null>(null);
+
+  useEffect(() => {
+    if (userId) {
+      setColdStart(getColdStartStatus(userId));
+    }
+  }, [userId, swipedCount]);
+
+  // Persist filters and mode
+  const setFilters = useCallback((f: DiscoveryFilters) => {
+    setFiltersState(f);
+    try { localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(f)); } catch {}
+  }, []);
+
+  const setDiscoveryMode = useCallback((m: DiscoveryMode) => {
+    setDiscoveryModeState(m);
+    try { localStorage.setItem(MODE_STORAGE_KEY, m); } catch {}
+  }, []);
 
   // Keep module-level cache in sync
   useEffect(() => { cachedQueue = queue; }, [queue]);
@@ -91,6 +132,21 @@ export function useDiscovery() {
     }
   }, [queue.length, isLoading, fetchQueue]);
 
+  // Pre-load next card images for instant transitions
+  useEffect(() => {
+    const preloadCount = 2;
+    for (let i = 1; i <= preloadCount && i < queue.length; i++) {
+      const img = queue[i]?.game?.headerImage;
+      if (img) {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.as = 'image';
+        link.href = img;
+        document.head.appendChild(link);
+      }
+    }
+  }, [queue]);
+
   const current = queue[0] ?? undefined;
   const currentGame = current?.game;
   const currentScore = current?.score ?? null;
@@ -98,6 +154,10 @@ export function useDiscovery() {
   const swipe = useCallback(
     (decision: SwipeDecision) => {
       if (!currentGame || !userId) return;
+
+      // Push to undo stack
+      undoStack.push({ game: currentGame, decision });
+      if (undoStack.length > MAX_UNDO_DEPTH) undoStack.shift();
 
       const direction = decision === 'no' ? 'left' : decision === 'yes' ? 'right' : 'down';
       setAnimatingOut(direction);
@@ -122,7 +182,9 @@ export function useDiscovery() {
   );
 
   const undo = useCallback(() => {
-    if (!userId) return;
+    if (!userId || undoStack.length === 0) return;
+    const last = undoStack.pop()!;
+    // Undo in DB
     const result = queries.undoLastSwipe(userId);
     if (result?.game) {
       setQueue((prev) => [{ game: result.game!, score: 0 }, ...prev]);
@@ -149,7 +211,8 @@ export function useDiscovery() {
     currentScore,
     swipe,
     undo,
-    canUndo: swipedCount > 0,
+    canUndo: undoStack.length > 0,
+    undoDepth: undoStack.length,
     isLoading: isLoading && queue.length === 0,
     filters,
     setFilters,
@@ -161,5 +224,6 @@ export function useDiscovery() {
     setDiscoveryMode,
     maxHours,
     setMaxHours,
+    coldStart,
   };
 }

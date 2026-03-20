@@ -73,22 +73,44 @@ export async function decryptApiKey(
 
 // Device-derived passphrase for local API key obfuscation.
 //
-// THREAT MODEL: This is NOT encryption against a determined attacker. The
-// passphrase is derived from ~8 possible browser language codes plus a fixed
-// constant, so the entire keyspace can be brute-forced trivially. This is
-// intentional: GameDNA stores data locally, and anyone with filesystem access
-// to the user's machine already has access to everything (browser storage,
-// cookies, password managers, etc.). The obfuscation simply prevents the API
-// key from sitting in plaintext in the DB, deterring casual inspection.
+// THREAT MODEL v3: The passphrase now incorporates an optional user-provided
+// PIN. Without a PIN the keyspace is ~8 values (browser language codes) which
+// can be brute-forced trivially. With a 4-digit PIN the keyspace jumps to
+// ~80,000 combinations (8 languages × 10,000 PINs), which is impractical for
+// casual attacks while still being lightweight for the user.
+//
+// GameDNA stores data locally, so anyone with filesystem access already owns
+// the machine. The goal is to prevent the API key from sitting in plaintext
+// in the DB and to deter casual inspection — not to defend against a targeted
+// attacker with full disk access.
 //
 // For real security in Tauri desktop builds, consider using the OS keychain
 // (tauri-plugin-stronghold or keyring integration) in the future.
+
+let _userPin: string | null = null;
+
+/** Set the user's encryption PIN for the current session. */
+export function setEncryptionPin(pin: string | null): void {
+  _userPin = pin;
+}
+
+/** Get the currently set encryption PIN (null if none). */
+export function getEncryptionPin(): string | null {
+  return _userPin;
+}
+
 export function getDevicePassphrase(): string {
   const parts = [
     navigator.language,
-    'gamedna-local-v2',
+    'gamedna-local-v3',
   ];
+  if (_userPin) parts.push(_userPin);
   return parts.join('|');
+}
+
+/** v2 passphrase (no PIN) — used for migration from v2 to v3. */
+export function getV2DevicePassphrase(): string {
+  return [navigator.language, 'gamedna-local-v2'].join('|');
 }
 
 // Legacy passphrase that included userAgent — used for migration only.
@@ -101,4 +123,21 @@ export function getLegacyDevicePassphrase(): string {
     'gamedna-local-v1',
   ];
   return parts.join('|');
+}
+
+// ── API Key Validation ────────────────────────────────────────────────────
+
+/** Validate that a string looks like a Steam Web API key (32 hex chars). */
+export function isValidSteamApiKeyFormat(key: string): boolean {
+  return /^[0-9A-Fa-f]{32}$/.test(key.trim());
+}
+
+/** Validate Ollama URL format. */
+export function isValidOllamaUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
 }

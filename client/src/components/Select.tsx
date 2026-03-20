@@ -10,10 +10,11 @@ interface SelectProps {
   onChange: (value: string) => void
   options: SelectOption[]
   className?: string
+  triggerClassName?: string
   size?: 'sm' | 'md'
 }
 
-export function Select({ value, onChange, options, className = '', size = 'md' }: SelectProps) {
+export function Select({ value, onChange, options, className = '', triggerClassName, size = 'md' }: SelectProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -70,7 +71,7 @@ export function Select({ value, onChange, options, className = '', size = 'md' }
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`${padding} flex items-center gap-2 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] hover:border-[#555] focus:outline-none focus:border-[var(--primary)] transition-colors cursor-pointer select-none whitespace-nowrap`}
+        className={triggerClassName ?? `${padding} flex items-center gap-2 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] hover:border-[#555] focus:outline-none focus:border-[var(--primary)] transition-colors cursor-pointer select-none whitespace-nowrap`}
       >
         <span className="truncate">{selectedLabel}</span>
         <i
