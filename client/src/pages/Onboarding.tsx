@@ -210,18 +210,42 @@ export default function Onboarding() {
     navigate('/');
   }, [refreshConfig, navigate]);
 
-  const handleImportBackup = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleImportBackup = useCallback(async (e?: React.ChangeEvent<HTMLInputElement>) => {
     setLoading(true);
     setError(null);
     setImportStatus('Reading backup file...');
 
     try {
-      const buffer = await file.arrayBuffer();
+      let data: Uint8Array;
+
+      if ('__TAURI_INTERNALS__' in window) {
+        // Use Tauri native dialog + fs
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        const { readFile } = await import('@tauri-apps/plugin-fs');
+        const selected = await open({
+          filters: [{ name: 'Database', extensions: ['db', 'sqlite'] }],
+          multiple: false,
+        });
+        if (!selected) {
+          setLoading(false);
+          setImportStatus(null);
+          return;
+        }
+        data = await readFile(selected);
+      } else {
+        // Web: use file input
+        const file = e?.target?.files?.[0];
+        if (!file) {
+          setLoading(false);
+          setImportStatus(null);
+          return;
+        }
+        const buffer = await file.arrayBuffer();
+        data = new Uint8Array(buffer);
+      }
+
       setImportStatus('Restoring database...');
-      await importDb(new Uint8Array(buffer));
+      await importDb(data);
       setImportStatus('Done!');
       await refreshConfig();
       navigate('/');
@@ -302,11 +326,21 @@ export default function Onboarding() {
 
               <div className="mt-4 pt-4 border-t border-[var(--border)]">
                 <p className="text-[var(--muted-foreground)] text-xs text-center mb-3">Already have a backup?</p>
-                <label className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] rounded-xl font-medium cursor-pointer hover:bg-[var(--accent)] transition-colors text-sm">
-                  <i className="fa-solid fa-upload" />
-                  Restore from Backup (.db)
-                  <input type="file" accept=".db,.sqlite" onChange={handleImportBackup} className="hidden" />
-                </label>
+                {'__TAURI_INTERNALS__' in window ? (
+                  <button
+                    onClick={() => handleImportBackup()}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] rounded-xl font-medium cursor-pointer hover:bg-[var(--accent)] transition-colors text-sm"
+                  >
+                    <i className="fa-solid fa-upload" />
+                    Restore from Backup (.db)
+                  </button>
+                ) : (
+                  <label className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] rounded-xl font-medium cursor-pointer hover:bg-[var(--accent)] transition-colors text-sm">
+                    <i className="fa-solid fa-upload" />
+                    Restore from Backup (.db)
+                    <input type="file" accept=".db,.sqlite" onChange={handleImportBackup} className="hidden" />
+                  </label>
+                )}
               </div>
             </>
           )}
