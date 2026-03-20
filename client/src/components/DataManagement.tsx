@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { exportDb, importDb, resetDb } from '../db/index';
 import * as queries from '../db/queries';
+import { recalculateTasteProfile } from '../services/taste-profile';
 import { useDb } from '../contexts/db-context';
 import { useToast } from './Toast';
 
@@ -86,7 +87,8 @@ export default function DataManagement() {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      queries.importUserData(userId, data);
+      const result = queries.importUserData(userId, data);
+      if (result.importedSwipes > 0) recalculateTasteProfile(userId);
       toast('Data imported successfully', 'success');
     } catch {
       toast('Failed to import JSON data', 'error');

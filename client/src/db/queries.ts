@@ -402,6 +402,22 @@ export function recordSwipe(userId: number, gameId: number, decision: SwipeDecis
   }
 }
 
+export function importSwipe(userId: number, gameId: number, decision: SwipeDecision, swipedAt: number): boolean {
+  const existing = get<{ id: number; decision: string; swiped_at: number }>(
+    'SELECT id, decision, swiped_at FROM swipe_history WHERE user_id = ? AND game_id = ?',
+    [userId, gameId],
+  );
+  if (existing) {
+    if (swipedAt > existing.swiped_at) {
+      run('UPDATE swipe_history SET decision = ?, swiped_at = ? WHERE id = ?', [decision, swipedAt, existing.id]);
+      return true;
+    }
+    return false;
+  }
+  run('INSERT INTO swipe_history (user_id, game_id, decision, swiped_at) VALUES (?, ?, ?, ?)', [userId, gameId, decision, swipedAt]);
+  return true;
+}
+
 export function undoLastSwipe(userId: number): { gameId: number; decision: string; game: Game | null } | null {
   const last = get<{ id: number; game_id: number; decision: string }>(
     'SELECT id, game_id, decision FROM swipe_history WHERE user_id = ? ORDER BY swiped_at DESC LIMIT 1',
@@ -1395,25 +1411,34 @@ export function exportUserData(userId: number) {
 }
 
 export function importUserData(userId: number, data: {
-  tags?: { ignored?: string[]; blacklisted?: string[] };
-  swipeHistory?: { gameId: number; decision: string; swipedAt?: number }[];
+  tags?: { ignored?: string[]; blacklisted?: string[]; scores?: Record<string, number> };
+  genres?: { scores?: Record<string, number> };
+  swipeHistory?: { gameId: number; gameName?: string; decision: string; swipedAt?: number }[];
 }): { importedTags: number; importedSwipes: number } {
   let importedTags = 0;
   let importedSwipes = 0;
 
-  // Support both old 'ignored' and new 'blacklisted' keys
+  // Blacklisted tags — merge (set union, case-insensitive)
   const tagList = data.tags?.blacklisted ?? data.tags?.ignored;
-  if (tagList) {
-    run('UPDATE users SET blacklisted_tags = ? WHERE id = ?', [JSON.stringify(tagList), userId]);
-    importedTags = tagList.length;
+  if (tagList?.length) {
+    const current = getBlacklistedTags(userId);
+    const currentLower = new Set(current.map((t) => t.toLowerCase()));
+    const newTags = tagList.filter((t) => !currentLower.has(t.toLowerCase()));
+    if (newTags.length > 0) {
+      const merged = [...current, ...newTags];
+      run('UPDATE users SET blacklisted_tags = ? WHERE id = ?', [JSON.stringify(merged), userId]);
+    }
+    importedTags = newTags.length;
   }
 
+  // Swipe history — upsert with "most recent wins"
   if (data.swipeHistory?.length) {
     for (const swipe of data.swipeHistory) {
       if (!['yes', 'no', 'maybe'].includes(swipe.decision)) continue;
-      upsertGameStub(swipe.gameId, `Game ${swipe.gameId}`);
-      recordSwipe(userId, swipe.gameId, swipe.decision as SwipeDecision);
-      importedSwipes++;
+      upsertGameStub(swipe.gameId, swipe.gameName ?? `Game ${swipe.gameId}`);
+      const swipedAt = swipe.swipedAt ?? nowUnix();
+      const changed = importSwipe(userId, swipe.gameId, swipe.decision as SwipeDecision, swipedAt);
+      if (changed) importedSwipes++;
     }
     persistDb();
   }

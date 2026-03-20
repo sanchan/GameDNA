@@ -5,6 +5,7 @@ import { useAuth, type SyncCategory, type CategorySyncState } from '../hooks/use
 import { useProfile, useGamingDNA } from '../hooks/use-profile';
 import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
+import { recalculateTasteProfile } from '../services/taste-profile';
 import RadarChart from '../components/RadarChart';
 import type { ProfileSnapshot, AiSummaryEntry } from '../../../shared/types';
 
@@ -91,6 +92,7 @@ export default function Profile() {
       const text = await file.text();
       const data = JSON.parse(text);
       const result = queries.importUserData(userId, data);
+      if (result.importedSwipes > 0) recalculateTasteProfile(userId);
       setImportResult(t('profile.importSuccess', { tags: result.importedTags, swipes: result.importedSwipes }));
       refetchDna();
     } catch (e) {

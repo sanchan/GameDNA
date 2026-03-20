@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
+import { recalculateTasteProfile } from '../services/taste-profile';
 import { useToast } from './Toast';
 
 export default function MigrationTool() {
@@ -31,7 +32,8 @@ export default function MigrationTool() {
       const data = await res.json();
 
       setStatus('Importing data...');
-      queries.importUserData(userId, data);
+      const result = queries.importUserData(userId, data);
+      if (result.importedSwipes > 0) recalculateTasteProfile(userId);
 
       setStatus(null);
       toast('Data imported from server successfully!', 'success');
