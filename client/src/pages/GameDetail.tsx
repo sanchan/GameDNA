@@ -12,6 +12,7 @@ import { cacheGame } from '../services/game-cache';
 import MediaGallery from '../components/MediaGallery';
 import { Select } from '../components/Select';
 import WhyNotThisGame from '../components/WhyNotThisGame';
+import WhyThisGame from '../components/WhyThisGame';
 import type { Game, SwipeDecision, GameStatusType, GameNote, Collection } from '../../../shared/types';
 
 interface MediaItem {
@@ -74,6 +75,8 @@ export default function GameDetail() {
   const [error, setError] = useState<string | null>(null);
   const [swiped, setSwiped] = useState<SwipeDecision | null>(null);
   const [showWhyNot, setShowWhyNot] = useState(false);
+  const [recData, setRecData] = useState<{ id: number; score: number; aiExplanation: string | null } | null>(null);
+  const [showWhyThis, setShowWhyThis] = useState(false);
   const [swiping, setSwiping] = useState(false);
   const { toast } = useToast();
 
@@ -127,6 +130,9 @@ export default function GameDetail() {
       const g = queries.getGame(Number(appid));
       if (g) {
         setGame(g);
+        if (userId) {
+          setRecData(queries.getRecommendationForGame(userId, g.id));
+        }
       } else {
         setError('Game not found in local database');
       }
@@ -135,7 +141,7 @@ export default function GameDetail() {
     } finally {
       setLoading(false);
     }
-  }, [appid]);
+  }, [appid, userId]);
 
   const loadMedia = useCallback(() => {
     if (mediaItems !== null || mediaLoading || !game) return mediaItems;
@@ -540,8 +546,17 @@ export default function GameDetail() {
               </p>
             )}
 
-            {/* Why Not — pushed to the right */}
-            {user && game && (
+            {/* Why This / Why Not — pushed to the right */}
+            {user && game && recData && (
+              <button
+                onClick={() => setShowWhyThis(true)}
+                className="ml-auto text-xs text-green-500 hover:text-green-400 transition-colors flex items-center gap-1"
+              >
+                <i className="fa-solid fa-star" />
+                Why this game?
+              </button>
+            )}
+            {user && game && !recData && (
               <button
                 onClick={() => setShowWhyNot(true)}
                 className="ml-auto text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors flex items-center gap-1"
@@ -860,6 +875,24 @@ export default function GameDetail() {
           items={mediaItems}
           initialIndex={galleryIndex}
           onClose={() => setGalleryOpen(false)}
+        />,
+        document.body,
+      )}
+
+      {showWhyThis && game && recData && createPortal(
+        <WhyThisGame
+          recId={recData.id}
+          gameId={game.id}
+          gameName={game.name}
+          gameImage={game.headerImage}
+          gameDeveloper={game.developers?.[0]}
+          matchScore={recData.score}
+          aiExplanation={recData.aiExplanation}
+          open={showWhyThis}
+          onClose={() => setShowWhyThis(false)}
+          onExplanationSaved={(_, explanation) => {
+            setRecData(prev => prev ? { ...prev, aiExplanation: explanation } : prev);
+          }}
         />,
         document.body,
       )}

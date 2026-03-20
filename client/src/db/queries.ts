@@ -761,6 +761,15 @@ export function getUndismissedRecIds(userId: number): number[] {
   ).map((r) => r.game_id);
 }
 
+export function getRecommendationForGame(userId: number, gameId: number) {
+  const row = get<{ id: number; score: number; ai_explanation: string | null }>(
+    'SELECT id, score, ai_explanation FROM recommendations WHERE user_id = ? AND game_id = ? AND dismissed = 0',
+    [userId, gameId],
+  );
+  if (!row) return null;
+  return { id: row.id, score: row.score, aiExplanation: row.ai_explanation };
+}
+
 // ── Bookmarks ───────────────────────────────────────────────────────────────
 
 export function getBookmarkIds(userId: number): number[] {
