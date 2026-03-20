@@ -6,6 +6,7 @@ import { getOwnedGames, getWishlist, getPopularGameIds, getSteamTags } from './s
 import { ensureGamesCached, forceRefreshGames } from './game-cache';
 import { recalculateTasteProfile } from './taste-profile';
 import { generateRecommendations } from './recommendation';
+import { expandGamePool } from './pool-expansion';
 
 export type SyncCategory = 'library' | 'wishlist' | 'backlog' | 'tags' | 'cache';
 export const ALL_CATEGORIES: SyncCategory[] = ['library', 'wishlist', 'backlog', 'tags'];
@@ -266,6 +267,16 @@ export async function runSync(
       try { recalculateTasteProfile(userId); } catch (e) {
         console.error('[sync] taste profile error:', e);
       }
+
+      cats.tags = { status: 'syncing', progress: 25, detail: 'Expanding discovery pool...' };
+      onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+      try {
+        await expandGamePool(userId, (cached, total) => {
+          cats.tags.progress = 25 + Math.round((cached / total) * 20);
+          cats.tags.detail = `Expanding pool... (${cached}/${total})`;
+          onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+        }, cc);
+      } catch (e) { console.error('[sync] Pool expansion error:', e); }
 
       cats.tags = { status: 'syncing', progress: 50, detail: 'Generating recommendations...' };
       onProgress(deriveOverall(cats, gamesCount, wishlistCount));

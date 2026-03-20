@@ -6,8 +6,7 @@ import { useDb } from '../contexts/db-context';
 import { useDiscovery } from '../hooks/use-discovery';
 import { useGamingDNA } from '../hooks/use-profile';
 import * as queries from '../db/queries';
-import { fetchMoreGameIds } from '../services/steam-api';
-import { ensureGamesCached } from '../services/game-cache';
+import { expandGamePool } from '../services/pool-expansion';
 import GameCard from '../components/GameCard';
 import type { GameCardHandle } from '../components/GameCard';
 import SwipeControls from '../components/SwipeControls';
@@ -241,15 +240,7 @@ export default function Discovery() {
     if (!userId || loadingMore) return;
     setLoadingMore(true);
     try {
-      // Fetch new game IDs from Steam that we don't already have cached
-      const existingIds = new Set(queries.getAllCachedGameIds());
-      const newIds = await fetchMoreGameIds(existingIds);
-      if (newIds.length > 0) {
-        // Cache their details from Steam
-        const cc = config?.countryCode ?? undefined;
-        await ensureGamesCached(newIds, () => {}, cc);
-      }
-      // Refetch the discovery queue with the newly cached games
+      await expandGamePool(userId, undefined, config?.countryCode ?? undefined);
       refetchQueue();
     } catch (e) {
       console.error('[discovery] Load more error:', e);

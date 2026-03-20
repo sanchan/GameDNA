@@ -92,16 +92,23 @@ export function recalculateTasteProfile(userId: number): void {
     }
   }
 
-  // Normalize scores to 0-1 range
+  // Normalize scores: clamp negatives to 0, ratio to max (preserves proportions)
   const normalize = (scores: Record<string, number>): Record<string, number> => {
-    const values = Object.values(scores);
-    if (values.length === 0) return {};
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min;
     const result: Record<string, number> = {};
-    for (const [key, val] of Object.entries(scores)) {
-      result[key] = range === 0 ? 0.5 : Math.round(((val - min) / range) * 100) / 100;
+    const entries = Object.entries(scores);
+    if (entries.length === 0) return {};
+
+    // Clamp negatives to 0 — the negative signal already reduced raw totals during accumulation
+    const positive: [string, number][] = entries.map(([k, v]) => [k, Math.max(v, 0)]);
+    const maxVal = Math.max(...positive.map(([, v]) => v));
+    if (maxVal === 0) {
+      for (const [key] of positive) result[key] = 0;
+      return result;
+    }
+
+    // Ratio to max — preserves proportions (50 vs 5 → 1.0 vs 0.1)
+    for (const [key, val] of positive) {
+      result[key] = Math.round((val / maxVal) * 100) / 100;
     }
     return result;
   };

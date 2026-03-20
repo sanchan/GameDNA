@@ -81,8 +81,8 @@ export async function cookCauldron(
   // Query candidates from DB, excluding input games
   const excludePlaceholders = [...inputIds].map(() => '?').join(',');
   const candidates = queryAll(
-    `SELECT * FROM games WHERE id NOT IN (${excludePlaceholders}) ORDER BY review_count DESC LIMIT ?`,
-    [...inputIds, config.recCandidatePoolSize],
+    `SELECT * FROM games WHERE id NOT IN (${excludePlaceholders}) AND cached_at > 0 LIMIT 2000`,
+    [...inputIds],
   );
 
   if (candidates.length === 0) return [];

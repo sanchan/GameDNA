@@ -48,6 +48,17 @@ function parseJson<T>(val: unknown, fallback: T): T {
   try { return JSON.parse(val); } catch { return fallback; }
 }
 
+function weightedMatch(gameItems: string[], profileMap: Map<string, number>): number {
+  if (profileMap.size === 0) return 0;
+  let matched = 0;
+  for (const item of gameItems) {
+    const score = profileMap.get(item.toLowerCase());
+    if (score !== undefined && score > 0) matched += score;
+  }
+  const totalWeight = Array.from(profileMap.values()).reduce((s, v) => s + Math.max(v, 0), 0);
+  return totalWeight > 0 ? matched / totalWeight : 0;
+}
+
 function dbGameToGame(row: Record<string, unknown>): Game {
   return {
     id: row.id as number,
@@ -521,6 +532,15 @@ export function upsertTasteProfile(userId: number, genreScores: Record<string, n
   );
 }
 
+export function getLastExpansionAt(userId: number): number {
+  const row = get<{ last_expansion_at: number }>('SELECT last_expansion_at FROM taste_profiles WHERE user_id = ?', [userId]);
+  return row?.last_expansion_at ?? 0;
+}
+
+export function setLastExpansionAt(userId: number, timestamp: number): void {
+  run('UPDATE taste_profiles SET last_expansion_at = ? WHERE user_id = ?', [timestamp, userId]);
+}
+
 // ── Discovery Queue ─────────────────────────────────────────────────────────
 
 export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mode: DiscoveryMode = 'default', maxHours?: number): Array<{ game: Game; score: number }> {
@@ -558,8 +578,11 @@ export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mod
   const profile = getTasteProfile(userId);
   const hasProfile = profile && (Object.keys(profile.genreScores).length > 0 || Object.keys(profile.tagScores).length > 0);
 
-  sql += ' ORDER BY review_count DESC, review_score DESC LIMIT ?';
-  params.push(hasProfile ? 50 : 10);
+  if (hasProfile) {
+    sql += ' AND cached_at > 0';  // exclude stubs with no genre/tag data
+  } else {
+    sql += ' ORDER BY review_count DESC, review_score DESC LIMIT 10';
+  }
 
   const rows = all<Record<string, unknown>>(sql, params);
 
@@ -608,15 +631,19 @@ export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mod
     return filtered.map((r) => ({ game: dbGameToGame(r), score: 0 }));
   }
 
-  const topGenres = new Set(
+  const genreMap = new Map(
     Object.entries(profile!.genreScores)
-      .sort(([, a], [, b]) => b - a).slice(0, 10)
-      .map(([n]) => n.toLowerCase()),
+      .filter(([, s]) => s > 0)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, config.recTopGenresCount)
+      .map(([name, score]) => [name.toLowerCase(), score] as [string, number]),
   );
-  const topTags = new Set(
+  const tagMap = new Map(
     Object.entries(profile!.tagScores)
-      .sort(([, a], [, b]) => b - a).slice(0, 15)
-      .map(([n]) => n.toLowerCase()),
+      .filter(([, s]) => s > 0)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, config.recTopTagsCount)
+      .map(([name, score]) => [name.toLowerCase(), score] as [string, number]),
   );
 
   const scored = filtered
@@ -624,8 +651,8 @@ export function getDiscoveryQueue(userId: number, filters: DiscoveryFilters, mod
       const gameGenres = parseJson<string[]>(row.genres, []);
       const gameTags = parseJson<string[]>(row.tags, []);
 
-      let genreMatch = gameGenres.filter((g) => topGenres.has(g.toLowerCase())).length / Math.max(topGenres.size, 1);
-      const tagMatch = gameTags.filter((t) => topTags.has(t.toLowerCase())).length / Math.max(topTags.size, 1);
+      let genreMatch = weightedMatch(gameGenres, genreMap);
+      const tagMatch = weightedMatch(gameTags, tagMap);
       const reviewNorm = ((row.review_score as number) ?? 50) / 100;
 
       let recency = 0.5;
@@ -1365,7 +1392,7 @@ export function getSimilarGames(appid: number, userId: number, limit = 10): Arra
   const excludeIds = new Set([appid, ...ownedIds, ...swipedIds]);
 
   const candidates = all<Record<string, unknown>>(
-    'SELECT * FROM games WHERE id != ? ORDER BY review_count DESC LIMIT 200',
+    'SELECT * FROM games WHERE id != ? AND cached_at > 0',
     [appid],
   ).filter((r) => !excludeIds.has(r.id as number));
 

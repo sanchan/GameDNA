@@ -21,16 +21,27 @@ function queryAll<T = Record<string, unknown>>(sql: string, params?: unknown[]):
   return results;
 }
 
+function weightedMatch(gameItems: string[], profileMap: Map<string, number>): number {
+  if (profileMap.size === 0) return 0;
+  let matched = 0;
+  for (const item of gameItems) {
+    const score = profileMap.get(item.toLowerCase());
+    if (score !== undefined && score > 0) matched += score;
+  }
+  const totalWeight = Array.from(profileMap.values()).reduce((s, v) => s + Math.max(v, 0), 0);
+  return totalWeight > 0 ? matched / totalWeight : 0;
+}
+
 function heuristicScore(
   game: Record<string, unknown>,
-  topGenres: Set<string>,
-  topTags: Set<string>,
+  topGenres: Map<string, number>,
+  topTags: Map<string, number>,
 ): number {
   const gameGenres = parseJson<string[]>(game.genres, []);
   const gameTags = parseJson<string[]>(game.tags, []);
 
-  const genreMatch = gameGenres.filter((g) => topGenres.has(g.toLowerCase())).length / Math.max(topGenres.size, 1);
-  const tagMatch = gameTags.filter((t) => topTags.has(t.toLowerCase())).length / Math.max(topTags.size, 1);
+  const genreMatch = weightedMatch(gameGenres, topGenres);
+  const tagMatch = weightedMatch(gameTags, topTags);
   const reviewNorm = ((game.review_score as number) ?? 50) / 100;
 
   let recency = 0.5;
@@ -54,19 +65,20 @@ export async function generateRecommendations(userId: number, onlyDismissed = fa
   const blacklistedTags = db.getBlacklistedTags(userId);
   const blacklistSet = getBlacklistedTagsSet(blacklistedTags);
 
-  const topGenres = new Set(
+  const topGenres = new Map(
     Object.entries(profile.genreScores)
+      .filter(([, s]) => s > 0)
       .sort(([, a], [, b]) => b - a)
       .slice(0, config.recTopGenresCount)
-      .map(([name]) => name.toLowerCase()),
+      .map(([name, score]) => [name.toLowerCase(), score] as [string, number]),
   );
 
-  const topTags = new Set(
+  const topTags = new Map(
     Object.entries(profile.tagScores)
-      .filter(([name]) => !blacklistSet.has(name.toLowerCase()))
+      .filter(([name, s]) => s > 0 && !blacklistSet.has(name.toLowerCase()))
       .sort(([, a], [, b]) => b - a)
       .slice(0, config.recTopTagsCount)
-      .map(([name]) => name.toLowerCase()),
+      .map(([name, score]) => [name.toLowerCase(), score] as [string, number]),
   );
 
   // Layer 2: SQL pre-filter
@@ -89,8 +101,7 @@ export async function generateRecommendations(userId: number, onlyDismissed = fa
     params.push(...excludeIds);
   }
 
-  sql += ' ORDER BY review_count DESC LIMIT ?';
-  params.push(config.recCandidatePoolSize);
+  sql += ' AND cached_at > 0 LIMIT 2000';  // safety valve; score everything
 
   const candidates = queryAll(sql, params);
 

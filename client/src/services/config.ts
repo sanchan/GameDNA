@@ -40,6 +40,14 @@ export const config = {
     swipeNo: -0.5,
   },
 
+  poolExpansion: {
+    maxSearchTerms: 8,           // 3 genres + 5 tags
+    maxNewGamesPerExpand: 100,   // cap per expansion run
+    minIntervalMs: 30 * 60_000, // 30min cooldown
+    topGenreCount: 3,
+    topTagCount: 5,
+  },
+
   apiTimeoutMs: 30_000,
   defaultPageSize: 50,
   maxPageSize: 200,
