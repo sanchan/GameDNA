@@ -37,7 +37,7 @@ export const config = {
     bookmark: 0.5,
     swipeYes: 1.0,
     swipeMaybe: 0.3,
-    swipeNo: -0.5,
+    swipeNo: -0.8,
   },
 
   poolExpansion: {
@@ -47,6 +47,16 @@ export const config = {
     topGenreCount: 3,
     topTagCount: 5,
   },
+
+  // Temporal decay: swipes/signals decay over time so recent preferences matter more
+  temporalDecayRate: 0.01,        // ~50% weight after 70 days
+
+  // Bayesian review credibility: games with few reviews are pulled toward the global mean
+  reviewCredibilityThreshold: 5000,  // reviews needed for full credibility
+  globalAverageReviewScore: 70,      // assumed global average (%)
+
+  // Cold start: minimum swipes before profile is considered reliable
+  coldStartThreshold: 20,
 
   apiTimeoutMs: 30_000,
   defaultPageSize: 50,

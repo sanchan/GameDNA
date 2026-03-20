@@ -714,17 +714,20 @@ export function getRecommendations(userId: number, opts?: { limit?: number; offs
     aiExplanation: (row.ai_explanation as string) ?? null,
     generatedAt: row.generated_at as number,
     source: (row.source as string) ?? 'heuristic',
+    scoreBreakdown: (row.score_breakdown as string) ?? null,
+    heuristicScore: (row.heuristic_score as number) ?? null,
   }));
 }
 
-export function upsertRecommendation(userId: number, gameId: number, score: number, explanation: string, source: 'ai' | 'heuristic'): void {
+export function upsertRecommendation(userId: number, gameId: number, score: number, explanation: string, source: 'ai' | 'heuristic', scoreBreakdown?: string, heuristicScore?: number): void {
   getDb().run(
-    `INSERT INTO recommendations (user_id, game_id, score, ai_explanation, generated_at, dismissed, source)
-     VALUES (?, ?, ?, ?, ?, 0, ?)
+    `INSERT INTO recommendations (user_id, game_id, score, ai_explanation, generated_at, dismissed, source, score_breakdown, heuristic_score)
+     VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)
      ON CONFLICT(user_id, game_id) DO UPDATE SET
        score=excluded.score, ai_explanation=excluded.ai_explanation,
-       generated_at=excluded.generated_at, dismissed=0, source=excluded.source`,
-    [userId, gameId, score, explanation || null, nowUnix(), source] as any[],
+       generated_at=excluded.generated_at, dismissed=0, source=excluded.source,
+       score_breakdown=excluded.score_breakdown, heuristic_score=excluded.heuristic_score`,
+    [userId, gameId, score, explanation || null, nowUnix(), source, scoreBreakdown || null, heuristicScore ?? null] as any[],
   );
 }
 

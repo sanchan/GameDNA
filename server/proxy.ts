@@ -7,7 +7,15 @@ import { cors } from 'hono/cors';
 
 const app = new Hono();
 
-app.use('*', cors({ origin: '*' }));
+// Restrict CORS to local dev server and Tauri webview origins
+app.use('*', cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'https://tauri.localhost',
+    'tauri://localhost',
+  ],
+}));
 
 // Web API proxy: /api/steam/web/* → api.steampowered.com/*
 app.all('/api/steam/web/*', async (c) => {

@@ -6,7 +6,8 @@ import { searchSteamStore } from './steam-api';
 import { ensureGamesCached } from './game-cache';
 import { config } from './config';
 
-const OVERLY_GENERIC = new Set(['action', 'indie', 'casual', 'adventure', 'simulation', 'free to play']);
+// Generic single-word genres that are too broad on their own but useful in combinations
+const GENERIC_SOLO = new Set(['action', 'indie', 'casual', 'adventure', 'simulation', 'free to play', 'rpg', 'strategy']);
 
 export async function expandGamePool(
   userId: number,
@@ -27,13 +28,18 @@ export async function expandGamePool(
   const lastExpansion = db.getLastExpansionAt(userId);
   if (Date.now() - lastExpansion * 1000 < pe.minIntervalMs) return 0;
 
-  // Build search terms from top genres + tags, skipping overly generic ones
+  // Build search terms from top genres + tags
+  // Instead of blacklisting generic genres entirely, use them in 2-term combinations
+  // e.g. "RPG Story-driven" instead of just "RPG"
   const searchTerms: string[] = [];
+  const specificGenres: string[] = [];
+  const genericGenres: string[] = [];
 
   for (const [name] of positiveGenres) {
-    if (searchTerms.length >= pe.topGenreCount) break;
-    if (!OVERLY_GENERIC.has(name.toLowerCase())) {
-      searchTerms.push(name);
+    if (GENERIC_SOLO.has(name.toLowerCase())) {
+      genericGenres.push(name);
+    } else {
+      specificGenres.push(name);
     }
   }
 
@@ -41,9 +47,34 @@ export async function expandGamePool(
     .filter(([, s]) => s > 0)
     .sort(([, a], [, b]) => b - a);
 
+  const specificTags: string[] = [];
   for (const [name] of positiveTags) {
+    if (!GENERIC_SOLO.has(name.toLowerCase())) {
+      specificTags.push(name);
+    }
+  }
+
+  // Add specific genres directly
+  for (const name of specificGenres) {
     if (searchTerms.length >= pe.maxSearchTerms) break;
-    if (!OVERLY_GENERIC.has(name.toLowerCase()) && !searchTerms.some((t) => t.toLowerCase() === name.toLowerCase())) {
+    searchTerms.push(name);
+  }
+
+  // Combine generic genres with top specific tags for targeted searches
+  for (const genre of genericGenres) {
+    if (searchTerms.length >= pe.maxSearchTerms) break;
+    const tag = specificTags.find((t) =>
+      !searchTerms.some((s) => s.toLowerCase() === `${genre} ${t}`.toLowerCase()),
+    );
+    if (tag) {
+      searchTerms.push(`${genre} ${tag}`);
+    }
+  }
+
+  // Add remaining specific tags
+  for (const name of specificTags) {
+    if (searchTerms.length >= pe.maxSearchTerms) break;
+    if (!searchTerms.some((t) => t.toLowerCase() === name.toLowerCase())) {
       searchTerms.push(name);
     }
   }
@@ -63,8 +94,8 @@ export async function expandGamePool(
 
   for (const term of searchTerms) {
     try {
-      const results = await searchSteamStore(term);
-      for (const r of results) {
+      const searchResult = await searchSteamStore(term);
+      for (const r of searchResult.data) {
         if (!excludeIds.has(r.id) && !seen.has(r.id)) {
           seen.add(r.id);
           newIds.push(r.id);

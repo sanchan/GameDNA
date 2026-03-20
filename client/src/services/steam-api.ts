@@ -2,6 +2,7 @@
 // in browser mode. In Tauri, calls go directly to Steam (no proxy needed).
 
 import { config } from './config';
+import { logApiCall } from './api-audit';
 
 const PROXY_BASE = '/api/steam';
 // Only bypass proxy in Tauri production builds (https://tauri.localhost).
@@ -143,45 +144,89 @@ export interface PlayerSummary {
   loccountrycode?: string;
 }
 
+/** Fetch with audit logging — wraps fetch to record all external API calls. */
+async function auditedFetch(url: string, init?: RequestInit): Promise<Response> {
+  const start = Date.now();
+  // Strip API keys from logged URL for privacy
+  const sanitizedUrl = url.replace(/key=[^&]+/, 'key=***');
+  try {
+    const res = await fetch(url, init);
+    logApiCall({ timestamp: Date.now(), method: init?.method ?? 'GET', url: sanitizedUrl, status: res.status, durationMs: Date.now() - start });
+    return res;
+  } catch (e) {
+    logApiCall({ timestamp: Date.now(), method: init?.method ?? 'GET', url: sanitizedUrl, status: null, durationMs: Date.now() - start, error: e instanceof Error ? e.message : 'Unknown' });
+    throw e;
+  }
+}
+
 /** Fetch via proxy (browser) or directly (Tauri). For web API calls with API key. */
 async function fetchWithProxy(url: string, apiKey?: string): Promise<Response> {
   if (!checkDailyLimit()) throw new Error('Steam API daily limit (100,000 calls) reached. Try again tomorrow.');
   const resolved = resolveSteamUrl(url, apiKey);
-  if (IS_TAURI_PROD) return fetch(resolved);
+  if (IS_TAURI_PROD) return auditedFetch(resolved);
   const headers: Record<string, string> = {};
   if (apiKey) headers['x-steam-api-key'] = apiKey;
-  return fetch(url, { headers });
+  return auditedFetch(url, { headers });
 }
 
-export async function getOwnedGames(steamId: string, apiKey: string): Promise<OwnedGame[]> {
+export class SteamApiError extends Error {
+  constructor(
+    message: string,
+    public readonly code: 'NETWORK' | 'AUTH' | 'RATE_LIMIT' | 'NOT_FOUND' | 'PARSE' | 'DAILY_LIMIT',
+    public readonly status?: number,
+  ) {
+    super(message);
+    this.name = 'SteamApiError';
+  }
+}
+
+export interface SteamResult<T> {
+  data: T;
+  error?: SteamApiError;
+}
+
+function classifyError(e: unknown, res?: Response): SteamApiError {
+  if (e instanceof SteamApiError) return e;
+  if (res) {
+    if (res.status === 401 || res.status === 403) return new SteamApiError('Invalid API key or insufficient permissions', 'AUTH', res.status);
+    if (res.status === 429) return new SteamApiError('Steam API rate limit exceeded', 'RATE_LIMIT', res.status);
+    if (res.status === 404) return new SteamApiError('Resource not found', 'NOT_FOUND', res.status);
+    return new SteamApiError(`Steam API returned ${res.status}`, 'NETWORK', res.status);
+  }
+  const msg = e instanceof Error ? e.message : 'Unknown error';
+  if (msg.includes('daily limit')) return new SteamApiError(msg, 'DAILY_LIMIT');
+  return new SteamApiError(msg, 'NETWORK');
+}
+
+export async function getOwnedGames(steamId: string, apiKey: string): Promise<SteamResult<OwnedGame[]>> {
   try {
     await webApiLimiter.acquire();
     const res = await fetchWithProxy(
       `${PROXY_BASE}/web/IPlayerService/GetOwnedGames/v0001/?steamid=${steamId}&format=json&include_appinfo=1&include_played_free_games=1`,
       apiKey,
     );
-    if (!res.ok) return [];
+    if (!res.ok) return { data: [], error: classifyError(null, res) };
     const data = await res.json() as { response?: { games?: OwnedGame[] } };
-    return data.response?.games ?? [];
+    return { data: data.response?.games ?? [] };
   } catch (e) {
     console.error('[steam-api] GetOwnedGames error:', e);
-    return [];
+    return { data: [], error: classifyError(e) };
   }
 }
 
-export async function getWishlist(steamId: string, apiKey: string): Promise<number[]> {
+export async function getWishlist(steamId: string, apiKey: string): Promise<SteamResult<number[]>> {
   try {
     await webApiLimiter.acquire();
     const res = await fetchWithProxy(
       `${PROXY_BASE}/web/IWishlistService/GetWishlist/v1/?steamid=${steamId}`,
       apiKey,
     );
-    if (!res.ok) return [];
+    if (!res.ok) return { data: [], error: classifyError(null, res) };
     const data = await res.json() as { response: { items?: Array<{ appid: number }> } };
-    return (data.response.items ?? []).map((item) => item.appid);
+    return { data: (data.response.items ?? []).map((item) => item.appid) };
   } catch (e) {
     console.error('[steam-api] GetWishlist error:', e);
-    return [];
+    return { data: [], error: classifyError(e) };
   }
 }
 
@@ -192,8 +237,8 @@ export async function getAppDetails(appid: number, cc?: string): Promise<GameDet
     const ccParam = cc ? `&cc=${cc}` : '';
 
     const [detailsRes, reviewsRes] = await Promise.all([
-      fetch(resolveSteamUrl(`${PROXY_BASE}/store/appdetails?appids=${appid}${ccParam}`)),
-      fetch(resolveSteamUrl(`${PROXY_BASE}/reviews/${appid}?json=1&purchase_type=all&num_per_page=0`)),
+      auditedFetch(resolveSteamUrl(`${PROXY_BASE}/store/appdetails?appids=${appid}${ccParam}`)),
+      auditedFetch(resolveSteamUrl(`${PROXY_BASE}/reviews/${appid}?json=1&purchase_type=all&num_per_page=0`)),
     ]);
 
     if (!detailsRes.ok) return null;
@@ -300,7 +345,7 @@ export async function getPopularGameIds(): Promise<number[]> {
   try {
     await storeApiLimiter.acquire();
     if (!checkDailyLimit()) throw new Error('Steam API daily limit reached');
-    const res = await fetch(resolveSteamUrl(`${PROXY_BASE}/store/featured`));
+    const res = await auditedFetch(resolveSteamUrl(`${PROXY_BASE}/store/featured`));
     if (res.ok) {
       const data = await res.json() as {
         featured_win?: Array<{ id: number }>;
@@ -331,7 +376,7 @@ export async function fetchMoreGameIds(exclude: Set<number>): Promise<number[]> 
     try {
       await storeApiLimiter.acquire();
       if (!checkDailyLimit()) break;
-      const res = await fetch(resolveSteamUrl(url));
+      const res = await auditedFetch(resolveSteamUrl(url));
       if (!res.ok) continue;
       const data = await res.json() as Record<string, unknown>;
       const extractIds = (obj: unknown): void => {
@@ -359,77 +404,78 @@ export async function fetchMoreGameIds(exclude: Set<number>): Promise<number[]> 
 }
 
 /** Fetch all Steam community tags via the tagdata/populartags endpoint. */
-export async function getSteamTags(): Promise<{ tagid: number; name: string }[]> {
+export async function getSteamTags(): Promise<SteamResult<{ tagid: number; name: string }[]>> {
   try {
     await storeApiLimiter.acquire();
-    if (!checkDailyLimit()) throw new Error('Steam API daily limit reached');
-    const res = await fetch(resolveSteamUrl(`${PROXY_BASE}/tagdata/populartags/english`));
-    if (!res.ok) return [];
+    if (!checkDailyLimit()) return { data: [], error: new SteamApiError('Steam API daily limit reached', 'DAILY_LIMIT') };
+    const res = await auditedFetch(resolveSteamUrl(`${PROXY_BASE}/tagdata/populartags/english`));
+    if (!res.ok) return { data: [], error: classifyError(null, res) };
     const data = await res.json();
-    // Response is an array of { tagid, name } objects
     if (Array.isArray(data)) {
-      return data.filter((t: unknown) => t && typeof t === 'object' && 'name' in (t as Record<string, unknown>))
+      const tags = data.filter((t: unknown) => t && typeof t === 'object' && 'name' in (t as Record<string, unknown>))
         .map((t: { tagid: number; name: string }) => ({ tagid: t.tagid, name: t.name }));
+      return { data: tags };
     }
-    return [];
+    return { data: [] };
   } catch (e) {
     console.error('[steam-api] getSteamTags error:', e);
-    return [];
+    return { data: [], error: classifyError(e) };
   }
 }
 
 /** Search the Steam Store by term via the storesearch endpoint. */
-export async function searchSteamStore(term: string): Promise<{ id: number; name: string; headerImage: string }[]> {
-  if (!term.trim()) return [];
+export async function searchSteamStore(term: string): Promise<SteamResult<{ id: number; name: string; headerImage: string }[]>> {
+  if (!term.trim()) return { data: [] };
   try {
     await storeApiLimiter.acquire();
-    if (!checkDailyLimit()) return [];
-    const res = await fetch(resolveSteamUrl(`${PROXY_BASE}/store/storesearch?term=${encodeURIComponent(term)}&l=english&cc=us`));
-    if (!res.ok) return [];
+    if (!checkDailyLimit()) return { data: [], error: new SteamApiError('Steam API daily limit reached', 'DAILY_LIMIT') };
+    const res = await auditedFetch(resolveSteamUrl(`${PROXY_BASE}/store/storesearch?term=${encodeURIComponent(term)}&l=english&cc=us`));
+    if (!res.ok) return { data: [], error: classifyError(null, res) };
     const data = await res.json() as { items?: Array<{ id: number; name: string; tiny_image: string }> };
-    return (data.items ?? []).map((item) => ({
+    const items = (data.items ?? []).map((item) => ({
       id: item.id,
       name: item.name,
       headerImage: item.tiny_image?.replace('capsule_sm_120', 'header') ?? '',
     }));
+    return { data: items };
   } catch (e) {
     console.error('[steam-api] searchSteamStore error:', e);
-    return [];
+    return { data: [], error: classifyError(e) };
   }
 }
 
-export async function getPlayerSummary(steamId: string, apiKey: string): Promise<PlayerSummary | null> {
+export async function getPlayerSummary(steamId: string, apiKey: string): Promise<SteamResult<PlayerSummary | null>> {
   try {
     await webApiLimiter.acquire();
     const res = await fetchWithProxy(
       `${PROXY_BASE}/web/ISteamUser/GetPlayerSummaries/v0002/?steamids=${steamId}`,
       apiKey,
     );
-    if (!res.ok) return null;
+    if (!res.ok) return { data: null, error: classifyError(null, res) };
     const data = await res.json() as {
       response?: { players?: PlayerSummary[] };
     };
-    return data.response?.players?.[0] ?? null;
-  } catch {
-    return null;
+    return { data: data.response?.players?.[0] ?? null };
+  } catch (e) {
+    return { data: null, error: classifyError(e) };
   }
 }
 
 /** Resolve a Steam profile URL or vanity name to a steam ID. */
-export async function resolveVanityUrl(vanityName: string, apiKey: string): Promise<string | null> {
+export async function resolveVanityUrl(vanityName: string, apiKey: string): Promise<SteamResult<string | null>> {
   try {
     await webApiLimiter.acquire();
     const res = await fetchWithProxy(
       `${PROXY_BASE}/web/ISteamUser/ResolveVanityURL/v0001/?vanityurl=${encodeURIComponent(vanityName)}`,
       apiKey,
     );
-    if (!res.ok) return null;
+    if (!res.ok) return { data: null, error: classifyError(null, res) };
     const data = await res.json() as { response?: { success: number; steamid?: string } };
     if (data.response?.success === 1 && data.response.steamid) {
-      return data.response.steamid;
+      return { data: data.response.steamid };
     }
-    return null;
-  } catch {
-    return null;
+    return { data: null };
+  } catch (e) {
+    return { data: null, error: classifyError(e) };
   }
 }

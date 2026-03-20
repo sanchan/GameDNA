@@ -2,11 +2,25 @@
 // Runs entirely in the browser with progress callbacks.
 
 import * as db from '../db/queries';
+import { getDb } from '../db/index';
 import { getOwnedGames, getWishlist, getPopularGameIds, getSteamTags } from './steam-api';
 import { ensureGamesCached, forceRefreshGames } from './game-cache';
 import { recalculateTasteProfile } from './taste-profile';
 import { generateRecommendations } from './recommendation';
 import { expandGamePool } from './pool-expansion';
+
+/** Run a callback inside a SQLite transaction. Rolls back on error. */
+function withTransaction(fn: () => void): void {
+  const d = getDb();
+  d.run('BEGIN');
+  try {
+    fn();
+    d.run('COMMIT');
+  } catch (e) {
+    d.run('ROLLBACK');
+    throw e;
+  }
+}
 
 export type SyncCategory = 'library' | 'wishlist' | 'backlog' | 'tags' | 'cache';
 export const ALL_CATEGORIES: SyncCategory[] = ['library', 'wishlist', 'backlog', 'tags'];
@@ -94,18 +108,25 @@ export async function runSync(
       cats.library = { status: 'syncing', progress: 10, detail: 'Fetching owned games from Steam...' };
       onProgress(deriveOverall(cats, gamesCount, wishlistCount));
 
-      ownedGames = await getOwnedGames(steamId, apiKey);
+      const ownedResult = await getOwnedGames(steamId, apiKey);
+      if (ownedResult.error) {
+        cats.library = { status: 'error', progress: 0, detail: `Steam API error: ${ownedResult.error.message}` };
+        onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+        return;
+      }
+      ownedGames = ownedResult.data;
       gamesCount = ownedGames.length;
       cats.library = { status: 'syncing', progress: 50, detail: `Found ${ownedGames.length} games. Saving...` };
       onProgress(deriveOverall(cats, gamesCount, wishlistCount));
 
-      for (const game of ownedGames) {
-        db.upsertGameStub(game.appid, game.name || `Game ${game.appid}`);
-      }
-
-      for (const game of ownedGames) {
-        db.upsertUserGame(userId, game.appid, game.playtime_forever, game.rtime_last_played ?? null);
-      }
+      withTransaction(() => {
+        for (const game of ownedGames) {
+          db.upsertGameStub(game.appid, game.name || `Game ${game.appid}`);
+        }
+        for (const game of ownedGames) {
+          db.upsertUserGame(userId, game.appid, game.playtime_forever, game.rtime_last_played ?? null);
+        }
+      });
       db.batchPersist();
 
       cats.library = { status: 'complete', progress: 100, detail: 'Complete' };
@@ -122,21 +143,28 @@ export async function runSync(
       cats.wishlist = { status: 'syncing', progress: 10, detail: 'Fetching wishlist from Steam...' };
       onProgress(deriveOverall(cats, gamesCount, wishlistCount));
 
-      wishlistAppids = await getWishlist(steamId, apiKey);
+      const wishlistResult = await getWishlist(steamId, apiKey);
+      if (wishlistResult.error) {
+        cats.wishlist = { status: 'error', progress: 0, detail: `Steam API error: ${wishlistResult.error.message}` };
+        onProgress(deriveOverall(cats, gamesCount, wishlistCount));
+        return;
+      }
+      wishlistAppids = wishlistResult.data;
       wishlistCount = wishlistAppids.length;
       cats.wishlist = { status: 'syncing', progress: 50, detail: `Found ${wishlistAppids.length} wishlist items. Saving...` };
       onProgress(deriveOverall(cats, gamesCount, wishlistCount));
 
-      for (const appid of wishlistAppids) {
-        db.upsertGameStub(appid, `Game ${appid}`);
-      }
-
-      const ownedSet = new Set(ownedGames.map((g) => g.appid));
-      for (const appid of wishlistAppids) {
-        if (!ownedSet.has(appid)) {
-          db.upsertUserGame(userId, appid, 0, null, true);
+      withTransaction(() => {
+        for (const appid of wishlistAppids) {
+          db.upsertGameStub(appid, `Game ${appid}`);
         }
-      }
+        const ownedSet = new Set(ownedGames.map((g) => g.appid));
+        for (const appid of wishlistAppids) {
+          if (!ownedSet.has(appid)) {
+            db.upsertUserGame(userId, appid, 0, null, true);
+          }
+        }
+      });
       db.batchPersist();
 
       cats.wishlist = { status: 'complete', progress: 100, detail: 'Complete' };
@@ -249,7 +277,9 @@ export async function runSync(
 
       let steamTags: { name: string }[] = [];
       try {
-        steamTags = await getSteamTags();
+        const tagsResult = await getSteamTags();
+        steamTags = tagsResult.data;
+        if (tagsResult.error) console.warn('[sync] Steam tags fetch issue:', tagsResult.error.message);
       } catch (e) {
         console.error('[sync] Steam tags fetch error:', e);
       }

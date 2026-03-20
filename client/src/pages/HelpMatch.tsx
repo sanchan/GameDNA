@@ -188,15 +188,58 @@ export default function HelpMatch() {
           </div>
         </div>
 
+        {/* Algorithm Details */}
+        <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <i className="fa-solid fa-microscope text-cyan-400" />
+            Algorithm Details
+          </h2>
+
+          <div className="space-y-4">
+            <div className="bg-[#1a1a1a] rounded-xl p-4">
+              <h3 className="text-sm font-semibold text-white mb-2">Temporal Decay</h3>
+              <p className="text-sm text-gray-400 leading-relaxed mb-2">
+                Recent swipes matter more than old ones. Each swipe's influence decays exponentially over time — roughly halving every 70 days. This ensures your taste profile evolves with you.
+              </p>
+              <code className="text-xs font-mono text-[var(--primary)] bg-[#141414] rounded px-2 py-1 inline-block">
+                weight = baseWeight × e<sup>−0.01 × days</sup>
+              </code>
+            </div>
+
+            <div className="bg-[#1a1a1a] rounded-xl p-4">
+              <h3 className="text-sm font-semibold text-white mb-2">Playtime Normalization</h3>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                8 hours in a short indie game signals stronger affinity than 8 hours in a 100-hour RPG. Playtime is normalized by expected genre duration so that completed short games weigh as heavily as partially played long games.
+              </p>
+            </div>
+
+            <div className="bg-[#1a1a1a] rounded-xl p-4">
+              <h3 className="text-sm font-semibold text-white mb-2">Bayesian Review Credibility</h3>
+              <p className="text-sm text-gray-400 leading-relaxed mb-2">
+                A game with 10 reviews at 95% isn't as trustworthy as 50,000 reviews at 95%. Games with fewer reviews are pulled toward the global average ({config.globalAverageReviewScore}%) proportionally.
+              </p>
+              <code className="text-xs font-mono text-[var(--primary)] bg-[#141414] rounded px-2 py-1 inline-block">
+                adjusted = credibility × rawScore + (1 − credibility) × {config.globalAverageReviewScore}%
+              </code>
+            </div>
+          </div>
+        </div>
+
         {/* AI Layer */}
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
             <i className="fa-solid fa-brain text-purple-400" />
             {t('matchExplainer.aiLayerTitle')}
           </h2>
-          <p className="text-sm text-gray-300 leading-relaxed">
+          <p className="text-sm text-gray-300 leading-relaxed mb-4">
             {t('matchExplainer.aiLayerDesc')}
           </p>
+          <div className="bg-[#1a1a1a] rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-white mb-2">Score Transparency</h3>
+            <p className="text-sm text-gray-400 leading-relaxed">
+              When AI re-ranks a recommendation, both scores are shown: the heuristic score (from the formula above) and the AI-adjusted score. You can see exactly how much the AI changed each recommendation and why.
+            </p>
+          </div>
         </div>
       </div>
     </div>

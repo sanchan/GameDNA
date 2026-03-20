@@ -32,17 +32,33 @@ function weightedMatch(gameItems: string[], profileMap: Map<string, number>): nu
   return totalWeight > 0 ? matched / totalWeight : 0;
 }
 
-function heuristicScore(
+export interface ScoreBreakdown {
+  genreMatch: number;
+  tagMatch: number;
+  reviewScore: number;
+  recency: number;
+  matchedGenres: string[];
+  matchedTags: string[];
+  reviewCredibility: number;
+}
+
+function heuristicScoreWithBreakdown(
   game: Record<string, unknown>,
   topGenres: Map<string, number>,
   topTags: Map<string, number>,
-): number {
+): { score: number; breakdown: ScoreBreakdown } {
   const gameGenres = parseJson<string[]>(game.genres, []);
   const gameTags = parseJson<string[]>(game.tags, []);
 
   const genreMatch = weightedMatch(gameGenres, topGenres);
   const tagMatch = weightedMatch(gameTags, topTags);
-  const reviewNorm = ((game.review_score as number) ?? 50) / 100;
+
+  // Bayesian review credibility: games with few reviews are pulled toward global average
+  const rawReviewScore = (game.review_score as number) ?? config.globalAverageReviewScore;
+  const reviewCount = (game.review_count as number) ?? 0;
+  const credibility = Math.min(reviewCount / config.reviewCredibilityThreshold, 1.0);
+  const adjustedReviewScore = credibility * rawReviewScore + (1 - credibility) * config.globalAverageReviewScore;
+  const reviewNorm = adjustedReviewScore / 100;
 
   let recency = 0.5;
   if (game.release_date) {
@@ -52,8 +68,31 @@ function heuristicScore(
     }
   }
 
+  // Track which genres/tags actually matched the profile
+  const matchedGenres = gameGenres.filter((g) => {
+    const s = topGenres.get(g.toLowerCase());
+    return s !== undefined && s > 0;
+  });
+  const matchedTags = gameTags.filter((t) => {
+    const s = topTags.get(t.toLowerCase());
+    return s !== undefined && s > 0;
+  });
+
   const w = config.scoring;
-  return w.genreWeight * genreMatch + w.tagWeight * tagMatch + w.reviewWeight * reviewNorm + w.recencyWeight * recency;
+  const score = w.genreWeight * genreMatch + w.tagWeight * tagMatch + w.reviewWeight * reviewNorm + w.recencyWeight * recency;
+
+  return {
+    score,
+    breakdown: {
+      genreMatch,
+      tagMatch,
+      reviewScore: reviewNorm,
+      recency,
+      matchedGenres,
+      matchedTags,
+      reviewCredibility: credibility,
+    },
+  };
 }
 
 export async function generateRecommendations(userId: number, onlyDismissed = false): Promise<number> {
@@ -112,10 +151,10 @@ export async function generateRecommendations(userId: number, onlyDismissed = fa
   });
 
   const scored = filtered
-    .map((game) => ({
-      game,
-      hScore: heuristicScore(game, topGenres, topTags),
-    }))
+    .map((game) => {
+      const { score, breakdown } = heuristicScoreWithBreakdown(game, topGenres, topTags);
+      return { game, hScore: score, breakdown };
+    })
     .sort((a, b) => b.hScore - a.hScore)
     .slice(0, config.recHeuristicTopN);
 
@@ -128,13 +167,16 @@ export async function generateRecommendations(userId: number, onlyDismissed = fa
   if (aiResults) {
     for (const result of aiResults) {
       const source = result.explanation ? 'ai' : 'heuristic';
-      db.upsertRecommendation(userId, result.appid, result.score, result.explanation, source);
+      const entry = scored.find((s) => (s.game.id as number) === result.appid);
+      const breakdownJson = entry ? JSON.stringify(entry.breakdown) : '';
+      db.upsertRecommendation(userId, result.appid, result.score, result.explanation, source, breakdownJson, entry?.hScore);
       count++;
     }
   } else {
     // Fallback: heuristic only
     for (const s of scored) {
-      db.upsertRecommendation(userId, s.game.id as number, s.hScore, '', 'heuristic');
+      const breakdownJson = JSON.stringify(s.breakdown);
+      db.upsertRecommendation(userId, s.game.id as number, s.hScore, '', 'heuristic', breakdownJson, s.hScore);
       count++;
     }
   }

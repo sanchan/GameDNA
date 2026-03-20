@@ -71,8 +71,18 @@ export async function decryptApiKey(
   return dec.decode(plaintext);
 }
 
-// Stable passphrase — does NOT use navigator.userAgent (changes on every browser update).
-// Not meant to be highly secure — just prevents casual access to the stored key.
+// Device-derived passphrase for local API key obfuscation.
+//
+// THREAT MODEL: This is NOT encryption against a determined attacker. The
+// passphrase is derived from ~8 possible browser language codes plus a fixed
+// constant, so the entire keyspace can be brute-forced trivially. This is
+// intentional: GameDNA stores data locally, and anyone with filesystem access
+// to the user's machine already has access to everything (browser storage,
+// cookies, password managers, etc.). The obfuscation simply prevents the API
+// key from sitting in plaintext in the DB, deterring casual inspection.
+//
+// For real security in Tauri desktop builds, consider using the OS keychain
+// (tauri-plugin-stronghold or keyring integration) in the future.
 export function getDevicePassphrase(): string {
   const parts = [
     navigator.language,

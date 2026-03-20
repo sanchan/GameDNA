@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/use-auth';
 import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
 import { generateRecommendations } from '../services/recommendation';
+import { whyNotThisGame, type WhyNotResult } from '../services/why-not';
 import GameGrid from '../components/GameGrid';
 import { Select } from '../components/Select';
 import WhyThisGame from '../components/WhyThisGame';
@@ -23,6 +24,8 @@ export default function Recommendations() {
   const [genreFilter, setGenreFilter] = useState('all');
   const [priceFilter, setPriceFilter] = useState('all');
   const prevSyncStatus = useRef(syncStatus);
+  const [whyNotQuery, setWhyNotQuery] = useState('');
+  const [whyNotResult, setWhyNotResult] = useState<WhyNotResult | null>(null);
 
   const fetchRecs = useCallback(() => {
     if (!userId) return;
@@ -36,14 +39,22 @@ export default function Recommendations() {
       if (genreFilter !== 'all') opts.genres = [genreFilter];
 
       const data = queries.getRecommendations(userId, opts);
-      setRecs(data.map((r) => ({
-        id: r.id,
-        game: r.game,
-        score: r.score,
-        aiExplanation: r.aiExplanation,
-        generatedAt: r.generatedAt,
-        source: r.source as 'ai' | 'heuristic',
-      })));
+      setRecs(data.map((r) => {
+        let scoreBreakdown = null;
+        if (r.scoreBreakdown) {
+          try { scoreBreakdown = JSON.parse(r.scoreBreakdown); } catch { /* ignore */ }
+        }
+        return {
+          id: r.id,
+          game: r.game,
+          score: r.score,
+          aiExplanation: r.aiExplanation,
+          generatedAt: r.generatedAt,
+          source: r.source as 'ai' | 'heuristic',
+          scoreBreakdown,
+          heuristicScore: r.heuristicScore,
+        };
+      }));
       setDismissedIds(new Set());
     } catch {
       // ignore
@@ -183,6 +194,57 @@ export default function Recommendations() {
               { value: 'over30', label: t('recommendations.over30') },
             ]}
           />
+
+          {/* Why Not This Game? search */}
+          <div className="flex items-center gap-2 ml-auto">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Why not this game? (App ID)"
+                value={whyNotQuery}
+                onChange={(e) => {
+                  setWhyNotQuery(e.target.value);
+                  setWhyNotResult(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && whyNotQuery.trim() && userId) {
+                    const appid = parseInt(whyNotQuery.trim());
+                    if (!isNaN(appid)) {
+                      setWhyNotResult(whyNotThisGame(userId, appid));
+                    }
+                  }
+                }}
+                className="bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-1.5 text-sm w-48 focus:border-[var(--primary)] outline-none transition-colors"
+              />
+              <i className="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Why Not result */}
+      {whyNotResult && (
+        <div className="bg-[#242424] border border-[#333] rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <i className="fa-solid fa-circle-question text-amber-400" />
+              {whyNotResult.found ? `Why not "${whyNotResult.gameName}"?` : 'Game not found'}
+            </h3>
+            <button onClick={() => setWhyNotResult(null)} className="text-gray-500 hover:text-white text-xs">
+              <i className="fa-solid fa-xmark" />
+            </button>
+          </div>
+          <ul className="space-y-1">
+            {whyNotResult.reasons.map((r, i) => (
+              <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
+                <i className="fa-solid fa-circle text-[4px] mt-2 shrink-0 text-gray-500" />
+                {r}
+              </li>
+            ))}
+          </ul>
+          {whyNotResult.score != null && (
+            <p className="text-xs text-gray-500 mt-2">Match score: {Math.round(whyNotResult.score * 100)}%</p>
+          )}
         </div>
       )}
 

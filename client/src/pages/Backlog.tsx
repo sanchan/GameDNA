@@ -120,7 +120,7 @@ export default function Backlog() {
         reason: `Highly rated (${e.game.reviewScore}%) and matches your library genres.`,
       })));
       setLastAnalyzed(new Date());
-      toast(`Analyzed ${sorted.length} games (heuristic — configure AI for deeper analysis)`, 'success');
+      toast(`Sorted ${sorted.length} games by review score`, 'success');
     } catch {
       toast('Analysis failed', 'error');
     } finally {

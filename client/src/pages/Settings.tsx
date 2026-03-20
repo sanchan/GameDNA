@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, useSyncExternalStore } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { useAuth } from '../hooks/use-auth';
 import { useDb } from '../contexts/db-context';
@@ -12,6 +12,7 @@ import type { AiProvider } from '../services/ai-engine';
 import type { UserSettings } from '../../../shared/types';
 import { DEFAULT_EXPLANATION_TEMPLATE } from '../services/ai-features';
 import { Select } from '../components/Select';
+import { getAuditLog, clearAuditLog, subscribeAuditLog, type ApiAuditEntry } from '../services/api-audit';
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
@@ -390,6 +391,9 @@ export default function Settings() {
           <DataManagement />
         </div>
 
+        {/* API Audit Log */}
+        <ApiAuditLogSection />
+
         {/* Migration */}
         <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -475,6 +479,62 @@ export default function Settings() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ApiAuditLogSection() {
+  const log = useSyncExternalStore(subscribeAuditLog, getAuditLog);
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <i className="fa-solid fa-scroll text-gray-400" />
+          API Call Log
+        </h2>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">{log.length} calls this session</span>
+          {log.length > 0 && (
+            <button
+              onClick={clearAuditLog}
+              className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+      <p className="text-sm text-gray-400 mb-4">
+        Every external API call the app makes is logged here. No data leaves your device except Steam API requests shown below.
+      </p>
+      {log.length === 0 ? (
+        <p className="text-sm text-gray-500 italic">No API calls recorded yet.</p>
+      ) : (
+        <>
+          <div className="space-y-1 max-h-64 overflow-y-auto">
+            {log.slice(-(expanded ? 100 : 10)).reverse().map((entry) => (
+              <div key={entry.id} className="flex items-center gap-2 text-xs font-mono bg-[#1a1a1a] rounded px-3 py-2">
+                <span className="text-gray-500 shrink-0">{new Date(entry.timestamp).toLocaleTimeString()}</span>
+                <span className={`shrink-0 ${entry.status && entry.status < 400 ? 'text-green-400' : 'text-red-400'}`}>
+                  {entry.status ?? 'ERR'}
+                </span>
+                <span className="text-gray-300 truncate">{entry.url}</span>
+                <span className="text-gray-500 shrink-0 ml-auto">{entry.durationMs}ms</span>
+              </div>
+            ))}
+          </div>
+          {log.length > 10 && !expanded && (
+            <button
+              onClick={() => setExpanded(true)}
+              className="mt-2 text-xs text-[var(--primary)] hover:underline"
+            >
+              Show all {log.length} entries
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }

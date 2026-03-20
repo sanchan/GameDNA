@@ -35,6 +35,16 @@ export interface TasteProfile {
   aiSummary: string | null;
 }
 
+export interface ScoreBreakdown {
+  genreMatch: number;
+  tagMatch: number;
+  reviewScore: number;
+  recency: number;
+  matchedGenres: string[];
+  matchedTags: string[];
+  reviewCredibility: number;
+}
+
 export interface Recommendation {
   id: number;
   game: Game;
@@ -42,6 +52,8 @@ export interface Recommendation {
   aiExplanation: string | null;
   generatedAt: number;
   source: 'ai' | 'heuristic';
+  scoreBreakdown?: ScoreBreakdown | null;
+  heuristicScore?: number | null;
 }
 
 export interface ProfileSnapshot {

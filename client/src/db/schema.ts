@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS games (
   cached_at INTEGER
 );
 
+CREATE INDEX IF NOT EXISTS games_name_idx ON games(name);
+
 CREATE TABLE IF NOT EXISTS user_games (
   user_id INTEGER REFERENCES users(id),
   game_id INTEGER REFERENCES games(id),
@@ -247,4 +249,6 @@ export const MIGRATIONS_SQL = [
   `ALTER TABLE users RENAME COLUMN ignored_tags TO blacklisted_tags`,
   `ALTER TABLE local_config ADD COLUMN custom_display_name TEXT`,
   `ALTER TABLE taste_profiles ADD COLUMN last_expansion_at INTEGER DEFAULT 0`,
+  `ALTER TABLE recommendations ADD COLUMN score_breakdown TEXT`,
+  `ALTER TABLE recommendations ADD COLUMN heuristic_score REAL`,
 ];

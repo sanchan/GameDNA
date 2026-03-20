@@ -29,9 +29,9 @@ export function recalculateTasteProfile(userId: number): void {
     [userId],
   );
 
-  // Fetch all swipe_history with game data
-  const swipeRows = queryAll<{ decision: string; genres: string; tags: string; price_cents: number | null }>(
-    `SELECT sh.decision, g.genres, g.tags, g.price_cents
+  // Fetch all swipe_history with game data and timestamp for temporal decay
+  const swipeRows = queryAll<{ decision: string; genres: string; tags: string; price_cents: number | null; swiped_at: number | null }>(
+    `SELECT sh.decision, g.genres, g.tags, g.price_cents, sh.swiped_at
      FROM swipe_history sh
      INNER JOIN games g ON sh.game_id = g.id
      WHERE sh.user_id = ?`,
@@ -50,15 +50,25 @@ export function recalculateTasteProfile(userId: number): void {
   const genreScoresRaw: Record<string, number> = {};
   const tagScoresRaw: Record<string, number> = {};
 
+  const nowSec = Math.floor(Date.now() / 1000);
+
   for (const row of userGamesRows) {
     const tw = config.tasteWeights;
     let weight: number;
     if (row.from_wishlist === 1) {
-      // Wishlist games use dedicated wishlist weight
       weight = tw.wishlist;
     } else {
       const playtime = row.playtime_mins ?? 0;
-      weight = playtime > 600 ? tw.highPlaytime : playtime >= 60 ? tw.mediumPlaytime : tw.lowPlaytime;
+      // Normalize playtime by expected genre duration to avoid RPG/MMO inflation
+      const genres = parseJson<string[]>(row.genres, []);
+      const primaryGenre = genres[0]?.toLowerCase() ?? '';
+      const expectedHours = config.estimatedPlaytimeByGenre[primaryGenre] ?? config.estimatedPlaytimeDefault;
+      const actualHours = playtime / 60;
+      const normalizedPlaytime = actualHours / expectedHours; // >1 means played beyond expected
+
+      if (normalizedPlaytime > 1.0) weight = tw.highPlaytime;
+      else if (normalizedPlaytime > 0.3) weight = tw.mediumPlaytime;
+      else weight = tw.lowPlaytime;
     }
 
     for (const g of parseJson<string[]>(row.genres, [])) {
@@ -71,7 +81,15 @@ export function recalculateTasteProfile(userId: number): void {
 
   for (const row of swipeRows) {
     const sw = config.tasteWeights;
-    const weight = row.decision === 'yes' ? sw.swipeYes : row.decision === 'maybe' ? sw.swipeMaybe : sw.swipeNo;
+    const baseWeight = row.decision === 'yes' ? sw.swipeYes : row.decision === 'maybe' ? sw.swipeMaybe : sw.swipeNo;
+
+    // Apply temporal decay: recent swipes matter more than old ones
+    let decayFactor = 1.0;
+    if (row.swiped_at) {
+      const daysSinceSwipe = (nowSec - row.swiped_at) / 86400;
+      decayFactor = Math.exp(-config.temporalDecayRate * daysSinceSwipe);
+    }
+    const weight = baseWeight * decayFactor;
 
     for (const g of parseJson<string[]>(row.genres, [])) {
       genreScoresRaw[g] = (genreScoresRaw[g] ?? 0) + weight;

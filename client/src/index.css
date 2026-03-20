@@ -137,6 +137,32 @@ main {
   left: 0;
 }
 
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Light theme */
+:root[data-theme="light"] {
+  --background: #f8f9fa;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --secondary: #e5e7eb;
+  --secondary-foreground: #1a1a1a;
+  --muted: #e5e7eb;
+  --muted-foreground: #6b7280;
+  --accent: #e5e7eb;
+  --accent-foreground: #1a1a1a;
+  --border: #d1d5db;
+  --input: #d1d5db;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;

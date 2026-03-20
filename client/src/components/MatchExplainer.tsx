@@ -2,13 +2,17 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { config } from '../services/config';
+import type { ScoreBreakdown } from '../../../shared/types';
 
 interface MatchExplainerProps {
   score: number;
   onClose: () => void;
+  breakdown?: ScoreBreakdown | null;
+  source?: 'ai' | 'heuristic';
+  heuristicScore?: number | null;
 }
 
-export default function MatchExplainer({ score, onClose }: MatchExplainerProps) {
+export default function MatchExplainer({ score, onClose, breakdown, source, heuristicScore }: MatchExplainerProps) {
   const { t } = useTranslation();
   const rounded = Math.round(score);
 
@@ -128,27 +132,82 @@ export default function MatchExplainer({ score, onClose }: MatchExplainerProps) 
             </div>
           </div>
 
+          {/* Per-game score breakdown */}
+          {breakdown && (
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-3">Score Breakdown</h3>
+              <div className="space-y-2">
+                {[
+                  { label: 'Genre match', value: breakdown.genreMatch, weight: weights.genreWeight, color: 'bg-purple-500', detail: breakdown.matchedGenres.length > 0 ? breakdown.matchedGenres.join(', ') : 'No matches' },
+                  { label: 'Tag match', value: breakdown.tagMatch, weight: weights.tagWeight, color: 'bg-blue-500', detail: breakdown.matchedTags.length > 0 ? breakdown.matchedTags.slice(0, 5).join(', ') : 'No matches' },
+                  { label: 'Review score', value: breakdown.reviewScore, weight: weights.reviewWeight, color: 'bg-green-500', detail: breakdown.reviewCredibility < 1 ? `Credibility: ${Math.round(breakdown.reviewCredibility * 100)}%` : 'Full credibility' },
+                  { label: 'Recency', value: breakdown.recency, weight: weights.recencyWeight, color: 'bg-amber-500', detail: '' },
+                ].map((item) => (
+                  <div key={item.label} className="bg-[#242424] rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-gray-300">{item.label}</span>
+                      <span className="text-sm font-mono text-white">{Math.round(item.value * 100)}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden mb-1">
+                      <div
+                        className={`h-full rounded-full ${item.color}`}
+                        style={{ width: `${Math.round(item.value * 100)}%` }}
+                      />
+                    </div>
+                    {item.detail && (
+                      <p className="text-xs text-gray-500 mt-1">{item.detail}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI vs Heuristic visibility */}
+          {source === 'ai' && heuristicScore != null && (
+            <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
+              <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
+                <i className="fa-solid fa-brain text-purple-400" />
+                AI Re-ranking
+              </h3>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-gray-400">Heuristic: <span className="text-white font-mono">{Math.round(heuristicScore * 100)}%</span></span>
+                <i className="fa-solid fa-arrow-right text-purple-400" />
+                <span className="text-gray-400">AI: <span className="text-white font-mono">{rounded}%</span></span>
+                {score > heuristicScore ? (
+                  <span className="text-xs text-green-400">+{Math.round((score - heuristicScore) * 100)}%</span>
+                ) : score < heuristicScore ? (
+                  <span className="text-xs text-red-400">{Math.round((score - heuristicScore) * 100)}%</span>
+                ) : null}
+              </div>
+            </div>
+          )}
+
           {/* Taste profile explanation */}
-          <div className="bg-[#242424] border border-[#333] rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
-              <i className="fa-solid fa-dna text-[var(--primary)]" />
-              {t('matchExplainer.tasteProfileTitle')}
-            </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              {t('matchExplainer.tasteProfileDesc')} {t('matchExplainer.tasteProfileSignals.library')} {t('matchExplainer.tasteProfileSignals.swipes')}
-            </p>
-          </div>
+          {!breakdown && (
+            <div className="bg-[#242424] border border-[#333] rounded-xl p-4">
+              <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
+                <i className="fa-solid fa-dna text-[var(--primary)]" />
+                {t('matchExplainer.tasteProfileTitle')}
+              </h3>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                {t('matchExplainer.tasteProfileDesc')} {t('matchExplainer.tasteProfileSignals.library')} {t('matchExplainer.tasteProfileSignals.swipes')}
+              </p>
+            </div>
+          )}
 
           {/* AI layer note */}
-          <div className="bg-[#242424] border border-[#333] rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
-              <i className="fa-solid fa-brain text-purple-400" />
-              {t('matchExplainer.aiLayerTitle')}
-            </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              {t('matchExplainer.aiLayerDesc')}
-            </p>
-          </div>
+          {!breakdown && (
+            <div className="bg-[#242424] border border-[#333] rounded-xl p-4">
+              <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
+                <i className="fa-solid fa-brain text-purple-400" />
+                {t('matchExplainer.aiLayerTitle')}
+              </h3>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                {t('matchExplainer.aiLayerDesc')}
+              </p>
+            </div>
+          )}
 
           {/* Link to full page */}
           <div className="text-center pt-1">

@@ -112,15 +112,23 @@ export default function Onboarding() {
 
     try {
       // Validate API key by fetching player summary
-      const summary = await getPlayerSummary(resolvedId, apiKey.trim());
-      if (!summary) {
+      const result = await getPlayerSummary(resolvedId, apiKey.trim());
+      if (result.error) {
+        const msg = result.error.code === 'AUTH'
+          ? 'Invalid API key. Please check your Steam Web API key is correct.'
+          : `Verification failed: ${result.error.message}`;
+        setError(msg);
+        setLoading(false);
+        return;
+      }
+      if (!result.data) {
         setError('Could not verify your Steam ID and API key. Please check both values are correct.');
         setLoading(false);
         return;
       }
 
-      setPlayerName(summary.personaname);
-      setPlayerAvatar(summary.avatarfull);
+      setPlayerName(result.data.personaname);
+      setPlayerAvatar(result.data.avatarfull);
       setStep('preferences');
     } catch (e) {
       setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
@@ -135,7 +143,8 @@ export default function Onboarding() {
     setLoading(true);
 
     try {
-      const summary = await getPlayerSummary(resolvedId, apiKey.trim());
+      const summaryResult = await getPlayerSummary(resolvedId, apiKey.trim());
+      const summary = summaryResult.data;
 
       // Save config with preferences
       await queries.saveLocalConfig({
