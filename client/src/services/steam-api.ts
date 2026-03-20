@@ -4,14 +4,19 @@
 import { config } from './config';
 
 const PROXY_BASE = `${import.meta.env.VITE_API_BASE || '/api'}/steam`;
-const IS_TAURI = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+// Only bypass proxy in Tauri production builds (https://tauri.localhost).
+// In tauri:dev the webview loads from http://localhost:5173 where CORS applies,
+// but the proxy is running so we use it like browser mode.
+const IS_TAURI_PROD = typeof window !== 'undefined'
+  && '__TAURI_INTERNALS__' in window
+  && window.location.protocol !== 'http:';
 
 /**
  * In Tauri mode, convert proxy URLs to direct Steam API URLs.
  * In browser mode, return the proxy URL unchanged.
  */
 function resolveSteamUrl(proxyUrl: string, apiKey?: string): string {
-  if (!IS_TAURI) return proxyUrl;
+  if (!IS_TAURI_PROD) return proxyUrl;
 
   const rel = proxyUrl.startsWith(PROXY_BASE) ? proxyUrl.slice(PROXY_BASE.length) : proxyUrl;
 
@@ -142,7 +147,7 @@ export interface PlayerSummary {
 async function fetchWithProxy(url: string, apiKey?: string): Promise<Response> {
   if (!checkDailyLimit()) throw new Error('Steam API daily limit (100,000 calls) reached. Try again tomorrow.');
   const resolved = resolveSteamUrl(url, apiKey);
-  if (IS_TAURI) return fetch(resolved);
+  if (IS_TAURI_PROD) return fetch(resolved);
   const headers: Record<string, string> = {};
   if (apiKey) headers['x-steam-api-key'] = apiKey;
   return fetch(url, { headers });
