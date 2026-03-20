@@ -4,17 +4,15 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run dev:proxy & bun run dev:client",
-    "dev:proxy": "bun --watch server/proxy.ts",
-    "dev:client": "vite --config client/vite.config.ts",
+    "dev": "vite --config client/vite.config.ts",
     "build": "vite build --config client/vite.config.ts",
     "tauri": "tauri",
-    "tauri:dev": "bun run dev:proxy & VITE_API_BASE=http://localhost:3000/api tauri dev",
-    "tauri:build": "VITE_API_BASE=http://localhost:3000/api tauri build",
-    "tauri:linux:build": "NO_STRIP=1 VITE_API_BASE=http://localhost:3000/api tauri build",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:linux:build": "NO_STRIP=1 tauri build",
     "tauri:ios:init": "tauri ios init",
-    "tauri:ios:dev": "bun run dev:proxy & VITE_API_BASE=http://localhost:3000/api tauri ios dev",
-    "tauri:ios:build": "VITE_API_BASE=http://localhost:3000/api tauri ios build"
+    "tauri:ios:dev": "tauri ios dev",
+    "tauri:ios:build": "tauri ios build"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.1",

@@ -10,9 +10,7 @@ GameDNA (steam-search) — a Steam game discovery web app with Tinder-style swip
 
 ```bash
 bun install              # Install dependencies
-bun run dev              # Start both server (port 3000) and client (port 5173)
-bun run dev:server       # Server only (bun --watch server/index.ts)
-bun run dev:client       # Client only (vite dev server)
+bun run dev              # Start Vite dev server (port 5173, includes Steam API proxy)
 bun run build            # Build client for production
 bun run db:generate      # Generate Drizzle migrations
 bun run db:migrate       # Push schema to DB (drizzle-kit push)

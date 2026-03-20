@@ -3,7 +3,7 @@
 
 import { config } from './config';
 
-const PROXY_BASE = `${import.meta.env.VITE_API_BASE || '/api'}/steam`;
+const PROXY_BASE = '/api/steam';
 // Only bypass proxy in Tauri production builds (https://tauri.localhost).
 // In tauri:dev the webview loads from http://localhost:5173 where CORS applies,
 // but the proxy is running so we use it like browser mode.

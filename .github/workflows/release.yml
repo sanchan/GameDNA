@@ -54,7 +54,6 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VITE_API_BASE: http://localhost:3000/api
           NO_STRIP: ${{ contains(matrix.platform, 'ubuntu') && '1' || '' }}
         with:
           tagName: ${{ github.ref_name }}

@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { useDb } from '../contexts/db-context';
 import * as queries from '../db/queries';
-import { importDb } from '../db/index';
+import { importDb, persistDbNow } from '../db/index';
 import { getPlayerSummary, resolveVanityUrl } from '../services/steam-api';
 import { useAi } from '../hooks/use-ai';
 import type { AiProvider } from '../services/ai-engine';
@@ -205,6 +205,7 @@ export default function Onboarding() {
 
   const completeSetup = useCallback(async () => {
     await queries.saveLocalConfig({ setupComplete: true });
+    await persistDbNow();
     await refreshConfig();
     navigate('/');
   }, [refreshConfig, navigate]);

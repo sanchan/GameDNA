@@ -1,0 +1,3 @@
+  - Linux: ~/.local/share/com.gamedna.app/EBWebView/ o similar (WebKitGTK)
+  - Windows: %APPDATA%\com.gamedna.app\EBWebView\ (Edge WebView2)
+  - macOS: ~/Library/WebKit/com.gamedna.app/
