@@ -127,7 +127,7 @@ export default function Stats() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       <div className="mb-8">
         <h1 className="text-3xl lg:text-4xl font-bold mb-2">Statistics Dashboard</h1>
-        <p className="text-gray-400">Insights into your gaming library and activity</p>
+        <p className="text-[var(--text-muted)]">Insights into your gaming library and activity</p>
       </div>
 
       {/* Tabs */}
@@ -136,7 +136,7 @@ export default function Stats() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'bg-[#242424] border border-[#333] text-gray-400 hover:text-white'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'bg-[var(--card)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--foreground)]'}`}
           >
             {t === 'dashboard' ? 'Dashboard' : t === 'year' ? 'Year in Review' : 'Compare Profiles'}
           </button>
@@ -148,9 +148,9 @@ export default function Stats() {
         loading || !stats ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-[#242424] border border-[#333] rounded-2xl p-6 animate-pulse">
-                <div className="h-10 w-20 bg-[#333] rounded mb-2" />
-                <div className="h-4 w-16 bg-[#333] rounded" />
+              <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 animate-pulse">
+                <div className="h-10 w-20 bg-[var(--muted)] rounded mb-2" />
+                <div className="h-4 w-16 bg-[var(--muted)] rounded" />
               </div>
             ))}
           </div>
@@ -158,34 +158,34 @@ export default function Stats() {
           <div className="space-y-8">
             {/* Overview cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
                 <div className="text-3xl font-black text-blue-400 mb-1">{stats.totalGames}</div>
-                <div className="text-sm text-gray-400">Total Games</div>
+                <div className="text-sm text-[var(--text-muted)]">Total Games</div>
               </div>
-              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
                 <div className="text-3xl font-black text-purple-400 mb-1">{stats.totalPlaytimeHours.toLocaleString()}h</div>
-                <div className="text-sm text-gray-400">Total Playtime</div>
+                <div className="text-sm text-[var(--text-muted)]">Total Playtime</div>
               </div>
-              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
                 <div className="text-3xl font-black text-green-400 mb-1">{formatPrice(stats.totalValueCents)}</div>
-                <div className="text-sm text-gray-400">Library Value</div>
+                <div className="text-sm text-[var(--text-muted)]">Library Value</div>
               </div>
-              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
                 <div className="text-3xl font-black text-amber-400 mb-1">{stats.swipeStats.yes + stats.swipeStats.no + stats.swipeStats.maybe}</div>
-                <div className="text-sm text-gray-400">Total Swipes</div>
+                <div className="text-sm text-[var(--text-muted)]">Total Swipes</div>
               </div>
             </div>
 
             {/* Played vs Unplayed */}
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Played vs Unplayed</h3>
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">Played vs Unplayed</h3>
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <div className="flex items-center justify-between text-sm mb-2">
                     <span className="text-green-400">Played ({stats.playedVsUnplayed.played})</span>
                     <span className="text-red-400">Unplayed ({stats.playedVsUnplayed.unplayed})</span>
                   </div>
-                  <div className="h-4 bg-[#333] rounded-full overflow-hidden flex">
+                  <div className="h-4 bg-[var(--muted)] rounded-full overflow-hidden flex">
                     <div
                       className="h-full bg-green-500 rounded-l-full"
                       style={{ width: `${stats.totalGames > 0 ? (stats.playedVsUnplayed.played / stats.totalGames * 100) : 0}%` }}
@@ -197,15 +197,15 @@ export default function Stats() {
             </div>
 
             {/* Games by Genre */}
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Games by Genre</h3>
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">Games by Genre</h3>
               <div className="space-y-3">
                 {stats.gamesByGenre.slice(0, 10).map((item) => {
                   const maxCount = stats.gamesByGenre[0]?.count ?? 1;
                   return (
                     <div key={item.genre} className="flex items-center gap-3">
-                      <span className="w-28 text-sm text-gray-300 truncate">{item.genre}</span>
-                      <div className="flex-1 h-6 bg-[#333] rounded-full overflow-hidden">
+                      <span className="w-28 text-sm text-[var(--text-body)] truncate">{item.genre}</span>
+                      <div className="flex-1 h-6 bg-[var(--muted)] rounded-full overflow-hidden">
                         <div
                           className="h-full bg-[var(--primary)] rounded-full flex items-center justify-end pr-2"
                           style={{ width: `${(item.count / maxCount) * 100}%`, minWidth: '2rem' }}
@@ -220,8 +220,8 @@ export default function Stats() {
             </div>
 
             {/* Games by Year */}
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Games by Release Year</h3>
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">Games by Release Year</h3>
               <div className="flex items-end gap-1 h-40">
                 {stats.gamesByYear.slice(-20).map((item) => {
                   const maxCount = Math.max(...stats.gamesByYear.map((y) => y.count));
@@ -240,8 +240,8 @@ export default function Stats() {
             </div>
 
             {/* Top Played Games */}
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Top 10 Most Played</h3>
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">Top 10 Most Played</h3>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {stats.topPlayedGames.map((item) => (
                   <Link key={item.game.id} to={`/game/${item.game.id}`} className="group">
@@ -249,7 +249,7 @@ export default function Stats() {
                       {item.game.headerImage ? (
                         <img src={item.game.headerImage} alt={item.game.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       ) : (
-                        <div className="w-full h-full bg-[#333] flex items-center justify-center"><i className="fa-solid fa-gamepad text-gray-500" /></div>
+                        <div className="w-full h-full bg-[var(--muted)] flex items-center justify-center"><i className="fa-solid fa-gamepad text-gray-500" /></div>
                       )}
                     </div>
                     <p className="text-xs font-semibold truncate">{item.game.name}</p>
@@ -261,8 +261,8 @@ export default function Stats() {
 
             {/* Swipe Activity */}
             {stats.recentActivity.length > 0 && (
-              <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-4">Recent Swipe Activity</h3>
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">Recent Swipe Activity</h3>
                 <div className="flex items-end gap-1 h-32">
                   {stats.recentActivity.map((item) => {
                     const maxSwipes = Math.max(...stats.recentActivity.map((a) => a.swipes));
@@ -291,11 +291,11 @@ export default function Stats() {
       {tab === 'year' && (
         <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <button onClick={() => loadYearReview(reviewYear - 1)} className="p-2 bg-[#242424] border border-[#333] rounded-lg hover:border-[var(--primary)]">
+            <button onClick={() => loadYearReview(reviewYear - 1)} className="p-2 bg-[var(--card)] border border-[var(--border)] rounded-lg hover:border-[var(--primary)]">
               <i className="fa-solid fa-chevron-left" />
             </button>
             <span className="text-2xl font-black">{reviewYear}</span>
-            <button onClick={() => loadYearReview(reviewYear + 1)} className="p-2 bg-[#242424] border border-[#333] rounded-lg hover:border-[var(--primary)]">
+            <button onClick={() => loadYearReview(reviewYear + 1)} className="p-2 bg-[var(--card)] border border-[var(--border)] rounded-lg hover:border-[var(--primary)]">
               <i className="fa-solid fa-chevron-right" />
             </button>
           </div>
@@ -304,40 +304,40 @@ export default function Stats() {
             <div className="space-y-6">
               {/* Hero stats */}
               <div className="bg-gradient-to-br from-purple-600/20 to-[var(--primary)]/20 border border-purple-500/30 rounded-2xl p-8 text-center">
-                <h2 className="text-4xl font-black text-white mb-2">Your {yearReview.year} Gaming Year</h2>
-                <p className="text-gray-400">Here's what your gaming year looked like</p>
+                <h2 className="text-4xl font-black text-[var(--foreground)] mb-2">Your {yearReview.year} Gaming Year</h2>
+                <p className="text-[var(--text-muted)]">Here's what your gaming year looked like</p>
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 text-center">
                   <div className="text-3xl font-black text-[var(--primary)] mb-1">{yearReview.totalSwipes}</div>
-                  <div className="text-sm text-gray-400">Games Swiped</div>
+                  <div className="text-sm text-[var(--text-muted)]">Games Swiped</div>
                 </div>
-                <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 text-center">
                   <div className="text-3xl font-black text-green-400 mb-1">{yearReview.totalDiscoveries}</div>
-                  <div className="text-sm text-gray-400">Discoveries</div>
+                  <div className="text-sm text-[var(--text-muted)]">Discoveries</div>
                 </div>
-                <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 text-center">
                   <div className="text-3xl font-black text-purple-400 mb-1">{yearReview.genresExplored}</div>
-                  <div className="text-sm text-gray-400">Genres Explored</div>
+                  <div className="text-sm text-[var(--text-muted)]">Genres Explored</div>
                 </div>
-                <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 text-center">
                   <div className="text-2xl font-black text-amber-400 mb-1">{yearReview.topGenre}</div>
-                  <div className="text-sm text-gray-400">Top Genre</div>
+                  <div className="text-sm text-[var(--text-muted)]">Top Genre</div>
                 </div>
               </div>
 
               {/* Top played game */}
               {yearReview.topPlayedGame && (
-                <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-4">Most Played Game</h3>
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">Most Played Game</h3>
                   <Link to={`/game/${yearReview.topPlayedGame.game.id}`} className="flex items-center gap-4 group">
                     {yearReview.topPlayedGame.game.headerImage && (
                       <img src={yearReview.topPlayedGame.game.headerImage} alt="" className="w-32 aspect-video rounded-lg object-cover" />
                     )}
                     <div>
                       <p className="font-bold text-lg group-hover:text-[var(--primary)] transition-colors">{yearReview.topPlayedGame.game.name}</p>
-                      <p className="text-sm text-gray-400">{Math.round(yearReview.topPlayedGame.playtimeMins / 60)} hours played</p>
+                      <p className="text-sm text-[var(--text-muted)]">{Math.round(yearReview.topPlayedGame.playtimeMins / 60)} hours played</p>
                     </div>
                   </Link>
                 </div>
@@ -345,8 +345,8 @@ export default function Stats() {
 
               {/* Monthly activity */}
               {yearReview.monthlyActivity.length > 0 && (
-                <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-4">Monthly Activity</h3>
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">Monthly Activity</h3>
                   <div className="flex items-end gap-2 h-32">
                     {yearReview.monthlyActivity.map((item) => {
                       const max = Math.max(...yearReview.monthlyActivity.map((m) => m.swipes));
@@ -365,9 +365,9 @@ export default function Stats() {
               )}
             </div>
           ) : (
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-12 text-center">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-12 text-center">
               <i className="fa-solid fa-calendar text-4xl text-gray-500 mb-4 block" />
-              <p className="text-gray-400">Loading year in review...</p>
+              <p className="text-[var(--text-muted)]">Loading year in review...</p>
             </div>
           )}
         </div>
@@ -376,9 +376,9 @@ export default function Stats() {
       {/* Compare Profiles Tab */}
       {tab === 'compare' && (
         <div className="space-y-6">
-          <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Compare Gaming Profiles</h3>
-            <p className="text-sm text-gray-400 mb-4">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">Compare Gaming Profiles</h3>
+            <p className="text-sm text-[var(--text-muted)] mb-4">
               Import a friend's exported GameDNA JSON file to compare your gaming tastes.
             </p>
             <button
@@ -394,13 +394,13 @@ export default function Stats() {
           {comparison && (
             <div className="space-y-4">
               <div className="bg-gradient-to-br from-green-500/10 to-blue-500/10 border border-green-500/30 rounded-2xl p-8 text-center">
-                <div className="text-6xl font-black text-white mb-2">{comparison.similarity}%</div>
-                <div className="text-lg text-gray-400">Taste Similarity</div>
+                <div className="text-6xl font-black text-[var(--foreground)] mb-2">{comparison.similarity}%</div>
+                <div className="text-lg text-[var(--text-muted)]">Taste Similarity</div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-                  <h4 className="text-sm font-bold text-gray-400 mb-3">Shared Genres</h4>
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+                  <h4 className="text-sm font-bold text-[var(--text-muted)] mb-3">Shared Genres</h4>
                   <div className="flex flex-wrap gap-2">
                     {comparison.sharedGenres.map((g) => (
                       <span key={g} className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-medium">{g}</span>
@@ -408,16 +408,16 @@ export default function Stats() {
                     {comparison.sharedGenres.length === 0 && <span className="text-gray-500 text-sm">None</span>}
                   </div>
                 </div>
-                <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-                  <h4 className="text-sm font-bold text-gray-400 mb-3">Unique to {comparison.user1.name}</h4>
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+                  <h4 className="text-sm font-bold text-[var(--text-muted)] mb-3">Unique to {comparison.user1.name}</h4>
                   <div className="flex flex-wrap gap-2">
                     {comparison.uniqueToUser1.map((g) => (
                       <span key={g} className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">{g}</span>
                     ))}
                   </div>
                 </div>
-                <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-                  <h4 className="text-sm font-bold text-gray-400 mb-3">Unique to {comparison.user2.name}</h4>
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+                  <h4 className="text-sm font-bold text-[var(--text-muted)] mb-3">Unique to {comparison.user2.name}</h4>
                   <div className="flex flex-wrap gap-2">
                     {comparison.uniqueToUser2.map((g) => (
                       <span key={g} className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs font-medium">{g}</span>

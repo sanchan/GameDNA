@@ -22,7 +22,7 @@ export default function GameGrid({ games, onExplain, onDismiss, dismissedIds }: 
           return (
             <div
               key={rec.id}
-              className="bg-[#1a1a1a] border border-[#333] border-dashed rounded-2xl overflow-hidden flex flex-col items-center justify-center min-h-[360px] opacity-60"
+              className="bg-[var(--background)] border border-[var(--border)] border-dashed rounded-2xl overflow-hidden flex flex-col items-center justify-center min-h-[360px] opacity-60"
             >
               <i className="fa-solid fa-ban text-3xl text-[var(--muted-foreground)] mb-3" />
               <p className="text-[var(--muted-foreground)] font-medium">{t('gameGrid.gameDismissed')}</p>

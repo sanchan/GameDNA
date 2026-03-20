@@ -43,7 +43,7 @@ function RecentSwipeCard({ item, userId, onReswipe }: { item: HistoryItem; userI
   };
 
   return (
-    <div className="group bg-[#242424] border border-[#333] rounded-xl overflow-hidden hover:border-[#444] transition-colors">
+    <div className="group bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden hover:border-[var(--muted-foreground)] transition-colors">
       {item.game.headerImage && (
         <div className="relative">
           <img
@@ -62,7 +62,7 @@ function RecentSwipeCard({ item, userId, onReswipe }: { item: HistoryItem; userI
             </button>
             <button
               onClick={() => handleSwipe('maybe')}
-              className={`pointer-events-auto w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'maybe' ? 'bg-yellow-500 text-white' : 'bg-white/20 text-yellow-400 hover:bg-yellow-500/30'}`}
+              className={`pointer-events-auto w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${decision === 'maybe' ? 'bg-yellow-500 text-[var(--foreground)]' : 'bg-white/20 text-yellow-400 hover:bg-yellow-500/30'}`}
               title={t('discovery.maybe')}
             >
               <i className="fa-solid fa-minus text-sm" />
@@ -281,7 +281,7 @@ export default function Discovery() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl lg:text-4xl font-bold mb-2">{t('discovery.title')}</h1>
-            <p className="text-gray-400">{t('discovery.subtitle')}</p>
+            <p className="text-[var(--text-muted)]">{t('discovery.subtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
             {/* Session counter */}
@@ -325,7 +325,7 @@ export default function Discovery() {
               onClick={() => setFiltersOpen(!filtersOpen)}
               className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition-colors cursor-pointer ${filtersOpen
                   ? 'bg-[var(--primary)]/15 border-[var(--primary)] text-[var(--primary)]'
-                  : 'bg-[#242424] border-[#333] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[#444]'
+                  : 'bg-[var(--card)] border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--muted-foreground)]'
                 }`}
             >
               <i className="fa-solid fa-filter" />
@@ -343,21 +343,21 @@ export default function Discovery() {
         <div className="max-w-md mx-auto">
           {isLoading || loadingMore ? (
             /* Skeleton card */
-            <div className="bg-[#242424] border border-[#333] rounded-2xl overflow-hidden">
-              <div className="h-64 bg-[#1a1a1a] animate-pulse" />
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden">
+              <div className="h-64 bg-[var(--background)] animate-pulse" />
               <div className="p-6 flex flex-col gap-3">
-                <div className="h-6 w-3/4 bg-[#1a1a1a] rounded animate-pulse" />
-                <div className="h-4 w-1/2 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="h-6 w-3/4 bg-[var(--background)] rounded animate-pulse" />
+                <div className="h-4 w-1/2 bg-[var(--background)] rounded animate-pulse" />
                 <div className="flex gap-2">
-                  <div className="h-6 w-14 bg-[#1a1a1a] rounded-full animate-pulse" />
-                  <div className="h-6 w-20 bg-[#1a1a1a] rounded animate-pulse" />
+                  <div className="h-6 w-14 bg-[var(--background)] rounded-full animate-pulse" />
+                  <div className="h-6 w-20 bg-[var(--background)] rounded animate-pulse" />
                 </div>
                 <div className="flex gap-2">
-                  <div className="h-6 w-20 bg-[#1a1a1a] rounded-full animate-pulse" />
-                  <div className="h-6 w-16 bg-[#1a1a1a] rounded-full animate-pulse" />
-                  <div className="h-6 w-14 bg-[#1a1a1a] rounded-full animate-pulse" />
+                  <div className="h-6 w-20 bg-[var(--background)] rounded-full animate-pulse" />
+                  <div className="h-6 w-16 bg-[var(--background)] rounded-full animate-pulse" />
+                  <div className="h-6 w-14 bg-[var(--background)] rounded-full animate-pulse" />
                 </div>
-                <div className="h-10 w-full bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="h-10 w-full bg-[var(--background)] rounded animate-pulse" />
               </div>
               {loadingMore && (
                 <div className="p-4 pt-0 text-center">
@@ -436,7 +436,7 @@ export default function Discovery() {
               {canUndo && (
                 <button
                   onClick={undo}
-                  className="absolute -left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-full flex items-center justify-center transition-all text-gray-400 hover:text-[var(--primary)]"
+                  className="absolute -left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] rounded-full flex items-center justify-center transition-all text-[var(--text-muted)] hover:text-[var(--primary)]"
                   title={t('discovery.undoSwipe')}
                 >
                   <i className="fa-solid fa-rotate-left text-sm" />
@@ -451,21 +451,21 @@ export default function Discovery() {
         {/* Discovery Stats */}
         <div className="max-w-4xl mx-auto mt-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 text-center">
               <div className="text-3xl font-bold text-[var(--primary)] mb-2">{swipeStats ? (swipeStats.yes + swipeStats.no + swipeStats.maybe) : swipedCount}</div>
-              <div className="text-sm text-gray-400">{t('discovery.gamesSwiped')}</div>
+              <div className="text-sm text-[var(--text-muted)]">{t('discovery.gamesSwiped')}</div>
             </div>
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 text-center">
               <div className="text-3xl font-bold text-green-500 mb-2">{swipeStats?.yes ?? '--'}</div>
-              <div className="text-sm text-gray-400">{t('discovery.liked')}</div>
+              <div className="text-sm text-[var(--text-muted)]">{t('discovery.liked')}</div>
             </div>
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 text-center">
               <div className="text-3xl font-bold text-yellow-500 mb-2">{swipeStats?.maybe ?? '--'}</div>
-              <div className="text-sm text-gray-400">{t('discovery.maybeLater')}</div>
+              <div className="text-sm text-[var(--text-muted)]">{t('discovery.maybeLater')}</div>
             </div>
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 text-center">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 text-center">
               <div className="text-3xl font-bold text-red-500 mb-2">{swipeStats?.no ?? '--'}</div>
-              <div className="text-sm text-gray-400">{t('discovery.passed')}</div>
+              <div className="text-sm text-[var(--text-muted)]">{t('discovery.passed')}</div>
             </div>
           </div>
         </div>
@@ -504,7 +504,7 @@ export default function Discovery() {
             </div>
             <div>
               <h4 className="text-xl font-bold mb-2">{t('discovery.proTip')}</h4>
-              <p className="text-gray-400 leading-relaxed">
+              <p className="text-[var(--text-muted)] leading-relaxed">
                 {t('discovery.proTipText')}
               </p>
             </div>
@@ -518,7 +518,7 @@ export default function Discovery() {
           <FilterPanel
             filters={filters}
             onApply={setFilters}
-            className="h-screen sticky top-0 xl:top-0 border-l border-[#333]"
+            className="h-screen sticky top-0 xl:top-0 border-l border-[var(--border)]"
             dna={dna}
           />
         </div>

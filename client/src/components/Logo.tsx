@@ -29,7 +29,7 @@ export function Logo({ size = 'md' }: LogoProps) {
         </svg>
       </div>
       <div className="flex items-baseline">
-        <span className={`${s.text} font-light text-white`}>{t('brand.game')}</span>
+        <span className={`${s.text} font-light text-[var(--foreground)]`}>{t('brand.game')}</span>
         <span className={`${s.text} font-bold text-[var(--primary)]`}>{t('brand.dna')}</span>
       </div>
     </div>

@@ -191,12 +191,12 @@ export default function MyLists() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">{t('myLists.title')}</h1>
-        <p className="text-gray-400 text-lg max-w-3xl">{t('myLists.subtitle')}</p>
+        <p className="text-[var(--text-muted)] text-lg max-w-3xl">{t('myLists.subtitle')}</p>
       </div>
 
       {/* Tabs */}
       <div className="mb-8">
-        <div className="bg-[#242424] border border-[#333] rounded-2xl p-2 inline-flex space-x-2">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-2 inline-flex space-x-2">
           {([
             { key: 'library' as TabKey, label: t('myLists.tabs.library'), icon: 'fa-solid fa-book' },
             { key: 'bookmarks' as TabKey, label: t('myLists.tabs.bookmarks'), icon: 'fa-regular fa-bookmark' },
@@ -209,7 +209,7 @@ export default function MyLists() {
               className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                 activeTab === key
                   ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
-                  : 'hover:bg-[#1a1a1a] text-gray-400'
+                  : 'hover:bg-[var(--background)] text-[var(--text-muted)]'
               }`}
             >
               <i className={`${icon} mr-2`} />
@@ -220,16 +220,16 @@ export default function MyLists() {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-8">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
           <div className="flex-1 relative">
-            <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
               type="text"
               placeholder={t('myLists.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg pl-12 pr-4 py-2.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-[var(--primary)] transition-all"
+              className="w-full bg-[var(--background)] border border-[var(--border)] rounded-lg pl-12 pr-4 py-2.5 text-[var(--foreground)] placeholder:text-gray-500 focus:outline-none focus:border-[var(--primary)] transition-all"
             />
           </div>
           <div className="flex items-center gap-3">
@@ -261,11 +261,11 @@ export default function MyLists() {
       {loading ? (
         <div className="space-y-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-[#242424] border border-[#333] rounded-xl p-4 flex items-center gap-4">
-              <div className="w-32 h-20 bg-[#1a1a1a] rounded-lg animate-pulse shrink-0" />
+            <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex items-center gap-4">
+              <div className="w-32 h-20 bg-[var(--background)] rounded-lg animate-pulse shrink-0" />
               <div className="flex-1 flex flex-col gap-2">
-                <div className="h-5 w-1/3 bg-[#1a1a1a] rounded animate-pulse" />
-                <div className="h-4 w-1/4 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="h-5 w-1/3 bg-[var(--background)] rounded animate-pulse" />
+                <div className="h-4 w-1/4 bg-[var(--background)] rounded animate-pulse" />
               </div>
             </div>
           ))}
@@ -284,7 +284,7 @@ export default function MyLists() {
                   value={newCollectionName}
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   placeholder="Collection name..."
-                  className="flex-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
+                  className="flex-1 bg-[var(--background)] border border-[var(--border)] rounded-lg px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newCollectionName.trim() && userId) {
                       try {
@@ -298,7 +298,7 @@ export default function MyLists() {
                     }
                   }}
                 />
-                <button onClick={() => setShowNewCollection(false)} className="text-gray-400 hover:text-white text-sm">Cancel</button>
+                <button onClick={() => setShowNewCollection(false)} className="text-[var(--text-muted)] hover:text-[var(--foreground)] text-sm">Cancel</button>
               </div>
             ) : (
               <button
@@ -314,16 +314,16 @@ export default function MyLists() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-[#242424] border border-[#333] rounded-2xl p-6 animate-pulse">
-                  <div className="h-6 w-32 bg-[#333] rounded mb-2" />
-                  <div className="h-4 w-20 bg-[#333] rounded" />
+                <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 animate-pulse">
+                  <div className="h-6 w-32 bg-[var(--muted)] rounded mb-2" />
+                  <div className="h-4 w-20 bg-[var(--muted)] rounded" />
                 </div>
               ))}
             </div>
           ) : collections.length === 0 ? (
             <div className="text-center py-16">
               <i className="fa-solid fa-folder-open text-4xl text-gray-500 mb-4 block" />
-              <p className="text-gray-400 mb-2">No collections yet</p>
+              <p className="text-[var(--text-muted)] mb-2">No collections yet</p>
               <p className="text-sm text-gray-500">Create collections to organize your games your way.</p>
             </div>
           ) : (
@@ -338,15 +338,15 @@ export default function MyLists() {
                       setCollectionGames(g);
                     } catch { setCollectionGames([]); }
                   }}
-                  className={`text-left bg-[#242424] border rounded-2xl p-6 transition-all hover:border-[var(--primary)] ${selectedCollection === col.id ? 'border-[var(--primary)]' : 'border-[#333]'}`}
+                  className={`text-left bg-[var(--card)] border rounded-2xl p-6 transition-all hover:border-[var(--primary)] ${selectedCollection === col.id ? 'border-[var(--primary)]' : 'border-[var(--border)]'}`}
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${col.color}33` }}>
                       <i className={`fa-solid ${col.icon}`} style={{ color: col.color }} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-white">{col.name}</h3>
-                      <p className="text-xs text-gray-400">{col.gameCount} games</p>
+                      <h3 className="font-bold text-[var(--foreground)]">{col.name}</h3>
+                      <p className="text-xs text-[var(--text-muted)]">{col.gameCount} games</p>
                     </div>
                   </div>
                   {col.description && <p className="text-xs text-gray-500">{col.description}</p>}
@@ -356,12 +356,12 @@ export default function MyLists() {
           )}
 
           {selectedCollection && collectionGames.length > 0 && (
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-lg font-bold text-[var(--foreground)]">
                   {collections.find((c) => c.id === selectedCollection)?.name} Games
                 </h3>
-                <button onClick={() => { setSelectedCollection(null); setCollectionGames([]); }} className="text-gray-400 hover:text-white">
+                <button onClick={() => { setSelectedCollection(null); setCollectionGames([]); }} className="text-[var(--text-muted)] hover:text-[var(--foreground)]">
                   <i className="fa-solid fa-xmark" />
                 </button>
               </div>
@@ -372,7 +372,7 @@ export default function MyLists() {
                       {game.headerImage ? (
                         <img src={game.headerImage} alt={game.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       ) : (
-                        <div className="w-full h-full bg-[#333] flex items-center justify-center"><i className="fa-solid fa-gamepad text-gray-500" /></div>
+                        <div className="w-full h-full bg-[var(--muted)] flex items-center justify-center"><i className="fa-solid fa-gamepad text-gray-500" /></div>
                       )}
                     </div>
                     <p className="text-xs font-semibold truncate">{game.name}</p>
@@ -420,7 +420,7 @@ function GameCardActions({ game, extraButtons }: { game: Game; extraButtons?: Re
       {extraButtons}
       <Link
         to={`/game/${game.id}`}
-        className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
+        className="flex items-center space-x-2 px-4 py-2 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
       >
         <i className="fa-solid fa-eye" />
         <span>{t('common.viewDetails')}</span>
@@ -444,39 +444,39 @@ function LibraryTab({ entries, stats, sortBy }: { entries: LibraryEntry[]; stats
     <div className="space-y-6">
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-5 text-center">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 text-center">
           <div className="text-3xl font-black text-[var(--primary)] mb-1">{stats.total.toLocaleString()}</div>
-          <div className="text-sm text-gray-400">{t('myLists.totalGames')}</div>
+          <div className="text-sm text-[var(--text-muted)]">{t('myLists.totalGames')}</div>
         </div>
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-5 text-center">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 text-center">
           <div className="text-3xl font-black text-green-500 mb-1">{stats.played.toLocaleString()}</div>
-          <div className="text-sm text-gray-400">{t('myLists.played')}</div>
+          <div className="text-sm text-[var(--text-muted)]">{t('myLists.played')}</div>
         </div>
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-5 text-center">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 text-center">
           <div className="text-3xl font-black text-yellow-500 mb-1">{stats.neverPlayed.toLocaleString()}</div>
-          <div className="text-sm text-gray-400">{t('myLists.neverPlayed')}</div>
+          <div className="text-sm text-[var(--text-muted)]">{t('myLists.neverPlayed')}</div>
         </div>
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-5 text-center">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 text-center">
           <div className="text-3xl font-black text-purple-500 mb-1">{formatPlaytimeShort(stats.totalPlaytimeMins)}</div>
-          <div className="text-sm text-gray-400">{t('myLists.totalPlaytime')}</div>
+          <div className="text-sm text-[var(--text-muted)]">{t('myLists.totalPlaytime')}</div>
         </div>
       </div>
 
       {sorted.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
+        <div className="text-center py-20 text-[var(--text-muted)]">
           <i className="fa-solid fa-book text-4xl mb-4 block" />
           <p className="text-lg mb-2">{t('myLists.noGamesFound')}</p>
         </div>
       ) : (
         <div className="space-y-4">
           {sorted.map((entry) => (
-            <div key={entry.game.id} className="bg-[#242424] border border-[#333] rounded-xl p-4 hover:border-[var(--primary)] transition-all group">
+            <div key={entry.game.id} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 hover:border-[var(--primary)] transition-all group">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <Link to={`/game/${entry.game.id}`} className="w-full sm:w-32 h-20 shrink-0 rounded-lg overflow-hidden">
                   {entry.game.headerImage ? (
                     <img src={entry.game.headerImage} alt={entry.game.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-[#1a1a1a]" />
+                    <div className="w-full h-full bg-[var(--background)]" />
                   )}
                 </Link>
                 <div className="flex-1 min-w-0 w-full">
@@ -487,7 +487,7 @@ function LibraryTab({ entries, stats, sortBy }: { entries: LibraryEntry[]; stats
                       </Link>
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         {entry.game.genres.slice(0, 3).map((genre) => (
-                          <span key={genre} className="bg-[#1a1a1a] px-3 py-1 rounded-full text-xs font-medium">{genre}</span>
+                          <span key={genre} className="bg-[var(--background)] px-3 py-1 rounded-full text-xs font-medium">{genre}</span>
                         ))}
                       </div>
                     </div>
@@ -501,13 +501,13 @@ function LibraryTab({ entries, stats, sortBy }: { entries: LibraryEntry[]; stats
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <div className="text-sm text-gray-400">
+                    <div className="text-sm text-[var(--text-muted)]">
                       <i className="fa-solid fa-clock mr-1" />{formatPlaytime(entry.playtimeMins)}
                     </div>
                     {entry.lastPlayed && (
                       <>
                         <span className="text-gray-600">&bull;</span>
-                        <div className="text-sm text-gray-400">{t('myLists.lastPlayed', { time: formatTimeAgo(entry.lastPlayed) })}</div>
+                        <div className="text-sm text-[var(--text-muted)]">{t('myLists.lastPlayed', { time: formatTimeAgo(entry.lastPlayed) })}</div>
                       </>
                     )}
                   </div>
@@ -529,16 +529,16 @@ function BookmarksTab({ games, onRemove, sortBy }: { games: Game[]; onRemove: (i
   return (
     <div className="space-y-6">
       {/* Bookmarks header card */}
-      <div className="bg-[#242424] border border-[#333] rounded-xl p-6 text-center">
-        <div className="w-20 h-20 bg-[#1a1a1a] rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 text-center">
+        <div className="w-20 h-20 bg-[var(--background)] rounded-full flex items-center justify-center mx-auto mb-4">
           <i className="fa-regular fa-bookmark text-4xl text-[var(--primary)]" />
         </div>
         <h3 className="text-xl font-bold mb-2">{t('myLists.bookmarkedGames', { count: games.length })}</h3>
-        <p className="text-gray-400">{t('myLists.bookmarksSavedLater')}</p>
+        <p className="text-[var(--text-muted)]">{t('myLists.bookmarksSavedLater')}</p>
       </div>
 
       {sorted.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
+        <div className="text-center py-20 text-[var(--text-muted)]">
           <i className="fa-regular fa-bookmark text-4xl mb-4 block" />
           <p className="text-lg mb-2">{t('myLists.noBookmarksYet')}</p>
           <p className="text-sm">
@@ -548,13 +548,13 @@ function BookmarksTab({ games, onRemove, sortBy }: { games: Game[]; onRemove: (i
       ) : (
         <div className="space-y-4">
           {sorted.map((game) => (
-            <div key={game.id} className="bg-[#242424] border border-[#333] rounded-xl p-4 hover:border-[var(--primary)] transition-all group">
+            <div key={game.id} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 hover:border-[var(--primary)] transition-all group">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <Link to={`/game/${game.id}`} className="w-full sm:w-32 h-20 shrink-0 rounded-lg overflow-hidden">
                   {game.headerImage ? (
                     <img src={game.headerImage} alt={game.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-[#1a1a1a]" />
+                    <div className="w-full h-full bg-[var(--background)]" />
                   )}
                 </Link>
                 <div className="flex-1 min-w-0 w-full">
@@ -565,7 +565,7 @@ function BookmarksTab({ games, onRemove, sortBy }: { games: Game[]; onRemove: (i
                       </Link>
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         {game.genres.slice(0, 3).map((genre) => (
-                          <span key={genre} className="bg-[#1a1a1a] px-3 py-1 rounded-full text-xs font-medium">{genre}</span>
+                          <span key={genre} className="bg-[var(--background)] px-3 py-1 rounded-full text-xs font-medium">{genre}</span>
                         ))}
                       </div>
                     </div>
@@ -584,7 +584,7 @@ function BookmarksTab({ games, onRemove, sortBy }: { games: Game[]; onRemove: (i
                       <>
                         <button
                           onClick={() => onRemove(game.id)}
-                          className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all"
+                          className="flex items-center space-x-2 px-4 py-2 bg-[var(--background)] border border-[var(--border)] hover:border-red-500 hover:text-red-500 rounded-lg text-sm font-semibold transition-all"
                         >
                           <i className="fa-solid fa-xmark" />
                           <span>{t('common.removeBookmark')}</span>
@@ -592,7 +592,7 @@ function BookmarksTab({ games, onRemove, sortBy }: { games: Game[]; onRemove: (i
                         <a
                           href={`steam://addtowishlist/${game.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
+                          className="flex items-center space-x-2 px-4 py-2 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
                         >
                           <i className="fa-regular fa-heart" />
                           <span>{t('common.addToWishlist')}</span>
@@ -617,29 +617,29 @@ function WishlistTab({ games, sortBy }: { games: Game[]; sortBy: SortKey }) {
   return (
     <div className="space-y-6">
       {/* Wishlist header card */}
-      <div className="bg-[#242424] border border-[#333] rounded-xl p-6 text-center">
-        <div className="w-20 h-20 bg-[#1a1a1a] rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 text-center">
+        <div className="w-20 h-20 bg-[var(--background)] rounded-full flex items-center justify-center mx-auto mb-4">
           <i className="fa-regular fa-heart text-4xl text-[var(--primary)]" />
         </div>
         <h3 className="text-xl font-bold mb-2">{t('myLists.wishlistedGames', { count: games.length })}</h3>
-        <p className="text-gray-400">{t('myLists.wishlistFromSteam')}</p>
+        <p className="text-[var(--text-muted)]">{t('myLists.wishlistFromSteam')}</p>
       </div>
 
       {sorted.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
+        <div className="text-center py-20 text-[var(--text-muted)]">
           <i className="fa-regular fa-heart text-4xl mb-4 block" />
           <p className="text-lg mb-2">{t('myLists.noWishlistGames')}</p>
         </div>
       ) : (
         <div className="space-y-4">
           {sorted.map((game) => (
-            <div key={game.id} className="bg-[#242424] border border-[#333] rounded-xl p-4 hover:border-[var(--primary)] transition-all group">
+            <div key={game.id} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 hover:border-[var(--primary)] transition-all group">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <Link to={`/game/${game.id}`} className="w-full sm:w-32 h-20 shrink-0 rounded-lg overflow-hidden">
                   {game.headerImage ? (
                     <img src={game.headerImage} alt={game.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-[#1a1a1a]" />
+                    <div className="w-full h-full bg-[var(--background)]" />
                   )}
                 </Link>
                 <div className="flex-1 min-w-0 w-full">
@@ -650,7 +650,7 @@ function WishlistTab({ games, sortBy }: { games: Game[]; sortBy: SortKey }) {
                       </Link>
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         {game.genres.slice(0, 3).map((genre) => (
-                          <span key={genre} className="bg-[#1a1a1a] px-3 py-1 rounded-full text-xs font-medium">{genre}</span>
+                          <span key={genre} className="bg-[var(--background)] px-3 py-1 rounded-full text-xs font-medium">{genre}</span>
                         ))}
                       </div>
                     </div>
@@ -668,7 +668,7 @@ function WishlistTab({ games, sortBy }: { games: Game[]; sortBy: SortKey }) {
                     extraButtons={
                       <a
                         href={`steam://store/${game.id}`}
-                        className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
+                        className="flex items-center space-x-2 px-4 py-2 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
                       >
                         <i className="fa-solid fa-cart-shopping" />
                         <span>{t('myLists.buyOnSteam')}</span>

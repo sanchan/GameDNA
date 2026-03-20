@@ -36,7 +36,7 @@ export default function Help() {
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl lg:text-4xl font-bold mb-2">{t('help.title')}</h1>
-          <p className="text-gray-400">{t('help.subtitle')}</p>
+          <p className="text-[var(--text-muted)]">{t('help.subtitle')}</p>
         </div>
 
         <div className="space-y-4">
@@ -44,17 +44,17 @@ export default function Help() {
             <Link
               key={s.to}
               to={s.to}
-              className="block bg-[#242424] border border-[#333] rounded-2xl p-6 hover:border-[var(--primary)] transition-all group"
+              className="block bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 hover:border-[var(--primary)] transition-all group"
             >
               <div className="flex items-center gap-4">
                 <div className={`w-12 h-12 rounded-xl ${s.bg} flex items-center justify-center shrink-0`}>
                   <i className={`${s.icon} ${s.color} text-lg`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-bold text-white group-hover:text-[var(--primary)] transition-colors">
+                  <h2 className="text-lg font-bold text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors">
                     {s.title}
                   </h2>
-                  <p className="text-sm text-gray-400 mt-0.5">{s.desc}</p>
+                  <p className="text-sm text-[var(--text-muted)] mt-0.5">{s.desc}</p>
                 </div>
                 <i className="fa-solid fa-chevron-right text-gray-600 group-hover:text-[var(--primary)] transition-colors" />
               </div>

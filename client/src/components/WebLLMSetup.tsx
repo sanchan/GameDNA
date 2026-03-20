@@ -87,7 +87,7 @@ export default function WebLLMSetup({ selectedModel, onModelChange }: Props) {
           webgpuAvailable === null ? 'bg-gray-500' :
           webgpuAvailable ? 'bg-green-500' : 'bg-red-500'
         }`} />
-        <span className="text-sm text-gray-300">
+        <span className="text-sm text-[var(--text-body)]">
           {webgpuAvailable === null ? 'Checking WebGPU...' :
            webgpuAvailable ? 'WebGPU available' : 'WebGPU not available — WebLLM requires a WebGPU-capable browser'}
         </span>
@@ -95,7 +95,7 @@ export default function WebLLMSetup({ selectedModel, onModelChange }: Props) {
 
       {/* Model Selector */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Model</label>
+        <label className="text-sm font-medium text-[var(--text-body)] mb-2 block">Model</label>
         <Select
           value={selectedModel}
           onChange={onModelChange}
@@ -111,10 +111,10 @@ export default function WebLLMSetup({ selectedModel, onModelChange }: Props) {
       {loading && downloadProgress ? (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-300">{downloadProgress.text}</span>
+            <span className="text-[var(--text-body)]">{downloadProgress.text}</span>
             <span className="text-[var(--primary)] font-medium">{Math.round(downloadProgress.progress * 100)}%</span>
           </div>
-          <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-[var(--background)] rounded-full overflow-hidden">
             <div
               className="h-full bg-[var(--primary)] rounded-full transition-all duration-300"
               style={{ width: `${downloadProgress.progress * 100}%` }}
@@ -149,8 +149,8 @@ export default function WebLLMSetup({ selectedModel, onModelChange }: Props) {
           {!isCurrentModelLoaded && !loading && modelCached !== null && (
             <p className="text-xs text-gray-500">
               {modelCached
-                ? <><i className="fa-solid fa-hard-drive mr-1 text-gray-400" />Model cached — ready to load</>
-                : <><i className="fa-solid fa-cloud-arrow-down mr-1 text-gray-400" />Model not downloaded yet — {WEBLLM_MODELS.find(m => m.id === selectedModel)?.size ?? 'unknown size'}</>
+                ? <><i className="fa-solid fa-hard-drive mr-1 text-[var(--text-muted)]" />Model cached — ready to load</>
+                : <><i className="fa-solid fa-cloud-arrow-down mr-1 text-[var(--text-muted)]" />Model not downloaded yet — {WEBLLM_MODELS.find(m => m.id === selectedModel)?.size ?? 'unknown size'}</>
               }
             </p>
           )}
@@ -163,10 +163,10 @@ export default function WebLLMSetup({ selectedModel, onModelChange }: Props) {
 
       {/* Storage Usage */}
       {storageUsage && (
-        <div className="flex items-center justify-between bg-[#1a1a1a] rounded-lg px-4 py-3">
+        <div className="flex items-center justify-between bg-[var(--background)] rounded-lg px-4 py-3">
           <div className="text-sm">
-            <span className="text-gray-400">Storage: </span>
-            <span className="text-white font-medium">{formatBytes(storageUsage.usage)}</span>
+            <span className="text-[var(--text-muted)]">Storage: </span>
+            <span className="text-[var(--foreground)] font-medium">{formatBytes(storageUsage.usage)}</span>
             <span className="text-gray-500"> / {formatBytes(storageUsage.quota)}</span>
           </div>
           <button

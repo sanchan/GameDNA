@@ -271,7 +271,7 @@ export default function History() {
       </p>
 
       {/* Search and Filters */}
-      <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-8">
         {/* Search input */}
         <div className="relative mb-4">
           <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
@@ -280,7 +280,7 @@ export default function History() {
             placeholder={t('history.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-[#1a1a1a] border border-[#333] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)]"
+            className="w-full pl-12 pr-4 py-3 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)]"
           />
         </div>
 
@@ -333,12 +333,12 @@ export default function History() {
       </div>
 
       {/* Decision Summary */}
-      <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-8">
         <h2 className="text-2xl font-bold mb-6">{t('history.decisionSummary')}</h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Yes card */}
-          <div className="bg-[#1a1a1a] border-2 border-green-500/30 rounded-xl p-6">
+          <div className="bg-[var(--background)] border-2 border-green-500/30 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -351,7 +351,7 @@ export default function History() {
               </div>
               <div className="text-4xl font-black text-green-500">{summary.yes}</div>
             </div>
-            <div className="w-full bg-[#242424] rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-[var(--card)] rounded-full h-3 overflow-hidden">
               <div
                 className="bg-green-500 h-full rounded-full transition-all"
                 style={{ width: `${entries.length ? (summary.yes / entries.length) * 100 : 0}%` }}
@@ -363,7 +363,7 @@ export default function History() {
           </div>
 
           {/* Maybe card */}
-          <div className="bg-[#1a1a1a] border-2 border-yellow-500/30 rounded-xl p-6">
+          <div className="bg-[var(--background)] border-2 border-yellow-500/30 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
@@ -376,7 +376,7 @@ export default function History() {
               </div>
               <div className="text-4xl font-black text-yellow-500">{summary.maybe}</div>
             </div>
-            <div className="w-full bg-[#242424] rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-[var(--card)] rounded-full h-3 overflow-hidden">
               <div
                 className="bg-yellow-500 h-full rounded-full transition-all"
                 style={{ width: `${entries.length ? (summary.maybe / entries.length) * 100 : 0}%` }}
@@ -388,7 +388,7 @@ export default function History() {
           </div>
 
           {/* No card */}
-          <div className="bg-[#1a1a1a] border-2 border-red-500/30 rounded-xl p-6">
+          <div className="bg-[var(--background)] border-2 border-red-500/30 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -401,7 +401,7 @@ export default function History() {
               </div>
               <div className="text-4xl font-black text-red-500">{summary.no}</div>
             </div>
-            <div className="w-full bg-[#242424] rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-[var(--card)] rounded-full h-3 overflow-hidden">
               <div
                 className="bg-red-500 h-full rounded-full transition-all"
                 style={{ width: `${entries.length ? (summary.no / entries.length) * 100 : 0}%` }}
@@ -414,18 +414,18 @@ export default function History() {
         </div>
 
         {/* Bottom stats row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-[#333]">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-[var(--border)]">
           <div className="flex items-center gap-6">
             <div>
               <p className="text-sm text-[var(--muted-foreground)]">{t('history.totalSwipes')}</p>
               <p className="text-2xl font-black">{summary.totalSwipes}</p>
             </div>
-            <div className="h-12 w-px bg-[#333]" />
+            <div className="h-12 w-px bg-[var(--muted)]" />
             <div>
               <p className="text-sm text-[var(--muted-foreground)]">{t('history.thisWeek')}</p>
               <p className="text-2xl font-black text-[var(--primary)]">{summary.thisWeek}</p>
             </div>
-            <div className="h-12 w-px bg-[#333]" />
+            <div className="h-12 w-px bg-[var(--muted)]" />
             <div>
               <p className="text-sm text-[var(--muted-foreground)]">{t('history.avgPerDay')}</p>
               <p className="text-2xl font-black">
@@ -435,7 +435,7 @@ export default function History() {
           </div>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-5 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all cursor-pointer"
+            className="flex items-center gap-2 px-5 py-3 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all cursor-pointer"
           >
             <i className="fa-solid fa-download" />
             <span>{t('history.exportHistory')}</span>
@@ -445,7 +445,7 @@ export default function History() {
 
       {/* Temporal Statistics Chart */}
       {dailyStats.some((d) => d.total > 0) && (
-        <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-8">
           <h2 className="text-2xl font-bold mb-2">{t('history.swipeActivity')}</h2>
           <p className="text-sm text-[var(--muted-foreground)] mb-6">{t('history.swipeActivitySubtitle')}</p>
           <div className="h-64">
@@ -494,11 +494,11 @@ export default function History() {
       {loading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-[#242424] border border-[#333] rounded-xl p-4 flex items-center gap-4">
-              <div className="w-32 h-20 bg-[#333] rounded-lg animate-pulse shrink-0" />
+            <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex items-center gap-4">
+              <div className="w-32 h-20 bg-[var(--muted)] rounded-lg animate-pulse shrink-0" />
               <div className="flex-1 flex flex-col gap-2">
-                <div className="h-5 w-1/3 bg-[#333] rounded animate-pulse" />
-                <div className="h-4 w-1/4 bg-[#333] rounded animate-pulse" />
+                <div className="h-5 w-1/3 bg-[var(--muted)] rounded animate-pulse" />
+                <div className="h-4 w-1/4 bg-[var(--muted)] rounded animate-pulse" />
               </div>
             </div>
           ))}
@@ -539,7 +539,7 @@ export default function History() {
               return (
                 <div
                   key={entry.id}
-                  className="bg-[#242424] border border-[#333] rounded-xl p-4 hover:border-[var(--primary)] transition-all"
+                  className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 hover:border-[var(--primary)] transition-all"
                 >
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     {/* Thumbnail */}
@@ -551,7 +551,7 @@ export default function History() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-[#333] flex items-center justify-center">
+                        <div className="w-full h-full bg-[var(--muted)] flex items-center justify-center">
                           <i className="fa-solid fa-gamepad text-[var(--muted-foreground)]" />
                         </div>
                       )}
@@ -568,7 +568,7 @@ export default function History() {
                           {entry.game.genres.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2 mb-2">
                               {entry.game.genres.slice(0, 3).map((genre) => (
-                                <span key={genre} className="bg-[#1a1a1a] px-3 py-1 rounded-full text-xs font-medium">
+                                <span key={genre} className="bg-[var(--background)] px-3 py-1 rounded-full text-xs font-medium">
                                   {genre}
                                 </span>
                               ))}
@@ -624,7 +624,7 @@ export default function History() {
                               key={d}
                               onClick={() => handleChangeDecision(entry.id, d)}
                               disabled={updatingId === entry.id}
-                              className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#333] font-semibold transition-all disabled:opacity-50 ${c.hoverBorder} ${c.hoverText}`}
+                              className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)] font-semibold transition-all disabled:opacity-50 ${c.hoverBorder} ${c.hoverText}`}
                             >
                               <i className={`fa-solid ${c.icon}`} />
                               <span>{c.label}</span>
@@ -634,7 +634,7 @@ export default function History() {
 
                         <Link
                           to={`/game/${entry.game.id}`}
-                          className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#333] font-semibold hover:border-[var(--primary)] transition-all"
+                          className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)] font-semibold hover:border-[var(--primary)] transition-all"
                         >
                           <i className="fa-solid fa-eye" />
                           <span>{t('history.viewGame')}</span>
@@ -643,7 +643,7 @@ export default function History() {
                         <button
                           onClick={() => handleRemoveEntry(entry.id)}
                           disabled={updatingId === entry.id}
-                          className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#333] font-semibold hover:border-red-500 hover:text-red-500 transition-all disabled:opacity-50"
+                          className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)] font-semibold hover:border-red-500 hover:text-red-500 transition-all disabled:opacity-50"
                         >
                           <i className="fa-solid fa-trash" />
                           <span>{t('common.remove')}</span>
@@ -662,7 +662,7 @@ export default function History() {
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="px-4 py-2 rounded-lg text-sm bg-[#242424] border border-[#333] text-[var(--foreground)] hover:border-[var(--primary)] disabled:opacity-30 disabled:hover:border-[#333] transition-all"
+                className="px-4 py-2 rounded-lg text-sm bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)] disabled:opacity-30 disabled:hover:border-[var(--border)] transition-all"
               >
                 <i className="fa-solid fa-chevron-left mr-1" />
                 {t('common.prev')}
@@ -673,7 +673,7 @@ export default function History() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
-                className="px-4 py-2 rounded-lg text-sm bg-[#242424] border border-[#333] text-[var(--foreground)] hover:border-[var(--primary)] disabled:opacity-30 disabled:hover:border-[#333] transition-all"
+                className="px-4 py-2 rounded-lg text-sm bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)] disabled:opacity-30 disabled:hover:border-[var(--border)] transition-all"
               >
                 {t('common.next')}
                 <i className="fa-solid fa-chevron-right ml-1" />

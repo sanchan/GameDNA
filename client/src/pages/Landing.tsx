@@ -36,13 +36,13 @@ export default function Landing() {
               <span className="text-[var(--primary)] block mt-2">{t('landing.heroTitleHighlight')}</span>
             </h2>
 
-            <p className="text-lg sm:text-xl text-gray-400 mb-8 lg:mb-10">
+            <p className="text-lg sm:text-xl text-[var(--text-muted)] mb-8 lg:mb-10">
               {t('landing.heroDescription')}
             </p>
 
             <button
               onClick={login}
-              className="bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] text-white px-10 py-5 rounded-xl text-lg sm:text-xl font-semibold transition-all duration-300 flex items-center gap-3 mb-8 cursor-pointer"
+              className="bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] text-[var(--foreground)] px-10 py-5 rounded-xl text-lg sm:text-xl font-semibold transition-all duration-300 flex items-center gap-3 mb-8 cursor-pointer"
             >
               <i className="fa-brands fa-steam text-2xl" />
               {t('common.signInWithSteam')}
@@ -51,19 +51,19 @@ export default function Landing() {
 
             {/* Feature pills */}
             <div className="flex flex-wrap gap-3 mb-8">
-              <span className="bg-[#242424] border border-[#333] px-4 py-2 rounded-full text-sm text-gray-300 flex items-center gap-2">
+              <span className="bg-[var(--card)] border border-[var(--border)] px-4 py-2 rounded-full text-sm text-[var(--text-body)] flex items-center gap-2">
                 <i className="fa-solid fa-brain text-[var(--primary)]" />
                 {t('landing.featureAI')}
               </span>
-              <span className="bg-[#242424] border border-[#333] px-4 py-2 rounded-full text-sm text-gray-300 flex items-center gap-2">
+              <span className="bg-[var(--card)] border border-[var(--border)] px-4 py-2 rounded-full text-sm text-[var(--text-body)] flex items-center gap-2">
                 <i className="fa-solid fa-hand-pointer text-[var(--primary)]" />
                 {t('landing.featureSwipe')}
               </span>
-              <span className="bg-[#242424] border border-[#333] px-4 py-2 rounded-full text-sm text-gray-300 flex items-center gap-2">
+              <span className="bg-[var(--card)] border border-[var(--border)] px-4 py-2 rounded-full text-sm text-[var(--text-body)] flex items-center gap-2">
                 <i className="fa-solid fa-chart-pie text-[var(--primary)]" />
                 {t('landing.featureTaste')}
               </span>
-              <span className="bg-[#242424] border border-[#333] px-4 py-2 rounded-full text-sm text-gray-300 flex items-center gap-2">
+              <span className="bg-[var(--card)] border border-[var(--border)] px-4 py-2 rounded-full text-sm text-[var(--text-body)] flex items-center gap-2">
                 <i className="fa-solid fa-bookmark text-[var(--primary)]" />
                 {t('landing.featureBacklog')}
               </span>
@@ -72,16 +72,16 @@ export default function Landing() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <div className="text-2xl sm:text-3xl font-bold text-white">50K+</div>
-                <div className="text-sm text-gray-400">{t('landing.statsGames')}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">50K+</div>
+                <div className="text-sm text-[var(--text-muted)]">{t('landing.statsGames')}</div>
               </div>
               <div>
-                <div className="text-2xl sm:text-3xl font-bold text-white">10K+</div>
-                <div className="text-sm text-gray-400">{t('landing.statsUsers')}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">10K+</div>
+                <div className="text-sm text-[var(--text-muted)]">{t('landing.statsUsers')}</div>
               </div>
               <div>
-                <div className="text-2xl sm:text-3xl font-bold text-white">98%</div>
-                <div className="text-sm text-gray-400">{t('landing.statsMatch')}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">98%</div>
+                <div className="text-sm text-[var(--text-muted)]">{t('landing.statsMatch')}</div>
               </div>
             </div>
           </div>
@@ -90,19 +90,19 @@ export default function Landing() {
           <div className="order-1 lg:order-2 flex justify-center">
             <div className="relative w-80 h-[420px]">
               {/* Background card 3 */}
-              <div className="absolute inset-x-4 top-0 bottom-0 bg-[#1a1a2e] rounded-2xl border border-[#333] translate-y-4 scale-[0.92] z-0" />
+              <div className="absolute inset-x-4 top-0 bottom-0 bg-[#1a1a2e] rounded-2xl border border-[var(--border)] translate-y-4 scale-[0.92] z-0" />
               {/* Background card 2 */}
-              <div className="absolute inset-x-2 top-0 bottom-0 bg-[#1e1e32] rounded-2xl border border-[#333] translate-y-2 scale-[0.96] z-10" />
+              <div className="absolute inset-x-2 top-0 bottom-0 bg-[#1e1e32] rounded-2xl border border-[var(--border)] translate-y-2 scale-[0.96] z-10" />
               {/* Main card */}
-              <div className="relative bg-[#242438] rounded-2xl border border-[#444] overflow-hidden z-20 h-full flex flex-col">
+              <div className="relative bg-[#242438] rounded-2xl border border-[var(--muted)] overflow-hidden z-20 h-full flex flex-col">
                 {/* Card image area */}
                 <div className="h-48 bg-gradient-to-br from-[var(--primary)]/30 to-purple-600/30 flex items-center justify-center">
-                  <i className="fa-solid fa-gamepad text-6xl text-white/30" />
+                  <i className="fa-solid fa-gamepad text-6xl text-[var(--foreground)]/30" />
                 </div>
                 {/* Card content */}
                 <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-xl font-bold text-white mb-1">{t('landing.cardTitle')}</h3>
-                  <p className="text-sm text-gray-400 mb-3">{t('landing.cardSubtitle')}</p>
+                  <h3 className="text-xl font-bold text-[var(--foreground)] mb-1">{t('landing.cardTitle')}</h3>
+                  <p className="text-sm text-[var(--text-muted)] mb-3">{t('landing.cardSubtitle')}</p>
                   <div className="flex flex-wrap gap-2 mb-auto">
                     <span className="bg-[var(--primary)]/20 text-[var(--primary)] px-2.5 py-1 rounded-md text-xs font-medium">RPG</span>
                     <span className="bg-purple-600/20 text-purple-400 px-2.5 py-1 rounded-md text-xs font-medium">Action</span>
@@ -130,7 +130,7 @@ export default function Landing() {
       <div className="absolute bottom-0 left-0 right-0 py-4 text-center z-10">
         <p className="text-xs text-gray-500">
           GameDNA is not affiliated with Valve or Steam.{' '}
-          <Link to="/legal" className="text-gray-400 hover:text-white transition-colors underline">
+          <Link to="/legal" className="text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors underline">
             Privacy & Legal
           </Link>
         </p>

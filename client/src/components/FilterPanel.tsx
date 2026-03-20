@@ -104,11 +104,11 @@ export default function FilterPanel({ filters, onApply, className = '', dna }: F
   ].filter(Boolean).length;
 
   const inputClass =
-    'w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)] transition-colors';
+    'w-full bg-[var(--background)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)] transition-colors';
 
   return (
     <div
-      className={`bg-[#242424] w-80 overflow-y-auto ${className}`}
+      className={`bg-[var(--card)] w-80 overflow-y-auto ${className}`}
     >
       <div className="p-6 w-80">
         {/* Header */}
@@ -125,9 +125,9 @@ export default function FilterPanel({ filters, onApply, className = '', dna }: F
               <label className="block text-sm font-semibold mb-3">{t('filterPanel.priceRange')}</label>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-400 mb-1 block">{t('filterPanel.minPrice')}</label>
+                  <label className="text-xs text-[var(--text-muted)] mb-1 block">{t('filterPanel.minPrice')}</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">$</span>
                     <input
                       type="number"
                       value={minPrice}
@@ -138,9 +138,9 @@ export default function FilterPanel({ filters, onApply, className = '', dna }: F
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400 mb-1 block">{t('filterPanel.maxPrice')}</label>
+                  <label className="text-xs text-[var(--text-muted)] mb-1 block">{t('filterPanel.maxPrice')}</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">$</span>
                     <input
                       type="number"
                       value={maxPrice}
@@ -165,9 +165,9 @@ export default function FilterPanel({ filters, onApply, className = '', dna }: F
                 className="range-slider w-full"
               />
               <div className="flex items-center justify-between mt-2">
-                <span className="text-xs text-gray-400">0%</span>
+                <span className="text-xs text-[var(--text-muted)]">0%</span>
                 <span className="text-sm font-bold text-[var(--primary)]">{minReviewScore}%</span>
-                <span className="text-xs text-gray-400">100%</span>
+                <span className="text-xs text-[var(--text-muted)]">100%</span>
               </div>
             </div>
 
@@ -181,7 +181,7 @@ export default function FilterPanel({ filters, onApply, className = '', dna }: F
                 rows={3}
                 className={`${inputClass} resize-none`}
               />
-              <p className="text-xs text-gray-400 mt-1">{t('filterPanel.separateWithCommas')}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">{t('filterPanel.separateWithCommas')}</p>
             </div>
 
             {/* Your Top Tags */}
@@ -194,10 +194,10 @@ export default function FilterPanel({ filters, onApply, className = '', dna }: F
                     <button
                       key={tag}
                       onClick={() => toggleTag(tag)}
-                      className={`px-3 py-1.5 bg-[#1a1a1a] border rounded-full text-xs transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] ${
+                      className={`px-3 py-1.5 bg-[var(--background)] border rounded-full text-xs transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] ${
                         isActive
                           ? 'border-[var(--primary)] text-[var(--primary)]'
-                          : 'border-[#333]'
+                          : 'border-[var(--border)]'
                       }`}
                     >
                       {tag}
@@ -231,15 +231,15 @@ export default function FilterPanel({ filters, onApply, className = '', dna }: F
               </button>
               <button
                 onClick={handleReset}
-                className="px-4 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg transition-colors"
+                className="px-4 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg transition-colors"
               >
                 <i className="fa-solid fa-rotate-right" />
               </button>
             </div>
 
             {/* Active Filters */}
-            <div className="mt-6 pt-6 border-t border-[#333]">
-              <div className="text-xs text-gray-400 mb-2">{t('filterPanel.activeFilters')}</div>
+            <div className="mt-6 pt-6 border-t border-[var(--border)]">
+              <div className="text-xs text-[var(--text-muted)] mb-2">{t('filterPanel.activeFilters')}</div>
               <div className="text-2xl font-bold text-[var(--primary)]">{activeCount}</div>
             </div>
           </div>

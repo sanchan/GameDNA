@@ -156,7 +156,7 @@ export default function Filters() {
     const pct = Math.round(score * 100);
     return (
       <div className="flex items-center gap-2 min-w-[80px]">
-        <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+        <div className="flex-1 h-1.5 bg-[var(--background)] rounded-full overflow-hidden">
           <div
             className="h-full bg-[var(--primary)] rounded-full transition-all"
             style={{ width: `${pct}%` }}
@@ -174,13 +174,13 @@ export default function Filters() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-black text-white mb-2">{t('filters.title')}</h1>
-          <p className="text-gray-400 text-sm">{t('filters.subtitle')}</p>
+          <h1 className="text-3xl font-black text-[var(--foreground)] mb-2">{t('filters.title')}</h1>
+          <p className="text-[var(--text-muted)] text-sm">{t('filters.subtitle')}</p>
         </div>
         <button
           onClick={handleSyncTags}
           disabled={isSyncing}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-xl text-sm font-medium transition-all text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-xl text-sm font-medium transition-all text-[var(--text-muted)] hover:text-[var(--foreground)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <i className={`fa-solid fa-arrows-rotate text-sm ${isSyncing ? 'animate-spin' : ''}`} />
           {isSyncing ? t('filters.syncing') : t('filters.syncTags')}
@@ -202,13 +202,13 @@ export default function Filters() {
               <i className="fa-solid fa-ban text-red-400 text-sm" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">{t('filters.blacklistTitle')}</h2>
+              <h2 className="text-lg font-bold text-[var(--foreground)]">{t('filters.blacklistTitle')}</h2>
               <p className="text-xs text-gray-500">{t('filters.blacklistSubtitle')}</p>
             </div>
           </div>
           <button
             onClick={handleResetToDefaults}
-            className="px-3 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-xs font-medium transition-all text-gray-400 hover:text-white"
+            className="px-3 py-2 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg text-xs font-medium transition-all text-[var(--text-muted)] hover:text-[var(--foreground)]"
           >
             <i className="fa-solid fa-rotate-right mr-1.5" />
             {t('filters.resetDefaults')}
@@ -220,10 +220,10 @@ export default function Filters() {
           {TAG_COLLECTIONS.map((col) => (
             <div
               key={col.id}
-              className="flex items-center justify-between p-3 bg-[#1a1a1a] border border-[#333] rounded-xl"
+              className="flex items-center justify-between p-3 bg-[var(--background)] border border-[var(--border)] rounded-xl"
             >
               <div className="flex-1 min-w-0 mr-3">
-                <p className="text-sm font-medium text-white">{col.label}</p>
+                <p className="text-sm font-medium text-[var(--foreground)]">{col.label}</p>
                 <p className="text-xs text-gray-500 truncate">{col.description}</p>
               </div>
               <button
@@ -232,7 +232,7 @@ export default function Filters() {
                 aria-checked={!!collectionStates[col.id]}
                 onClick={() => handleToggleCollection(col.id)}
                 className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2 focus:ring-offset-[#111] ${
-                  collectionStates[col.id] ? 'bg-red-500' : 'bg-[#333]'
+                  collectionStates[col.id] ? 'bg-red-500' : 'bg-[var(--muted)]'
                 }`}
               >
                 <span
@@ -260,12 +260,12 @@ export default function Filters() {
               }
             }}
             placeholder={t('filters.searchToBlacklist')}
-            className="w-full bg-[#242424] border border-[#333] rounded-xl pl-11 pr-10 py-3 text-sm focus:outline-none focus:border-red-500/50 transition-colors placeholder:text-gray-500"
+            className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl pl-11 pr-10 py-3 text-sm focus:outline-none focus:border-red-500/50 transition-colors placeholder:text-gray-500"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-white/10 transition-all"
             >
               <i className="fa-solid fa-xmark text-sm" />
             </button>
@@ -274,7 +274,7 @@ export default function Filters() {
 
         {/* Search results dropdown */}
         {search && (catalogResults.length > 0 || canAddFreeform) && (
-          <div className="bg-[#1a1a1a] border border-[#333] rounded-xl mb-4 max-h-60 overflow-y-auto">
+          <div className="bg-[var(--background)] border border-[var(--border)] rounded-xl mb-4 max-h-60 overflow-y-auto">
             {/* Freeform entry option */}
             {canAddFreeform && (
               <button
@@ -282,9 +282,9 @@ export default function Filters() {
                   handleAddToBlacklist(search.trim());
                   setSearch('');
                 }}
-                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-red-500/10 transition-colors text-sm text-left border-b border-[#333]"
+                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-red-500/10 transition-colors text-sm text-left border-b border-[var(--border)]"
               >
-                <span className="text-white font-medium">
+                <span className="text-[var(--foreground)] font-medium">
                   "{search.trim()}"
                 </span>
                 <span className="text-xs text-red-400">
@@ -304,7 +304,7 @@ export default function Filters() {
                 className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-red-500/10 transition-colors text-sm text-left"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-300">{tag.name}</span>
+                  <span className="text-[var(--text-body)]">{tag.name}</span>
                   <span className="text-[10px] text-gray-600">
                     {tag.gameCount} {tag.gameCount === 1 ? 'game' : 'games'}
                   </span>
@@ -324,9 +324,9 @@ export default function Filters() {
 
         {/* Blacklisted tag chips */}
         {blacklistedTags.length === 0 ? (
-          <div className="bg-[#242424] border border-[#333] rounded-2xl p-8 text-center">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-8 text-center">
             <i className="fa-solid fa-check-circle text-2xl text-emerald-500/50 mb-2" />
-            <p className="text-gray-400 text-sm">{t('filters.noBlacklistedTags')}</p>
+            <p className="text-[var(--text-muted)] text-sm">{t('filters.noBlacklistedTags')}</p>
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -355,19 +355,19 @@ export default function Filters() {
             <i className="fa-solid fa-chart-simple text-[var(--primary)] text-sm" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">{t('filters.autoTagsTitle')}</h2>
+            <h2 className="text-lg font-bold text-[var(--foreground)]">{t('filters.autoTagsTitle')}</h2>
             <p className="text-xs text-gray-500">{t('filters.autoTagsSubtitle')}</p>
           </div>
         </div>
 
         {autoTags.length === 0 ? (
-          <div className="bg-[#242424] border border-[#333] rounded-2xl p-8 text-center">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-8 text-center">
             <i className="fa-solid fa-chart-line text-2xl text-gray-600 mb-2" />
-            <p className="text-gray-400 text-sm">{t('filters.noAutoTags')}</p>
+            <p className="text-[var(--text-muted)] text-sm">{t('filters.noAutoTags')}</p>
           </div>
         ) : (
-          <div className="bg-[#242424] border border-[#333] rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 px-4 py-2.5 border-b border-[#333] text-xs text-gray-500 font-medium">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 px-4 py-2.5 border-b border-[var(--border)] text-xs text-gray-500 font-medium">
               <span>{t('filters.tagName')}</span>
               <span className="text-right">{t('filters.games')}</span>
               <span className="w-[80px]">{t('filters.score')}</span>
@@ -380,7 +380,7 @@ export default function Filters() {
                     i < autoTags.length - 1 ? 'border-b border-[#222]' : ''
                   }`}
                 >
-                  <span className="text-sm text-gray-300 truncate">{tag.name}</span>
+                  <span className="text-sm text-[var(--text-body)] truncate">{tag.name}</span>
                   <span className="text-xs text-gray-500 tabular-nums text-right">
                     {tag.count}
                   </span>

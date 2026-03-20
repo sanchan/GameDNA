@@ -124,14 +124,14 @@ export default function DataManagement() {
     <div className="space-y-4">
       {/* Storage Usage */}
       {storageUsage && (
-        <div className="bg-[#1a1a1a] rounded-lg p-4">
+        <div className="bg-[var(--background)] rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-300">Browser Storage</span>
+            <span className="text-sm font-medium text-[var(--text-body)]">Browser Storage</span>
             <span className="text-xs text-gray-500">
               {formatBytes(storageUsage.usage)} / {formatBytes(storageUsage.quota)} ({usagePercent}%)
             </span>
           </div>
-          <div className="w-full h-2 bg-[#333] rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-[var(--muted)] rounded-full overflow-hidden">
             <div
               className="h-full bg-[var(--primary)] rounded-full transition-all"
               style={{ width: `${Math.min(usagePercent, 100)}%` }}
@@ -144,7 +144,7 @@ export default function DataManagement() {
       <div className="flex flex-wrap gap-3">
         <button
           onClick={handleExportDb}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] text-[var(--text-body)] rounded-xl text-sm font-medium hover:border-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
         >
           <i className="fa-solid fa-database" />
           Export Database (.db)
@@ -152,7 +152,7 @@ export default function DataManagement() {
         <button
           onClick={handleExportJson}
           disabled={!userId}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] text-[var(--text-body)] rounded-xl text-sm font-medium hover:border-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors disabled:opacity-50"
         >
           <i className="fa-solid fa-file-export" />
           Export as JSON
@@ -161,12 +161,12 @@ export default function DataManagement() {
 
       {/* Import */}
       <div className="flex flex-wrap gap-3">
-        <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors cursor-pointer">
+        <label className="flex items-center gap-2 px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] text-[var(--text-body)] rounded-xl text-sm font-medium hover:border-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer">
           <i className={`fa-solid ${importing ? 'fa-spinner fa-spin' : 'fa-upload'}`} />
           Import Database (.db)
           <input type="file" accept=".db,.sqlite" onChange={handleImportDb} className="hidden" />
         </label>
-        <label className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors cursor-pointer">
+        <label className="flex items-center gap-2 px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] text-[var(--text-body)] rounded-xl text-sm font-medium hover:border-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer">
           <i className={`fa-solid ${importing ? 'fa-spinner fa-spin' : 'fa-file-import'}`} />
           Import JSON
           <input type="file" accept=".json" onChange={handleImportJson} className="hidden" />
@@ -174,14 +174,14 @@ export default function DataManagement() {
       </div>
 
       {/* Clear All Data */}
-      <div className="pt-4 border-t border-[#333]">
+      <div className="pt-4 border-t border-[var(--border)]">
         <button
           onClick={handleClearAll}
           disabled={clearing}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
             confirmClear
               ? 'bg-red-500 text-white hover:bg-red-600'
-              : 'bg-[#1a1a1a] border border-red-500/50 text-red-400 hover:bg-red-500/10'
+              : 'bg-[var(--background)] border border-red-500/50 text-red-400 hover:bg-red-500/10'
           } disabled:opacity-50`}
         >
           <i className={`fa-solid ${clearing ? 'fa-spinner fa-spin' : 'fa-trash'}`} />
@@ -190,7 +190,7 @@ export default function DataManagement() {
         {confirmClear && (
           <button
             onClick={() => setConfirmClear(false)}
-            className="ml-3 text-xs text-gray-400 hover:text-gray-300"
+            className="ml-3 text-xs text-[var(--text-muted)] hover:text-[var(--text-body)]"
           >
             Cancel
           </button>

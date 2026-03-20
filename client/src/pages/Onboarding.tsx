@@ -340,7 +340,7 @@ export default function Onboarding() {
 
               <button
                 onClick={() => setStep('steam-id')}
-                className="w-full py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] text-white rounded-xl font-medium transition-all duration-300"
+                className="w-full py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] text-[var(--foreground)] rounded-xl font-medium transition-all duration-300"
               >
                 Get Started
               </button>
@@ -418,7 +418,7 @@ export default function Onboarding() {
                 <button
                   onClick={resolveSteamId}
                   disabled={!steamInput.trim() || loading}
-                  className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-300"
+                  className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-[var(--foreground)] rounded-xl font-medium transition-all duration-300"
                 >
                   {loading ? 'Checking...' : 'Continue'}
                 </button>
@@ -494,7 +494,7 @@ export default function Onboarding() {
                 <button
                   onClick={validateApiKey}
                   disabled={!apiKey.trim() || loading}
-                  className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-300"
+                  className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-[var(--foreground)] rounded-xl font-medium transition-all duration-300"
                 >
                   {loading ? 'Verifying...' : 'Continue'}
                 </button>
@@ -722,7 +722,7 @@ export default function Onboarding() {
                 <button
                   onClick={saveConfigAndContinue}
                   disabled={loading}
-                  className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-300"
+                  className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-[var(--foreground)] rounded-xl font-medium transition-all duration-300"
                 >
                   {loading ? 'Saving...' : 'Continue'}
                 </button>
@@ -879,7 +879,7 @@ export default function Onboarding() {
                 {!syncStarted ? (
                   <button
                     onClick={handleStartSync}
-                    className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] text-white rounded-xl font-medium transition-all duration-300"
+                    className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] text-[var(--foreground)] rounded-xl font-medium transition-all duration-300"
                   >
                     <i className="fa-solid fa-rotate mr-2" />
                     Sync Now
@@ -888,7 +888,7 @@ export default function Onboarding() {
                   <button
                     onClick={completeSetup}
                     disabled={isSyncing}
-                    className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-300"
+                    className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1b2838] to-[#2a475e] hover:from-[#2a475e] hover:to-[#3a5a7e] disabled:opacity-50 disabled:cursor-not-allowed text-[var(--foreground)] rounded-xl font-medium transition-all duration-300"
                   >
                     {isSyncing ? (
                       <><i className="fa-solid fa-spinner fa-spin mr-2" />Syncing...</>

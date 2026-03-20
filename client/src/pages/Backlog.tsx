@@ -220,7 +220,7 @@ export default function Backlog() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3 text-white">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3 text-[var(--foreground)]">
           {t('backlog.title')}
         </h1>
         <p className="text-[var(--muted-foreground)] text-lg max-w-3xl">
@@ -229,7 +229,7 @@ export default function Backlog() {
       </div>
 
       {/* Analysis Header Card */}
-      <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-8">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
@@ -237,7 +237,7 @@ export default function Backlog() {
                 <i className="fa-solid fa-brain text-[var(--primary)] text-xl" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">{t('backlog.aiAnalysisReady')}</h2>
+                <h2 className="text-2xl font-bold text-[var(--foreground)]">{t('backlog.aiAnalysisReady')}</h2>
                 <p className="text-sm text-[var(--muted-foreground)]">
                   {lastAnalyzed
                     ? t('backlog.lastAnalyzed', { date: lastAnalyzed.toLocaleDateString(), time: lastAnalyzed.toLocaleTimeString() })
@@ -262,42 +262,42 @@ export default function Backlog() {
 
       {/* Backlog Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <div className="bg-blue-500/20 rounded-lg w-10 h-10 flex items-center justify-center">
               <i className="fa-solid fa-gamepad text-blue-400" />
             </div>
-            <span className="text-3xl font-black text-white">{unplayedCount}</span>
+            <span className="text-3xl font-black text-[var(--foreground)]">{unplayedCount}</span>
           </div>
           <h3 className="text-sm text-[var(--muted-foreground)] mb-1">{t('backlog.unplayedGames')}</h3>
           <p className="text-xs text-gray-500">{t('backlog.inYourLibrary')}</p>
         </div>
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <div className="bg-purple-500/20 rounded-lg w-10 h-10 flex items-center justify-center">
               <i className="fa-solid fa-clock text-purple-400" />
             </div>
-            <span className="text-3xl font-black text-white">{totalPlaytimeHours}h</span>
+            <span className="text-3xl font-black text-[var(--foreground)]">{totalPlaytimeHours}h</span>
           </div>
           <h3 className="text-sm text-[var(--muted-foreground)] mb-1">{t('backlog.totalPlaytime')}</h3>
           <p className="text-xs text-gray-500">{t('backlog.estimatedToComplete')}</p>
         </div>
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <div className="bg-green-500/20 rounded-lg w-10 h-10 flex items-center justify-center">
               <i className="fa-solid fa-star text-green-400" />
             </div>
-            <span className="text-3xl font-black text-white">{highPriorityCount}</span>
+            <span className="text-3xl font-black text-[var(--foreground)]">{highPriorityCount}</span>
           </div>
           <h3 className="text-sm text-[var(--muted-foreground)] mb-1">{t('backlog.highPriority')}</h3>
           <p className="text-xs text-gray-500">{t('backlog.recommendedToPlay')}</p>
         </div>
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
           <div className="flex items-center justify-between mb-3">
             <div className="bg-yellow-500/20 rounded-lg w-10 h-10 flex items-center justify-center">
               <i className="fa-solid fa-chart-line text-yellow-400" />
             </div>
-            <span className="text-3xl font-black text-white">{avgScore}</span>
+            <span className="text-3xl font-black text-[var(--foreground)]">{avgScore}</span>
           </div>
           <h3 className="text-sm text-[var(--muted-foreground)] mb-1">{t('backlog.avgMatchScore')}</h3>
           <p className="text-xs text-gray-500">{t('backlog.basedOnYourDNA')}</p>
@@ -305,7 +305,7 @@ export default function Backlog() {
       </div>
 
       {/* Filters and Sort */}
-      <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-8">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="flex flex-col gap-2">
             <label className="text-sm text-[var(--muted-foreground)] font-medium">{t('common.sortBy')}</label>
@@ -371,15 +371,15 @@ export default function Backlog() {
       {loading ? (
         <div className="flex flex-col gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-[#242424] border border-[#333] rounded-xl p-6 animate-pulse">
+            <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 animate-pulse">
               <div className="flex flex-col lg:flex-row gap-6">
-                <div className="w-full lg:w-48 h-32 bg-[#333] rounded-lg" />
+                <div className="w-full lg:w-48 h-32 bg-[var(--muted)] rounded-lg" />
                 <div className="flex-1 flex flex-col gap-3">
-                  <div className="h-7 w-1/3 bg-[#333] rounded" />
-                  <div className="h-4 w-1/2 bg-[#333] rounded" />
+                  <div className="h-7 w-1/3 bg-[var(--muted)] rounded" />
+                  <div className="h-4 w-1/2 bg-[var(--muted)] rounded" />
                   <div className="flex gap-2">
-                    <div className="h-6 w-16 bg-[#333] rounded-full" />
-                    <div className="h-6 w-20 bg-[#333] rounded-full" />
+                    <div className="h-6 w-16 bg-[var(--muted)] rounded-full" />
+                    <div className="h-6 w-20 bg-[var(--muted)] rounded-full" />
                   </div>
                 </div>
               </div>
@@ -414,10 +414,10 @@ export default function Backlog() {
             return (
               <div
                 key={entry.game.id}
-                className={`bg-[#242424] rounded-xl p-6 transition-all ${
+                className={`bg-[var(--card)] rounded-xl p-6 transition-all ${
                   isHighPriority
                     ? 'border-2 border-green-500/30 hover:border-green-500'
-                    : 'border border-[#333] hover:border-[var(--primary)]'
+                    : 'border border-[var(--border)] hover:border-[var(--primary)]'
                 }`}
               >
                 <div className="flex flex-col lg:flex-row gap-6">
@@ -437,7 +437,7 @@ export default function Backlog() {
                     <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          <Link to={`/game/${entry.game.id}`} className="text-2xl font-bold text-white hover:text-[var(--primary)] transition-colors truncate">
+                          <Link to={`/game/${entry.game.id}`} className="text-2xl font-bold text-[var(--foreground)] hover:text-[var(--primary)] transition-colors truncate">
                             {entry.game.name}
                           </Link>
                           {badge && (
@@ -453,7 +453,7 @@ export default function Backlog() {
                             {entry.game.genres.slice(0, 5).map((genre) => (
                               <span
                                 key={genre}
-                                className="bg-[#1a1a1a] text-[var(--muted-foreground)] rounded-full px-3 py-1 text-xs font-medium"
+                                className="bg-[var(--background)] text-[var(--muted-foreground)] rounded-full px-3 py-1 text-xs font-medium"
                               >
                                 {genre}
                               </span>
@@ -476,15 +476,15 @@ export default function Backlog() {
                           </div>
                         )}
                         {entry.game.reviewScore !== null && (
-                          <div className="w-px h-16 bg-[#333]" />
+                          <div className="w-px h-16 bg-[var(--muted)]" />
                         )}
                         <div className="text-center">
-                          <p className="text-3xl font-black text-white mb-1">{formatPlaytimeShort(entry.playtimeMins)}</p>
+                          <p className="text-3xl font-black text-[var(--foreground)] mb-1">{formatPlaytimeShort(entry.playtimeMins)}</p>
                           <p className="text-xs text-[var(--muted-foreground)]">{t('backlog.estPlaytime')}</p>
                         </div>
                         {entry.estimatedHours && (
                           <>
-                            <div className="w-px h-16 bg-[#333]" />
+                            <div className="w-px h-16 bg-[var(--muted)]" />
                             <div className="text-center">
                               <p className="text-2xl font-black text-purple-400 mb-1">{entry.estimatedHours}h</p>
                               <p className="text-xs text-[var(--muted-foreground)]">Est. Total</p>
@@ -496,12 +496,12 @@ export default function Backlog() {
 
                     {/* AI Recommendation */}
                     {reason && (
-                      <div className="bg-[#1a1a1a] rounded-lg p-4 mb-4">
+                      <div className="bg-[var(--background)] rounded-lg p-4 mb-4">
                         <h4 className="text-sm font-bold text-[var(--primary)] mb-2">
                           <i className="fa-solid fa-lightbulb mr-2" />
                           {t('backlog.aiRecommendation')}
                         </h4>
-                        <p className="text-sm text-gray-300 leading-relaxed">
+                        <p className="text-sm text-[var(--text-body)] leading-relaxed">
                           {reason}
                         </p>
                       </div>
@@ -512,7 +512,7 @@ export default function Backlog() {
                       <a
                         href={`steam://run/${entry.game.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className={`text-white text-sm font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+                        className={`text-[var(--foreground)] text-sm font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
                           isHighPriority
                             ? 'bg-green-500 hover:bg-green-600'
                             : 'bg-[var(--primary)] hover:bg-[var(--primary)]/90'
@@ -524,14 +524,14 @@ export default function Backlog() {
                       <a
                         href={`steam://addtowishlist/${entry.game.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+                        className="bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] text-[var(--foreground)] text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2"
                       >
                         <i className="fa-solid fa-bookmark" />
                         {t('common.addToWishlist')}
                       </a>
                       <Link
                         to={`/game/${entry.game.id}`}
-                        className="bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+                        className="bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] text-[var(--foreground)] text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2"
                       >
                         <i className="fa-solid fa-eye" />
                         {t('common.viewDetails')}
@@ -539,7 +539,7 @@ export default function Backlog() {
                       <button
                         onClick={() => handleMarkAsPlayed(entry.game.id, entry.game.name)}
                         disabled={markingPlayedId === entry.game.id}
-                        className="bg-[#1a1a1a] border border-[#333] hover:border-gray-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        className="bg-[var(--background)] border border-[var(--border)] hover:border-gray-500 text-[var(--foreground)] text-sm font-semibold px-4 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                       >
                         <i className={`fa-solid ${markingPlayedId === entry.game.id ? 'fa-spinner fa-spin' : 'fa-check'}`} />
                         {t('backlog.markAsPlayed')}
@@ -547,17 +547,17 @@ export default function Backlog() {
                       <div className="flex items-center gap-1 ml-auto">
                         <button
                           onClick={() => handleReorder(entry.game.id, 'up')}
-                          className="w-8 h-8 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg flex items-center justify-center transition-all"
+                          className="w-8 h-8 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg flex items-center justify-center transition-all"
                           title={t('backlog.moveUp')}
                         >
-                          <i className="fa-solid fa-chevron-up text-xs text-gray-400" />
+                          <i className="fa-solid fa-chevron-up text-xs text-[var(--text-muted)]" />
                         </button>
                         <button
                           onClick={() => handleReorder(entry.game.id, 'down')}
-                          className="w-8 h-8 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg flex items-center justify-center transition-all"
+                          className="w-8 h-8 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg flex items-center justify-center transition-all"
                           title={t('backlog.moveDown')}
                         >
-                          <i className="fa-solid fa-chevron-down text-xs text-gray-400" />
+                          <i className="fa-solid fa-chevron-down text-xs text-[var(--text-muted)]" />
                         </button>
                       </div>
                     </div>

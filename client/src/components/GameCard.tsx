@@ -133,9 +133,9 @@ const GameCard = forwardRef<GameCardHandle, GameCardProps>(function GameCard({ g
   const galleryIndex = currentIndex > 0 ? currentIndex - 1 : 0;
 
   return (
-    <div className={`bg-[#242424] border border-[#333] rounded-2xl overflow-hidden hover:border-[var(--primary)] transition-all duration-300 group flex flex-col ${className}`}>
+    <div className={`bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-[var(--primary)] transition-all duration-300 group flex flex-col ${className}`}>
       {/* Image / Gallery section */}
-      <div className="relative h-64 overflow-hidden bg-[#1a1a1a]">
+      <div className="relative h-64 overflow-hidden bg-[var(--background)]">
         <div className="w-full h-full cursor-pointer" onClick={handleFullscreen}>
           {showHeader ? (
             game.headerImage && (
@@ -192,13 +192,13 @@ const GameCard = forwardRef<GameCardHandle, GameCardProps>(function GameCard({ g
         {/* Navigation arrows */}
         <button
           onClick={handlePrev}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center text-white/70 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-[var(--background)]/80 backdrop-blur-sm hover:bg-[var(--background)] rounded-full flex items-center justify-center text-[var(--foreground)]/70 hover:text-[var(--foreground)] transition-all opacity-0 group-hover:opacity-100"
         >
           <i className="fa-solid fa-chevron-left text-xs" />
         </button>
         <button
           onClick={handleNext}
-          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center text-white/70 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-[var(--background)]/80 backdrop-blur-sm hover:bg-[var(--background)] rounded-full flex items-center justify-center text-[var(--foreground)]/70 hover:text-[var(--foreground)] transition-all opacity-0 group-hover:opacity-100"
         >
           <i className="fa-solid fa-chevron-right text-xs" />
         </button>
@@ -220,30 +220,30 @@ const GameCard = forwardRef<GameCardHandle, GameCardProps>(function GameCard({ g
           <BookmarkButton
             gameId={game.id}
             size={14}
-            className="w-9 h-9 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[var(--primary)] rounded-full flex items-center justify-center transition-all"
+            className="w-9 h-9 bg-[var(--background)]/80 backdrop-blur-sm hover:bg-[var(--primary)] rounded-full flex items-center justify-center transition-all"
           />
           <a
             href={`steam://addtowishlist/${game.id}`}
             onClick={(e) => e.stopPropagation()}
-            className="w-9 h-9 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-red-500 rounded-full flex items-center justify-center transition-all"
+            className="w-9 h-9 bg-[var(--background)]/80 backdrop-blur-sm hover:bg-red-500 rounded-full flex items-center justify-center transition-all"
             title={t('gameCard.addToSteamWishlist')}
           >
-            <i className="fa-regular fa-heart text-white/70" />
+            <i className="fa-regular fa-heart text-[var(--foreground)]/70" />
           </a>
           <a
             href={`https://store.steampowered.com/app/${game.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-9 h-9 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-blue-500 rounded-full flex items-center justify-center transition-all"
+            className="w-9 h-9 bg-[var(--background)]/80 backdrop-blur-sm hover:bg-blue-500 rounded-full flex items-center justify-center transition-all"
             onClick={(e) => e.stopPropagation()}
           >
-            <i className="fa-brands fa-steam text-white/70" />
+            <i className="fa-brands fa-steam text-[var(--foreground)]/70" />
           </a>
         </div>
 
         {/* Price badge — bottom right of image */}
         {price && (
-          <div className="absolute bottom-4 right-4 z-20 bg-[#1a1a1a]/90 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+          <div className="absolute bottom-4 right-4 z-20 bg-[var(--background)]/90 backdrop-blur-sm px-3 py-1.5 rounded-lg">
             <span className="text-lg font-bold text-[var(--primary)]">{price}</span>
           </div>
         )}
@@ -289,7 +289,7 @@ const GameCard = forwardRef<GameCardHandle, GameCardProps>(function GameCard({ g
             {game.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="bg-[#1a1a1a] px-2.5 py-1 rounded-full text-xs font-medium"
+                className="bg-[var(--background)] px-2.5 py-1 rounded-full text-xs font-medium"
               >
                 {tag}
               </span>

@@ -230,7 +230,7 @@ export default function Cauldron() {
         <div className="mt-8 flex justify-center">
           <button
             onClick={backToCauldron}
-            className="px-6 py-3 rounded-xl bg-[#2a2a2a] text-[var(--foreground)] hover:bg-[#333] transition-colors font-medium"
+            className="px-6 py-3 rounded-xl bg-[#2a2a2a] text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors font-medium"
           >
             <i className="fa-solid fa-arrow-left mr-2" />
             {t('cauldron.backToCauldron')}
@@ -261,7 +261,7 @@ export default function Cauldron() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('cauldron.searchPlaceholder')}
-            className="w-full pl-11 pr-4 py-3 bg-[#1a1a1a] border border-[#333] rounded-xl text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-purple-500/50 transition-colors"
+            className="w-full pl-11 pr-4 py-3 bg-[var(--background)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-purple-500/50 transition-colors"
           />
           {searching && (
             <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -272,7 +272,7 @@ export default function Cauldron() {
 
         {/* Search dropdown */}
         {searchResults.length > 0 && (
-          <div className="absolute z-20 mt-1 w-full bg-[#1a1a1a] border border-[#333] rounded-xl overflow-hidden shadow-xl max-h-80 overflow-y-auto">
+          <div className="absolute z-20 mt-1 w-full bg-[var(--background)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xl max-h-80 overflow-y-auto">
             {searchResults.map((item) => (
               <button
                 key={item.id}
@@ -282,7 +282,7 @@ export default function Cauldron() {
                 {item.headerImage ? (
                   <img src={item.headerImage} alt="" className="w-16 h-8 object-cover rounded" />
                 ) : (
-                  <div className="w-16 h-8 bg-[#333] rounded flex items-center justify-center">
+                  <div className="w-16 h-8 bg-[var(--muted)] rounded flex items-center justify-center">
                     <i className="fa-solid fa-gamepad text-xs text-[var(--muted-foreground)]" />
                   </div>
                 )}
@@ -321,12 +321,12 @@ export default function Cauldron() {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="group flex items-center gap-2 pl-1 pr-2 py-1 bg-[#1a1a1a] border border-[#333] rounded-xl hover:border-purple-500/30 transition-colors"
+                  className="group flex items-center gap-2 pl-1 pr-2 py-1 bg-[var(--background)] border border-[var(--border)] rounded-xl hover:border-purple-500/30 transition-colors"
                 >
                   {item.headerImage ? (
                     <img src={item.headerImage} alt="" className="w-12 h-6 object-cover rounded-lg" />
                   ) : (
-                    <div className="w-12 h-6 bg-[#333] rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-6 bg-[var(--muted)] rounded-lg flex items-center justify-center">
                       <i className="fa-solid fa-gamepad text-[10px] text-[var(--muted-foreground)]" />
                     </div>
                   )}
@@ -349,7 +349,7 @@ export default function Cauldron() {
       <button
         onClick={cook}
         disabled={items.length < 2}
-        className="w-full py-4 rounded-xl font-bold text-lg transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 shadow-lg shadow-purple-500/20"
+        className="w-full py-4 rounded-xl font-bold text-lg transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-purple-600 to-pink-600 text-[var(--foreground)] hover:from-purple-500 hover:to-pink-500 shadow-lg shadow-purple-500/20"
       >
         <i className="fa-solid fa-fire mr-2" />
         {items.length < 2

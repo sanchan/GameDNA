@@ -202,25 +202,25 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 lg:p-8 mb-8 animate-pulse">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 lg:p-8 mb-8 animate-pulse">
           <div className="flex flex-col sm:flex-row items-center gap-6">
-            <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full bg-[#333]" />
+            <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full bg-[var(--muted)]" />
             <div className="flex-1 space-y-3">
-              <div className="h-8 w-48 bg-[#333] rounded" />
-              <div className="h-5 w-32 bg-[#333] rounded" />
+              <div className="h-8 w-48 bg-[var(--muted)] rounded" />
+              <div className="h-5 w-32 bg-[var(--muted)] rounded" />
             </div>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-[#242424] border border-[#333] rounded-xl p-6 animate-pulse">
-              <div className="h-10 w-20 bg-[#333] rounded mb-2" />
-              <div className="h-4 w-16 bg-[#333] rounded" />
+            <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 animate-pulse">
+              <div className="h-10 w-20 bg-[var(--muted)] rounded mb-2" />
+              <div className="h-4 w-16 bg-[var(--muted)] rounded" />
             </div>
           ))}
         </div>
-        <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 lg:p-8 mb-8 animate-pulse">
-          <div className="h-[300px] bg-[#333] rounded" />
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 lg:p-8 mb-8 animate-pulse">
+          <div className="h-[300px] bg-[var(--muted)] rounded" />
         </div>
       </div>
     );
@@ -248,7 +248,7 @@ export default function Profile() {
         {/* Main Content Area (Left 2/3) */}
         <div className="lg:col-span-2 space-y-8">
           {/* Profile Header Card */}
-          <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 lg:p-8">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 lg:p-8">
             <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
               {user.avatarUrl && (
                 <img
@@ -275,18 +275,18 @@ export default function Profile() {
                         value={nameInput}
                         onChange={(e) => setNameInput(e.target.value)}
                         placeholder={dbConfig?.displayName ?? 'Gamer'}
-                        className="bg-[#1a1a1a] border border-[#444] rounded-lg px-3 py-2 text-2xl lg:text-3xl font-black text-white focus:border-[var(--primary)] outline-none w-64"
+                        className="bg-[var(--background)] border border-[var(--muted)] rounded-lg px-3 py-2 text-2xl lg:text-3xl font-black text-[var(--foreground)] focus:border-[var(--primary)] outline-none w-64"
                       />
                       <button type="submit" className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-500 text-white transition-colors">
                         <i className="fa-solid fa-check" />
                       </button>
-                      <button type="button" onClick={() => setEditingName(false)} className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#333] hover:bg-[#444] text-gray-300 transition-colors">
+                      <button type="button" onClick={() => setEditingName(false)} className="w-9 h-9 flex items-center justify-center rounded-lg bg-[var(--muted)] hover:bg-[var(--muted)] text-[var(--text-body)] transition-colors">
                         <i className="fa-solid fa-xmark" />
                       </button>
                     </form>
                   ) : (
                     <div className="flex items-center gap-2 group">
-                      <h1 className="text-3xl lg:text-4xl font-black text-white">
+                      <h1 className="text-3xl lg:text-4xl font-black text-[var(--foreground)]">
                         {user.displayName || 'Gamer'}
                       </h1>
                       <button
@@ -294,7 +294,7 @@ export default function Profile() {
                           setNameInput(dbConfig?.customDisplayName || '');
                           setEditingName(true);
                         }}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-[#333] opacity-0 group-hover:opacity-100 transition-all"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-[var(--foreground)] hover:bg-[var(--muted)] opacity-0 group-hover:opacity-100 transition-all"
                         title={t('common.edit')}
                       >
                         <i className="fa-solid fa-pen text-sm" />
@@ -306,14 +306,14 @@ export default function Profile() {
                       <i className="fa-brands fa-steam text-[var(--primary)] text-xl" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400">{t('profile.steamId')}</p>
+                      <p className="text-sm text-[var(--text-muted)]">{t('profile.steamId')}</p>
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-bold font-mono">
                           {showSteamId ? user.steamId : '••••••••••••••••••'}
                         </p>
                         <button
                           onClick={() => setShowSteamId(!showSteamId)}
-                          className="text-gray-500 hover:text-white transition-colors"
+                          className="text-gray-500 hover:text-[var(--foreground)] transition-colors"
                           title={showSteamId ? t('common.hide') : t('common.show')}
                         >
                           <i className={`fa-solid ${showSteamId ? 'fa-eye-slash' : 'fa-eye'} text-xs`} />
@@ -331,7 +331,7 @@ export default function Profile() {
                     <i className="fa-solid fa-arrows-rotate" />
                     <span>{syncStatus === 'syncing' ? t('common.syncing') : t('common.syncLibrary')}</span>
                   </button>
-                  <button className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all">
+                  <button className="flex items-center space-x-2 px-4 py-2 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all">
                     <i className="fa-solid fa-share-nodes" />
                     <span>{t('profile.shareProfile')}</span>
                   </button>
@@ -342,58 +342,58 @@ export default function Profile() {
 
           {/* Stats Row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
                   <i className="fa-solid fa-gamepad text-blue-500 text-xl" />
                 </div>
-                <span className="text-4xl font-black text-white">{dna?.totalGames ?? 0}</span>
+                <span className="text-4xl font-black text-[var(--foreground)]">{dna?.totalGames ?? 0}</span>
               </div>
-              <h3 className="text-sm text-gray-400 mb-1">{t('profile.gamesOwned')}</h3>
+              <h3 className="text-sm text-[var(--text-muted)] mb-1">{t('profile.gamesOwned')}</h3>
               <p className="text-xs text-gray-500">{t('profile.inSteamLibrary')}</p>
             </div>
-            <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
                   <i className="fa-solid fa-clock text-purple-500 text-xl" />
                 </div>
-                <span className="text-4xl font-black text-white">{dna?.totalPlaytimeHours.toLocaleString() ?? 0}</span>
+                <span className="text-4xl font-black text-[var(--foreground)]">{dna?.totalPlaytimeHours.toLocaleString() ?? 0}</span>
               </div>
-              <h3 className="text-sm text-gray-400 mb-1">{t('profile.hoursPlayed')}</h3>
+              <h3 className="text-sm text-[var(--text-muted)] mb-1">{t('profile.hoursPlayed')}</h3>
               <p className="text-xs text-gray-500">{t('profile.totalPlaytime')}</p>
             </div>
-            <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
                   <i className="fa-solid fa-hand-pointer text-green-500 text-xl" />
                 </div>
-                <span className="text-4xl font-black text-white">{totalSwipes}</span>
+                <span className="text-4xl font-black text-[var(--foreground)]">{totalSwipes}</span>
               </div>
-              <h3 className="text-sm text-gray-400 mb-1">{t('profile.totalSwipes')}</h3>
+              <h3 className="text-sm text-[var(--text-muted)] mb-1">{t('profile.totalSwipes')}</h3>
               <p className="text-xs text-gray-500">{t('profile.discoveryActivity')}</p>
             </div>
           </div>
 
           {/* Radar Chart Section */}
           {dna && dna.topGenres.length > 0 && (
-            <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 lg:p-8">
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 lg:p-8">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-2">{t('profile.gamingPreferenceProfile')}</h2>
-                  <p className="text-gray-400 text-sm">{t('profile.gamingPreferenceSubtitle')}</p>
+                  <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">{t('profile.gamingPreferenceProfile')}</h2>
+                  <p className="text-[var(--text-muted)] text-sm">{t('profile.gamingPreferenceSubtitle')}</p>
                   <p className="text-xs text-[var(--primary)] mt-1">{t('profile.clickGenreHint')}</p>
                 </div>
                 <div className="flex items-center gap-3 mt-4 lg:mt-0">
                   <button
                     onClick={handleShowEvolution}
-                    className="flex items-center space-x-2 px-4 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
+                    className="flex items-center space-x-2 px-4 py-3 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
                   >
                     <i className="fa-solid fa-chart-line" />
                     <span>{t('profile.profileEvolution')}</span>
                   </button>
                   <button
                     onClick={() => { refetchDna(); refetchProfile(); }}
-                    className="flex items-center space-x-2 px-4 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
+                    className="flex items-center space-x-2 px-4 py-3 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
                   >
                     <i className="fa-solid fa-rotate" />
                     <span>{t('profile.refreshProfile')}</span>
@@ -406,14 +406,14 @@ export default function Profile() {
 
               {/* Genre games popup */}
               {selectedGenre && (
-                <div className="mt-6 bg-[#1a1a1a] rounded-xl p-5 border border-[var(--primary)]/30">
+                <div className="mt-6 bg-[var(--background)] rounded-xl p-5 border border-[var(--primary)]/30">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-white">
+                    <h3 className="text-lg font-bold text-[var(--foreground)]">
                       {t('profile.gamesInGenre', { genre: selectedGenre })}
                     </h3>
                     <button
                       onClick={() => { setSelectedGenre(null); setGenreGames([]); }}
-                      className="text-gray-400 hover:text-white"
+                      className="text-[var(--text-muted)] hover:text-[var(--foreground)]"
                     >
                       <i className="fa-solid fa-xmark" />
                     </button>
@@ -421,7 +421,7 @@ export default function Profile() {
                   {loadingGenreGames ? (
                     <div className="flex gap-3">
                       {[1, 2, 3].map((i) => (
-                        <div key={i} className="w-32 h-20 bg-[#333] rounded-lg animate-pulse" />
+                        <div key={i} className="w-32 h-20 bg-[var(--muted)] rounded-lg animate-pulse" />
                       ))}
                     </div>
                   ) : genreGames.length > 0 ? (
@@ -430,12 +430,12 @@ export default function Profile() {
                         <Link
                           key={game.id}
                           to={`/game/${game.id}`}
-                          className="bg-[#242424] rounded-lg overflow-hidden hover:ring-1 hover:ring-[var(--primary)] transition-all"
+                          className="bg-[var(--card)] rounded-lg overflow-hidden hover:ring-1 hover:ring-[var(--primary)] transition-all"
                         >
                           {game.headerImage ? (
                             <img src={game.headerImage} alt={game.name} className="w-full aspect-video object-cover" />
                           ) : (
-                            <div className="w-full aspect-video bg-[#333] flex items-center justify-center">
+                            <div className="w-full aspect-video bg-[var(--muted)] flex items-center justify-center">
                               <i className="fa-solid fa-gamepad text-gray-500" />
                             </div>
                           )}
@@ -456,17 +456,17 @@ export default function Profile() {
 
               {/* Profile Evolution */}
               {showEvolution && (
-                <div className="mt-6 bg-[#1a1a1a] rounded-xl p-5 border border-purple-500/30">
-                  <h3 className="text-lg font-bold text-white mb-2">{t('profile.profileEvolution')}</h3>
-                  <p className="text-sm text-gray-400 mb-4">{t('profile.profileEvolutionSubtitle')}</p>
+                <div className="mt-6 bg-[var(--background)] rounded-xl p-5 border border-purple-500/30">
+                  <h3 className="text-lg font-bold text-[var(--foreground)] mb-2">{t('profile.profileEvolution')}</h3>
+                  <p className="text-sm text-[var(--text-muted)] mb-4">{t('profile.profileEvolutionSubtitle')}</p>
                   {snapshots.length === 0 ? (
                     <p className="text-sm text-gray-500">{t('profile.noSnapshots')}</p>
                   ) : (
                     <div className="space-y-3 max-h-64 overflow-y-auto">
                       {snapshots.map((snapshot) => (
-                        <div key={snapshot.id} className="bg-[#242424] rounded-lg p-4 flex items-center justify-between">
+                        <div key={snapshot.id} className="bg-[var(--card)] rounded-lg p-4 flex items-center justify-between">
                           <div className="flex-1">
-                            <p className="text-xs text-gray-400 mb-1">
+                            <p className="text-xs text-[var(--text-muted)] mb-1">
                               {new Date((snapshot.createdAt ?? 0) * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                             </p>
                             <div className="flex flex-wrap gap-1">
@@ -494,7 +494,7 @@ export default function Profile() {
           {dna && dna.allTags.length > 0 && (
             <Link
               to="/filters"
-              className="block bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-2xl p-6 lg:p-8 transition-all group"
+              className="block bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] rounded-2xl p-6 lg:p-8 transition-all group"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
@@ -502,8 +502,8 @@ export default function Profile() {
                     <i className="fa-solid fa-sliders text-[var(--primary)] text-2xl" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white mb-1">{t('profile.tagPreferences')}</h2>
-                    <p className="text-gray-400 text-sm">{t('profile.tagPreferencesSubtitle')}</p>
+                    <h2 className="text-xl font-bold text-[var(--foreground)] mb-1">{t('profile.tagPreferences')}</h2>
+                    <p className="text-[var(--text-muted)] text-sm">{t('profile.tagPreferencesSubtitle')}</p>
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-xs text-[var(--primary)] font-medium">
                         {dna.allTags.filter((t) => !t.blacklisted).length} {t('filters.positive')}
@@ -528,14 +528,14 @@ export default function Profile() {
                     <i className="fa-solid fa-brain text-[var(--primary)] text-2xl" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">{t('profile.aiGamingSummary')}</h2>
-                    <p className="text-gray-400 text-sm">{t('profile.aiGamingSummarySubtitle')}</p>
+                    <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">{t('profile.aiGamingSummary')}</h2>
+                    <p className="text-[var(--text-muted)] text-sm">{t('profile.aiGamingSummarySubtitle')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleShowSummaryHistory}
-                    className="flex items-center space-x-2 px-4 py-3 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
+                    className="flex items-center space-x-2 px-4 py-3 bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all"
                   >
                     <i className="fa-solid fa-clock-rotate-left" />
                     <span>{t('profile.summaryHistory')}</span>
@@ -543,15 +543,15 @@ export default function Profile() {
                   <button
                     onClick={handleGenerateSummary}
                     disabled={generatingSummary}
-                    className="flex items-center space-x-2 px-4 py-3 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+                    className="flex items-center space-x-2 px-4 py-3 bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
                   >
                     <i className={`fa-solid ${generatingSummary ? 'fa-spinner fa-spin' : 'fa-rotate'}`} />
                     <span>{generatingSummary ? t('profile.generatingSummary') : t('profile.generateNewSummary')}</span>
                   </button>
                 </div>
               </div>
-              <div className="bg-[#242424]/50 rounded-xl p-6">
-                <p className="text-gray-300 leading-relaxed">
+              <div className="bg-[var(--card)]/50 rounded-xl p-6">
+                <p className="text-[var(--text-body)] leading-relaxed">
                   {dna.aiSummary.split(/(\b(?:RPG|FPS|action|strategy|indie|simulation|adventure|puzzle|multiplayer|singleplayer|co-op|competitive|casual|hardcore)\b)/gi).map((part, i) =>
                     i % 2 === 1 ? (
                       <span key={i} className="text-[var(--primary)] font-bold">{part}</span>
@@ -564,18 +564,18 @@ export default function Profile() {
 
               {/* Summary History */}
               {showSummaryHistory && (
-                <div className="mt-6 bg-[#1a1a1a] rounded-xl p-5 border border-[var(--primary)]/20">
-                  <h3 className="text-lg font-bold text-white mb-4">{t('profile.previousSummaries')}</h3>
+                <div className="mt-6 bg-[var(--background)] rounded-xl p-5 border border-[var(--primary)]/20">
+                  <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">{t('profile.previousSummaries')}</h3>
                   {summaryHistory.length === 0 ? (
                     <p className="text-sm text-gray-500">{t('profile.noSummaryHistory')}</p>
                   ) : (
                     <div className="space-y-3 max-h-64 overflow-y-auto">
                       {summaryHistory.map((entry) => (
-                        <div key={entry.id} className="bg-[#242424] rounded-lg p-4">
-                          <p className="text-xs text-gray-400 mb-2">
+                        <div key={entry.id} className="bg-[var(--card)] rounded-lg p-4">
+                          <p className="text-xs text-[var(--text-muted)] mb-2">
                             {new Date((entry.createdAt ?? 0) * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                           </p>
-                          <p className="text-sm text-gray-300 leading-relaxed">{entry.summary}</p>
+                          <p className="text-sm text-[var(--text-body)] leading-relaxed">{entry.summary}</p>
                         </div>
                       ))}
                     </div>
@@ -606,9 +606,9 @@ export default function Profile() {
           )}
 
           {/* Sync Library */}
-          <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold text-white">{t('profile.syncLibraryCard')}</h3>
+              <h3 className="text-lg font-bold text-[var(--foreground)]">{t('profile.syncLibraryCard')}</h3>
               <button
                 onClick={() => {
                   if (refreshCache) {
@@ -626,13 +626,13 @@ export default function Profile() {
             </div>
 
             {/* Refresh Cache toggle */}
-            <div className="flex items-center justify-between mb-4 bg-[#1a1a1a] rounded-xl px-4 py-3">
+            <div className="flex items-center justify-between mb-4 bg-[var(--background)] rounded-xl px-4 py-3">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                   <i className="fa-solid fa-rotate text-cyan-500 text-xs" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs text-white">Refresh game cache</h4>
+                  <h4 className="font-bold text-xs text-[var(--foreground)]">Refresh game cache</h4>
                   <p className="text-[10px] text-gray-500">Re-fetch all game data on Sync All</p>
                 </div>
               </div>
@@ -655,16 +655,16 @@ export default function Profile() {
                 const isError = catState.status === 'error';
 
                 return (
-                  <div key={key} className="bg-[#1a1a1a] rounded-xl p-4">
+                  <div key={key} className="bg-[var(--background)] rounded-xl p-4">
                     <div className={`flex items-center justify-between${(isSyncing || isError || (isComplete && !hiddenBars[key])) && !fadingBars[key] ? ' mb-2' : ''}`}>
                       <div className="flex items-center space-x-3">
                         <div className={`w-9 h-9 ${bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
                           <i className={`fa-solid ${icon} ${iconColor} text-sm`} />
                         </div>
                         <div>
-                          <h4 className="font-bold text-sm text-white">{label}</h4>
+                          <h4 className="font-bold text-sm text-[var(--foreground)]">{label}</h4>
                           {isSyncing && catState.detail && (
-                            <p className="text-xs text-gray-400 mt-0.5">{catState.detail}</p>
+                            <p className="text-xs text-[var(--text-muted)] mt-0.5">{catState.detail}</p>
                           )}
                           {isComplete && (
                             <p className="text-xs text-green-400 mt-0.5">
@@ -682,10 +682,10 @@ export default function Profile() {
                         <button
                           onClick={() => triggerSync([key])}
                           disabled={anyCategorySyncing}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#242424] border border-[#333] hover:border-[var(--primary)] transition-all disabled:opacity-30"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] transition-all disabled:opacity-30"
                           title={`Sync ${label}`}
                         >
-                          <i className="fa-solid fa-arrows-rotate text-xs text-gray-400" />
+                          <i className="fa-solid fa-arrows-rotate text-xs text-[var(--text-muted)]" />
                         </button>
                       )}
                       {isSyncing && (
@@ -697,7 +697,7 @@ export default function Profile() {
                     {/* Progress bar - hidden when idle, fades out after completion */}
                     {(isSyncing || isError || (isComplete && !hiddenBars[key])) && (
                       <div
-                        className={`h-1.5 bg-[#333] rounded-full overflow-hidden mt-2 transition-all duration-500 ${
+                        className={`h-1.5 bg-[var(--muted)] rounded-full overflow-hidden mt-2 transition-all duration-500 ${
                           fadingBars[key] ? 'opacity-0 max-h-0 mt-0' : 'opacity-100 max-h-4'
                         }`}
                       >
@@ -717,49 +717,49 @@ export default function Profile() {
           </div>
 
           {/* Data Actions */}
-          <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 space-y-3">
-            <h3 className="text-lg font-bold text-white mb-5">{t('profile.dataActions', 'Data')}</h3>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 space-y-3">
+            <h3 className="text-lg font-bold text-[var(--foreground)] mb-5">{t('profile.dataActions', 'Data')}</h3>
               <button
                 onClick={handleExport}
-                className="w-full bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-xl p-3 flex items-center space-x-3 transition-all group"
+                className="w-full bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-xl p-3 flex items-center space-x-3 transition-all group"
               >
                 <div className="w-9 h-9 bg-green-500/20 group-hover:bg-green-500/30 rounded-lg flex items-center justify-center flex-shrink-0 transition-all">
                   <i className="fa-solid fa-download text-green-500 text-sm" />
                 </div>
                 <div className="text-left flex-1">
                   <h4 className="font-bold text-sm">{t('profile.exportData')}</h4>
-                  <p className="text-xs text-gray-400">{t('profile.downloadAsJSON')}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{t('profile.downloadAsJSON')}</p>
                 </div>
               </button>
 
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importing}
-                className="w-full bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-xl p-3 flex items-center space-x-3 transition-all group disabled:opacity-50"
+                className="w-full bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-xl p-3 flex items-center space-x-3 transition-all group disabled:opacity-50"
               >
                 <div className="w-9 h-9 bg-purple-500/20 group-hover:bg-purple-500/30 rounded-lg flex items-center justify-center flex-shrink-0 transition-all">
                   <i className="fa-solid fa-upload text-purple-500 text-sm" />
                 </div>
                 <div className="text-left flex-1">
                   <h4 className="font-bold text-sm">{importing ? t('profile.importing') : t('profile.importData')}</h4>
-                  <p className="text-xs text-gray-400">{t('profile.restorePreferences')}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{t('profile.restorePreferences')}</p>
                 </div>
               </button>
 
             {importResult && (
-              <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-3">
-                <p className="text-xs text-gray-300">{importResult}</p>
+              <div className="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3">
+                <p className="text-xs text-[var(--text-body)]">{importResult}</p>
               </div>
             )}
           </div>
 
           {/* Quick Links */}
-          <div className="bg-[#242424] border border-[#333] rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-white mb-6">{t('profile.quickLinks', 'Quick Links')}</h3>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-[var(--foreground)] mb-6">{t('profile.quickLinks', 'Quick Links')}</h3>
             <div className="space-y-3">
               <Link
                 to="/history"
-                className="block bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-xl p-4 transition-all group"
+                className="block bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-xl p-4 transition-all group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -768,7 +768,7 @@ export default function Profile() {
                     </div>
                     <div>
                       <h4 className="font-bold text-sm mb-0.5">{t('profile.viewHistory')}</h4>
-                      <p className="text-xs text-gray-400">{t('profile.totalSwipesCount', { count: totalSwipes })}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{t('profile.totalSwipesCount', { count: totalSwipes })}</p>
                     </div>
                   </div>
                   <i className="fa-solid fa-arrow-right text-gray-500 group-hover:text-[var(--primary)] transition-colors" />
@@ -777,7 +777,7 @@ export default function Profile() {
 
               <Link
                 to="/backlog"
-                className="block bg-[#1a1a1a] border border-[#333] hover:border-[var(--primary)] rounded-xl p-4 transition-all group"
+                className="block bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)] rounded-xl p-4 transition-all group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -786,7 +786,7 @@ export default function Profile() {
                     </div>
                     <div>
                       <h4 className="font-bold text-sm mb-0.5">{t('profile.manageBacklog')}</h4>
-                      <p className="text-xs text-gray-400">{t('profile.gamesInLibrary', { count: dna?.totalGames ?? 0 })}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{t('profile.gamesInLibrary', { count: dna?.totalGames ?? 0 })}</p>
                     </div>
                   </div>
                   <i className="fa-solid fa-arrow-right text-gray-500 group-hover:text-[var(--primary)] transition-colors" />

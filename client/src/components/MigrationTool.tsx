@@ -47,24 +47,24 @@ export default function MigrationTool() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-400">
+      <p className="text-sm text-[var(--text-muted)]">
         If you were using a previous GameDNA server, you can import your data here.
         Make sure you're logged in to the old server in the same browser.
       </p>
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Server URL</label>
+        <label className="text-sm font-medium text-[var(--text-body)] mb-2 block">Server URL</label>
         <input
           type="text"
           value={serverUrl}
           onChange={(e) => setServerUrl(e.target.value)}
           placeholder="http://localhost:3000"
-          className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
+          className="w-full bg-[var(--background)] border border-[var(--border)] rounded-lg px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-gray-500 focus:outline-none focus:border-[var(--primary)]"
         />
       </div>
       <button
         onClick={handleImport}
         disabled={importing || !serverUrl.trim()}
-        className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-medium hover:border-[#444] hover:text-white transition-colors disabled:opacity-50"
+        className="flex items-center gap-2 px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] text-[var(--text-body)] rounded-xl text-sm font-medium hover:border-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors disabled:opacity-50"
       >
         <i className={`fa-solid ${importing ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-down'}`} />
         {importing ? 'Importing...' : 'Import from Server'}

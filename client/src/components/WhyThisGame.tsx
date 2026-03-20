@@ -169,9 +169,9 @@ export default function WhyThisGame({
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Modal */}
-      <div ref={modalRef} className="relative bg-[#242424] border-2 border-[var(--primary)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+      <div ref={modalRef} className="relative bg-[var(--card)] border-2 border-[var(--primary)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-[fadeIn_0.2s_ease-out]">
         {/* Header */}
-        <div className="bg-[#1a1a1a] border-b border-[#333] p-6">
+        <div className="bg-[var(--background)] border-b border-[var(--border)] p-6">
           <div className="flex items-start gap-4">
             {gameImage && (
               <img
@@ -204,7 +204,7 @@ export default function WhyThisGame({
             </div>
             <button
               onClick={onClose}
-              className="w-10 h-10 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg flex items-center justify-center transition-colors shrink-0"
+              className="w-10 h-10 bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg flex items-center justify-center transition-colors shrink-0"
             >
               <i className="fa-solid fa-xmark" />
             </button>
@@ -230,17 +230,17 @@ export default function WhyThisGame({
                 </button>
               )}
             </div>
-            <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-5">
+            <div className="bg-[var(--background)] border border-[var(--border)] rounded-xl p-5">
               {error ? (
                 <p className="text-red-400">{error}</p>
               ) : loading && !text ? (
                 <div className="space-y-3">
-                  <div className="h-4 w-full bg-[#333] rounded animate-pulse" />
-                  <div className="h-4 w-11/12 bg-[#333] rounded animate-pulse" />
-                  <div className="h-4 w-4/5 bg-[#333] rounded animate-pulse" />
-                  <div className="h-4 w-full bg-[#333] rounded animate-pulse" />
-                  <div className="h-4 w-3/4 bg-[#333] rounded animate-pulse" />
-                  <div className="h-4 w-5/6 bg-[#333] rounded animate-pulse" />
+                  <div className="h-4 w-full bg-[var(--muted)] rounded animate-pulse" />
+                  <div className="h-4 w-11/12 bg-[var(--muted)] rounded animate-pulse" />
+                  <div className="h-4 w-4/5 bg-[var(--muted)] rounded animate-pulse" />
+                  <div className="h-4 w-full bg-[var(--muted)] rounded animate-pulse" />
+                  <div className="h-4 w-3/4 bg-[var(--muted)] rounded animate-pulse" />
+                  <div className="h-4 w-5/6 bg-[var(--muted)] rounded animate-pulse" />
                 </div>
               ) : (
                 <div className="text-sm leading-relaxed whitespace-pre-wrap">

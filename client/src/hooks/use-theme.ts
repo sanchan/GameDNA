@@ -28,16 +28,8 @@ export function useThemeProvider() {
     const root = document.documentElement;
     if (theme === 'light') {
       root.setAttribute('data-theme', 'light');
-      root.style.setProperty('--background', '#f5f5f5');
-      root.style.setProperty('--foreground', '#1a1a1a');
-      root.style.setProperty('--muted', '#e5e5e5');
-      root.style.setProperty('--muted-foreground', '#737373');
     } else {
       root.removeAttribute('data-theme');
-      root.style.setProperty('--background', '#1a1a1a');
-      root.style.setProperty('--foreground', '#ffffff');
-      root.style.setProperty('--muted', '#333333');
-      root.style.setProperty('--muted-foreground', '#999999');
     }
     localStorage.setItem('gamedna-theme', theme);
   }, [theme]);

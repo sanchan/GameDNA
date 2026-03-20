@@ -70,7 +70,7 @@ export function Select({ value, onChange, options, className = '', size = 'md' }
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`${padding} flex items-center gap-2 bg-[#1a1a1a] border border-[#333] rounded-lg text-[var(--foreground)] hover:border-[#555] focus:outline-none focus:border-[var(--primary)] transition-colors cursor-pointer select-none whitespace-nowrap`}
+        className={`${padding} flex items-center gap-2 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] hover:border-[#555] focus:outline-none focus:border-[var(--primary)] transition-colors cursor-pointer select-none whitespace-nowrap`}
       >
         <span className="truncate">{selectedLabel}</span>
         <i
@@ -81,7 +81,7 @@ export function Select({ value, onChange, options, className = '', size = 'md' }
       {open && (
         <div
           ref={listRef}
-          className="dropdown-menu absolute z-50 mt-1.5 min-w-full w-max max-h-64 overflow-y-auto rounded-xl border border-[#333] bg-[#1a1a1a] shadow-xl shadow-black/40 py-1"
+          className="dropdown-menu absolute z-50 mt-1.5 min-w-full w-max max-h-64 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--background)] shadow-xl shadow-black/40 py-1"
         >
           {options.map((opt, i) => {
             const isSelected = opt.value === value

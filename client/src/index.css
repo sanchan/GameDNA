@@ -147,12 +147,13 @@ main {
   }
 }
 
-/* Light theme */
+/* Light theme — every dark-mode variable overridden */
 :root[data-theme="light"] {
-  --background: #f8f9fa;
+  --background: #f5f5f5;
   --foreground: #1a1a1a;
   --card: #ffffff;
   --card-foreground: #1a1a1a;
+  --primary-foreground: #ffffff;
   --secondary: #e5e7eb;
   --secondary-foreground: #1a1a1a;
   --muted: #e5e7eb;
@@ -161,6 +162,23 @@ main {
   --accent-foreground: #1a1a1a;
   --border: #d1d5db;
   --input: #d1d5db;
+  /* Surfaces used as inline hex in components — mapped here for the search-replace pass */
+  --surface-1: #f5f5f5;     /* replaces #1a1a1a backgrounds */
+  --surface-2: #ffffff;      /* replaces #242424 cards     */
+  --surface-3: #f0f0f0;      /* replaces #141414 insets    */
+  --text-heading: #111827;
+  --text-body: #374151;
+  --text-muted: #6b7280;
+}
+
+/* Dark theme surfaces (default) */
+:root {
+  --surface-1: #1a1a1a;
+  --surface-2: #242424;
+  --surface-3: #141414;
+  --text-heading: #ffffff;
+  --text-body: #d1d5db;
+  --text-muted: #a3a3a3;
 }
 
 /* Scrollbar styling */
@@ -209,7 +227,7 @@ main {
 
 .range-slider::-webkit-slider-runnable-track {
   height: 8px;
-  background: #1a1a1a;
+  background: var(--muted);
   border-radius: 8px;
 }
 
@@ -226,7 +244,7 @@ main {
 
 .range-slider::-moz-range-track {
   height: 8px;
-  background: #1a1a1a;
+  background: var(--muted);
   border-radius: 8px;
 }
 

@@ -151,7 +151,7 @@ export default function Recommendations() {
             <button
               onClick={() => handleGenerate(true)}
               disabled={generating}
-              className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg font-semibold transition-all disabled:opacity-50"
+              className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg font-semibold transition-all disabled:opacity-50"
             >
               <i className="fa-solid fa-arrows-rotate" />
               <span>{t('recommendations.regenerateDismissed')}</span>
@@ -214,7 +214,7 @@ export default function Recommendations() {
                     }
                   }
                 }}
-                className="bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-1.5 text-sm w-48 focus:border-[var(--primary)] outline-none transition-colors"
+                className="bg-[var(--background)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-sm w-48 focus:border-[var(--primary)] outline-none transition-colors"
               />
               <i className="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
             </div>
@@ -224,19 +224,19 @@ export default function Recommendations() {
 
       {/* Why Not result */}
       {whyNotResult && (
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-4 mb-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 mb-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[var(--foreground)] flex items-center gap-2">
               <i className="fa-solid fa-circle-question text-amber-400" />
               {whyNotResult.found ? `Why not "${whyNotResult.gameName}"?` : 'Game not found'}
             </h3>
-            <button onClick={() => setWhyNotResult(null)} className="text-gray-500 hover:text-white text-xs">
+            <button onClick={() => setWhyNotResult(null)} className="text-gray-500 hover:text-[var(--foreground)] text-xs">
               <i className="fa-solid fa-xmark" />
             </button>
           </div>
           <ul className="space-y-1">
             {whyNotResult.reasons.map((r, i) => (
-              <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
+              <li key={i} className="text-sm text-[var(--text-muted)] flex items-start gap-2">
                 <i className="fa-solid fa-circle text-[4px] mt-2 shrink-0 text-gray-500" />
                 {r}
               </li>
@@ -280,26 +280,26 @@ export default function Recommendations() {
             </div>
           )}
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-[#242424] border border-[#333] rounded-2xl overflow-hidden">
-              <div className="h-64 bg-[#1a1a1a] animate-pulse" />
+            <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden">
+              <div className="h-64 bg-[var(--background)] animate-pulse" />
               <div className="p-6 flex flex-col gap-3">
                 <div className="flex justify-between">
                   <div className="flex-1">
-                    <div className="h-6 w-3/4 bg-[#1a1a1a] rounded animate-pulse mb-2" />
-                    <div className="h-4 w-1/2 bg-[#1a1a1a] rounded animate-pulse" />
+                    <div className="h-6 w-3/4 bg-[var(--background)] rounded animate-pulse mb-2" />
+                    <div className="h-4 w-1/2 bg-[var(--background)] rounded animate-pulse" />
                   </div>
-                  <div className="h-6 w-16 bg-[#1a1a1a] rounded animate-pulse" />
+                  <div className="h-6 w-16 bg-[var(--background)] rounded animate-pulse" />
                 </div>
                 <div className="flex gap-2">
-                  <div className="h-6 w-14 bg-[#1a1a1a] rounded-full animate-pulse" />
-                  <div className="h-6 w-20 bg-[#1a1a1a] rounded animate-pulse" />
+                  <div className="h-6 w-14 bg-[var(--background)] rounded-full animate-pulse" />
+                  <div className="h-6 w-20 bg-[var(--background)] rounded animate-pulse" />
                 </div>
                 <div className="flex gap-2">
-                  <div className="h-6 w-20 bg-[#1a1a1a] rounded-full animate-pulse" />
-                  <div className="h-6 w-16 bg-[#1a1a1a] rounded-full animate-pulse" />
-                  <div className="h-6 w-14 bg-[#1a1a1a] rounded-full animate-pulse" />
+                  <div className="h-6 w-20 bg-[var(--background)] rounded-full animate-pulse" />
+                  <div className="h-6 w-16 bg-[var(--background)] rounded-full animate-pulse" />
+                  <div className="h-6 w-14 bg-[var(--background)] rounded-full animate-pulse" />
                 </div>
-                <div className="h-10 w-full bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="h-10 w-full bg-[var(--background)] rounded animate-pulse" />
               </div>
             </div>
           ))}
@@ -329,7 +329,7 @@ export default function Recommendations() {
             </button>
             <a
               href="/discover"
-              className="flex items-center gap-2 px-6 py-3 bg-[#242424] border border-[#333] hover:border-[var(--primary)] rounded-lg font-semibold transition-all"
+              className="flex items-center gap-2 px-6 py-3 bg-[var(--card)] border border-[var(--border)] hover:border-[var(--primary)] rounded-lg font-semibold transition-all"
             >
               <i className="fa-solid fa-compass" />
               <span>{t('recommendations.goToDiscovery')}</span>

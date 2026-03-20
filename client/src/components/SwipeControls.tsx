@@ -18,7 +18,7 @@ export default function SwipeControls({ onSwipe, disabled = false }: SwipeContro
         title={t('swipe.notInterested')}
         aria-label={t('swipe.notInterested')}
       >
-        <i className="fa-solid fa-thumbs-down text-2xl text-red-500 group-hover:text-white transition-colors duration-300" aria-hidden="true" />
+        <i className="fa-solid fa-thumbs-down text-2xl text-red-500 group-hover:text-[var(--foreground)] transition-colors duration-300" aria-hidden="true" />
         <span className="sr-only">{t('swipe.notInterested')}</span>
       </button>
 
@@ -30,7 +30,7 @@ export default function SwipeControls({ onSwipe, disabled = false }: SwipeContro
         title={t('swipe.maybeLater')}
         aria-label={t('swipe.maybeLater')}
       >
-        <i className="fa-solid fa-minus text-2xl text-gray-400 group-hover:text-white transition-colors duration-300" aria-hidden="true" />
+        <i className="fa-solid fa-minus text-2xl text-[var(--text-muted)] group-hover:text-[var(--foreground)] transition-colors duration-300" aria-hidden="true" />
         <span className="sr-only">{t('swipe.maybeLater')}</span>
       </button>
 
@@ -42,7 +42,7 @@ export default function SwipeControls({ onSwipe, disabled = false }: SwipeContro
         title={t('swipe.interested')}
         aria-label={t('swipe.interested')}
       >
-        <i className="fa-solid fa-thumbs-up text-2xl text-green-500 group-hover:text-white transition-colors duration-300" aria-hidden="true" />
+        <i className="fa-solid fa-thumbs-up text-2xl text-green-500 group-hover:text-[var(--foreground)] transition-colors duration-300" aria-hidden="true" />
         <span className="sr-only">{t('swipe.interested')}</span>
       </button>
     </div>

@@ -22,10 +22,10 @@ export default function BookmarkButton({ gameId, size = 16, className }: Bookmar
         toggle(gameId);
         toast(active ? 'Bookmark removed' : 'Bookmarked', 'success');
       }}
-      className={className ?? `w-8 h-8 bg-[#1a1a1a]/80 backdrop-blur-sm hover:bg-[#1a1a1a] rounded-full flex items-center justify-center transition-all ${
+      className={className ?? `w-8 h-8 bg-[var(--background)]/80 backdrop-blur-sm hover:bg-[var(--background)] rounded-full flex items-center justify-center transition-all ${
         active
           ? 'text-[var(--primary)]'
-          : 'text-white/70 hover:text-[var(--primary)]'
+          : 'text-[var(--foreground)]/70 hover:text-[var(--primary)]'
       }`}
       title={active ? t('common.removeBookmark') : t('common.bookmark')}
     >

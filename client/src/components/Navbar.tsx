@@ -124,11 +124,11 @@ export default function Navbar() {
     <>
       {/* ─── Desktop: Fixed left sidebar ─── */}
       {user && (
-        <aside className="hidden xl:flex fixed top-0 left-0 h-screen w-64 bg-[#1a1a1a] border-r border-[#333] flex-col z-40">
+        <aside className="hidden xl:flex fixed top-0 left-0 h-screen w-64 bg-[var(--background)] border-r border-[var(--border)] flex-col z-40">
           {/* Drag region (traffic-light safe zone) */}
           <div className="h-[var(--tauri-titlebar-inset,0px)] shrink-0 w-full" data-tauri-drag-region />
           {/* Logo */}
-          <div className="px-5 h-16 flex items-center shrink-0 border-b border-[#333]" data-tauri-drag-region>
+          <div className="px-5 h-16 flex items-center shrink-0 border-b border-[var(--border)]" data-tauri-drag-region>
             <Link to="/">
               <Logo />
             </Link>
@@ -147,7 +147,7 @@ export default function Navbar() {
                   className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all mb-0.5 ${
                     isActive
                       ? 'bg-[var(--primary)]/15 text-[var(--primary)]'
-                      : 'text-[var(--muted-foreground)] hover:bg-white/5 hover:text-white'
+                      : 'text-[var(--muted-foreground)] hover:bg-white/5 hover:text-[var(--foreground)]'
                   }`}
                 >
                   {icon && <i className={`${icon} w-5 text-center text-base`} />}
@@ -159,7 +159,7 @@ export default function Navbar() {
 
           {/* Sync progress */}
           {syncStatus === 'syncing' && syncProgress && (
-            <div className="px-4 py-3 border-t border-[#333] shrink-0">
+            <div className="px-4 py-3 border-t border-[var(--border)] shrink-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-[var(--foreground)] truncate">{syncProgress.detail}</span>
                 <span className="text-xs text-[var(--muted-foreground)]">{syncProgress.progress}%</span>
@@ -177,7 +177,7 @@ export default function Navbar() {
           )}
 
           {/* API quota */}
-          <div className="px-4 py-3 border-t border-[#333] shrink-0">
+          <div className="px-4 py-3 border-t border-[var(--border)] shrink-0">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[10px] font-medium text-[var(--muted-foreground)] uppercase tracking-wider">{t('common.apiQuota')}</span>
               <span className={`text-[10px] font-medium ${quotaTextColor}`}>
@@ -196,13 +196,13 @@ export default function Navbar() {
           </div>
 
           {/* User info + logout */}
-          <div className="px-3 py-4 border-t border-[#333] shrink-0">
+          <div className="px-3 py-4 border-t border-[var(--border)] shrink-0">
             <div className="flex items-center gap-3 px-3 mb-3">
               {user.avatarUrl && (
                 <img src={user.avatarUrl} alt="" className="w-9 h-9 rounded-full" />
               )}
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user.displayName}</p>
+                <p className="text-sm font-medium text-[var(--foreground)] truncate">{user.displayName}</p>
                 <p className="text-xs text-[var(--muted-foreground)]">Steam</p>
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function Navbar() {
       )}
 
       {/* ─── Mobile/Tablet: Top bar ─── */}
-      <nav className="xl:hidden sticky top-0 z-40 bg-[#242424]/95 backdrop-blur-lg border-b border-[#333]">
+      <nav className="xl:hidden sticky top-0 z-40 bg-[var(--card)]/95 backdrop-blur-lg border-b border-[var(--border)]">
         <div className="px-4 sm:px-6 flex items-center justify-between h-16 mt-[var(--tauri-titlebar-inset,0px)]" data-tauri-drag-region>
           {/* Left: Hamburger + Logo */}
           <div className="flex items-center gap-2">
@@ -257,7 +257,7 @@ export default function Navbar() {
 
         {/* Sync progress banner */}
         {user && syncStatus === 'syncing' && syncProgress && (
-          <div className="bg-[#242424] border-t border-[#333] px-4 py-2">
+          <div className="bg-[var(--card)] border-t border-[var(--border)] px-4 py-2">
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm text-[var(--foreground)]">{syncProgress.detail}</span>
               <span className="text-xs text-[var(--muted-foreground)]">{syncProgress.progress}%</span>
@@ -288,17 +288,17 @@ export default function Navbar() {
 
           {/* Sidebar panel */}
           <div
-            className={`absolute top-0 left-0 h-full w-72 bg-[#1a1a1a] border-r border-[#333] flex flex-col transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+            className={`absolute top-0 left-0 h-full w-72 bg-[var(--background)] border-r border-[var(--border)] flex flex-col transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
           >
             {/* Sidebar header */}
             <div className="pt-[var(--tauri-titlebar-inset,0px)] shrink-0" />
-            <div className="flex items-center justify-between px-5 h-16 border-b border-[#333] shrink-0">
+            <div className="flex items-center justify-between px-5 h-16 border-b border-[var(--border)] shrink-0">
               <Link to="/" onClick={() => setSidebarOpen(false)}>
                 <Logo />
               </Link>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 text-[var(--muted-foreground)] hover:text-white transition-colors"
+                className="p-2 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
                 aria-label="Close menu"
               >
                 <i className="fa-solid fa-xmark text-xl" />
@@ -306,13 +306,13 @@ export default function Navbar() {
             </div>
 
             {/* User info */}
-            <div className="px-5 py-4 border-b border-[#333] shrink-0">
+            <div className="px-5 py-4 border-b border-[var(--border)] shrink-0">
               <div className="flex items-center gap-3">
                 {user.avatarUrl && (
                   <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full" />
                 )}
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user.displayName}</p>
+                  <p className="text-sm font-medium text-[var(--foreground)] truncate">{user.displayName}</p>
                   <p className="text-xs text-[var(--muted-foreground)]">Steam</p>
                 </div>
               </div>
@@ -332,7 +332,7 @@ export default function Navbar() {
                     className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all mb-0.5 ${
                       isActive
                         ? 'bg-[var(--primary)]/15 text-[var(--primary)]'
-                        : 'text-[var(--muted-foreground)] hover:bg-white/5 hover:text-white'
+                        : 'text-[var(--muted-foreground)] hover:bg-white/5 hover:text-[var(--foreground)]'
                     }`}
                   >
                     {icon && <i className={`${icon} w-5 text-center text-base`} />}
@@ -343,7 +343,7 @@ export default function Navbar() {
             </div>
 
             {/* API quota */}
-            <div className="px-4 py-3 border-t border-[#333] shrink-0">
+            <div className="px-4 py-3 border-t border-[var(--border)] shrink-0">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] font-medium text-[var(--muted-foreground)] uppercase tracking-wider">{t('common.apiQuota')}</span>
                 <span className={`text-[10px] font-medium ${quotaTextColor}`}>
@@ -362,7 +362,7 @@ export default function Navbar() {
             </div>
 
             {/* Logout button at bottom */}
-            <div className="px-3 py-4 border-t border-[#333] shrink-0">
+            <div className="px-3 py-4 border-t border-[var(--border)] shrink-0">
               <button
                 onClick={() => { setSidebarOpen(false); setSignOutOpen(true); }}
                 className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
@@ -378,24 +378,24 @@ export default function Navbar() {
       {/* ─── Sign Out confirmation dialog ─── */}
       {signOutOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center shrink-0">
                 <i className="fa-solid fa-triangle-exclamation text-red-400" />
               </div>
-              <h3 className="text-lg font-bold text-white">Sign out of GameDNA?</h3>
+              <h3 className="text-lg font-bold text-[var(--foreground)]">Sign out of GameDNA?</h3>
             </div>
 
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-[var(--text-muted)] mb-4">
               All local data will be <span className="text-red-400 font-medium">permanently deleted</span>, including your library, ratings, taste profile, and settings.
             </p>
 
-            <div className="bg-[#1a1a1a] rounded-xl p-4 mb-6">
-              <p className="text-sm font-medium text-gray-300 mb-3">Export your data first:</p>
+            <div className="bg-[var(--background)] rounded-xl p-4 mb-6">
+              <p className="text-sm font-medium text-[var(--text-body)] mb-3">Export your data first:</p>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={handleExportDb}
-                  className="flex items-center gap-2 px-3 py-2 bg-[#242424] border border-[#444] text-gray-300 rounded-lg text-sm font-medium hover:border-[var(--primary)] hover:text-white transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 bg-[var(--card)] border border-[var(--muted)] text-[var(--text-body)] rounded-lg text-sm font-medium hover:border-[var(--primary)] hover:text-[var(--foreground)] transition-colors"
                 >
                   <i className="fa-solid fa-database text-xs" />
                   Download .db backup
@@ -403,7 +403,7 @@ export default function Navbar() {
                 <button
                   onClick={handleExportJson}
                   disabled={!userId}
-                  className="flex items-center gap-2 px-3 py-2 bg-[#242424] border border-[#444] text-gray-300 rounded-lg text-sm font-medium hover:border-[var(--primary)] hover:text-white transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-2 bg-[var(--card)] border border-[var(--muted)] text-[var(--text-body)] rounded-lg text-sm font-medium hover:border-[var(--primary)] hover:text-[var(--foreground)] transition-colors disabled:opacity-50"
                 >
                   <i className="fa-solid fa-file-export text-xs" />
                   Download .json export
@@ -415,7 +415,7 @@ export default function Navbar() {
               <button
                 onClick={() => setSignOutOpen(false)}
                 disabled={signingOut}
-                className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-300 border border-[#444] hover:bg-[#333] transition-colors disabled:opacity-50"
+                className="px-4 py-2.5 rounded-lg text-sm font-medium text-[var(--text-body)] border border-[var(--muted)] hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>

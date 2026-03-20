@@ -111,7 +111,7 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
       {/* Close button */}
       <button
         onClick={close}
-        className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+        className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-[var(--foreground)] hover:bg-white/20 transition-colors"
         title={t('mediaGallery.closeEsc')}
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -121,7 +121,7 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
       </button>
 
       {/* Counter */}
-      <div className="absolute top-4 left-4 z-10 text-white/70 text-sm">
+      <div className="absolute top-4 left-4 z-10 text-[var(--foreground)]/70 text-sm">
         {t('mediaGallery.counter', { current: index + 1, total: items.length })}
       </div>
 
@@ -165,7 +165,7 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
         <>
           <button
             onClick={(e) => { e.stopPropagation(); goPrev(); }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/10 text-[var(--foreground)] hover:bg-white/20 transition-colors"
             title={t('mediaGallery.previous')}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -174,7 +174,7 @@ export default function MediaGallery({ items, initialIndex, onClose }: MediaGall
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); goNext(); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/10 text-[var(--foreground)] hover:bg-white/20 transition-colors"
             title={t('mediaGallery.next')}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
