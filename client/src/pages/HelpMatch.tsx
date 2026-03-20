@@ -37,6 +37,13 @@ export default function HelpMatch() {
     },
   ];
 
+  const signals = [
+    { key: 'library', icon: 'fa-solid fa-gamepad', color: 'text-[var(--primary)]' },
+    { key: 'wishlist', icon: 'fa-solid fa-heart', color: 'text-pink-400' },
+    { key: 'swipes', icon: 'fa-solid fa-hand-pointer', color: 'text-green-400' },
+    { key: 'bookmarks', icon: 'fa-solid fa-bookmark', color: 'text-amber-400' },
+  ];
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       <div className="max-w-3xl mx-auto">
@@ -102,9 +109,79 @@ export default function HelpMatch() {
             <i className="fa-solid fa-dna text-[var(--primary)]" />
             {t('matchExplainer.tasteProfileTitle')}
           </h2>
-          <p className="text-sm text-gray-300 leading-relaxed">
+          <p className="text-sm text-gray-300 leading-relaxed mb-4">
             {t('matchExplainer.tasteProfileDesc')}
           </p>
+
+          <div className="space-y-3 mb-4">
+            {signals.map((s) => (
+              <div key={s.key} className="flex items-start gap-3 bg-[#1a1a1a] rounded-xl p-3">
+                <div className="w-8 h-8 rounded-lg bg-[#242424] flex items-center justify-center shrink-0 mt-0.5">
+                  <i className={`${s.icon} ${s.color} text-sm`} />
+                </div>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  {t(`matchExplainer.tasteProfileSignals.${s.key}`)}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-[#141414] border border-[#333] rounded-xl p-4">
+            <p className="text-xs text-gray-400 leading-relaxed">
+              <span className="text-gray-300 font-medium">How scores stay proportional: </span>
+              {t('matchExplainer.tasteProfileNormalization')}
+            </p>
+          </div>
+        </div>
+
+        {/* Pool Expansion */}
+        <div className="bg-[#242424] border border-[#333] rounded-2xl p-6 mb-6">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <i className="fa-solid fa-magnifying-glass-plus text-cyan-400" />
+            {t('matchExplainer.poolExpansionTitle')}
+          </h2>
+          <p className="text-sm text-gray-300 leading-relaxed mb-4">
+            {t('matchExplainer.poolExpansionDesc')}
+          </p>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 bg-[#1a1a1a] rounded-xl p-4">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                <i className="fa-solid fa-magnifying-glass text-cyan-400 text-sm" />
+              </div>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                {t('matchExplainer.poolExpansionPoints.search')}
+              </p>
+            </div>
+            <div className="flex items-start gap-3 bg-[#1a1a1a] rounded-xl p-4">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                <i className="fa-solid fa-gem text-emerald-400 text-sm" />
+              </div>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                {t('matchExplainer.poolExpansionPoints.noPopGate')}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Learning Loop */}
+        <div className="bg-gradient-to-br from-[var(--primary)]/5 to-purple-600/5 border border-[var(--primary)]/20 rounded-2xl p-6 mb-6">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <i className="fa-solid fa-arrows-spin text-[var(--primary)]" />
+            {t('matchExplainer.learningLoopTitle')}
+          </h2>
+          <p className="text-sm text-gray-300 leading-relaxed mb-4">
+            {t('matchExplainer.learningLoopDesc')}
+          </p>
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-500 flex-wrap">
+            <span className="px-3 py-1.5 bg-[#1a1a1a] rounded-full text-gray-300">Swipe / Bookmark</span>
+            <i className="fa-solid fa-arrow-right text-[var(--primary)]" />
+            <span className="px-3 py-1.5 bg-[#1a1a1a] rounded-full text-gray-300">Profile updates</span>
+            <i className="fa-solid fa-arrow-right text-[var(--primary)]" />
+            <span className="px-3 py-1.5 bg-[#1a1a1a] rounded-full text-gray-300">New game searches</span>
+            <i className="fa-solid fa-arrow-right text-[var(--primary)]" />
+            <span className="px-3 py-1.5 bg-[#1a1a1a] rounded-full text-gray-300">Better matches</span>
+            <i className="fa-solid fa-rotate-left text-[var(--primary)]" />
+          </div>
         </div>
 
         {/* AI Layer */}

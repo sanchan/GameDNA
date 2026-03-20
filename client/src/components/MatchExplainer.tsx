@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { config } from '../services/config';
 
@@ -130,7 +131,7 @@ export default function MatchExplainer({ score, onClose }: MatchExplainerProps) 
               {t('matchExplainer.tasteProfileTitle')}
             </h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              {t('matchExplainer.tasteProfileDesc')}
+              {t('matchExplainer.tasteProfileDesc')} {t('matchExplainer.tasteProfileSignals.library')} {t('matchExplainer.tasteProfileSignals.swipes')}
             </p>
           </div>
 
@@ -143,6 +144,18 @@ export default function MatchExplainer({ score, onClose }: MatchExplainerProps) 
             <p className="text-xs text-gray-400 leading-relaxed">
               {t('matchExplainer.aiLayerDesc')}
             </p>
+          </div>
+
+          {/* Link to full page */}
+          <div className="text-center pt-1">
+            <Link
+              to="/help/match"
+              onClick={onClose}
+              className="text-sm text-[var(--primary)] hover:text-[var(--primary)]/80 font-medium inline-flex items-center gap-1.5 transition-colors"
+            >
+              {t('matchExplainer.learningLoopTitle')}, {t('matchExplainer.poolExpansionTitle').toLowerCase()}, and more
+              <i className="fa-solid fa-arrow-right text-xs" />
+            </Link>
           </div>
         </div>
       </div>

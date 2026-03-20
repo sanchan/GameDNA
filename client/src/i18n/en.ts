@@ -535,31 +535,46 @@ const en = {
   matchExplainer: {
     title: 'How Match Works',
     howItWorks: 'How is this score calculated?',
-    description: 'Your match score measures how well a game fits your gaming DNA. It combines your taste profile (built from your owned games and swipe history) with game characteristics to produce a compatibility percentage.',
+    description: 'Your match score measures how well a game fits your gaming DNA. It combines your taste profile — built from your library, wishlist, bookmarks, and swipe history — with the game\'s characteristics to produce a compatibility percentage. Genres and tags you love count more heavily than ones you merely like.',
     formula: 'Scoring formula',
     factors: 'Scoring Factors',
     factor: {
       genre: {
         title: 'Genre Match',
-        desc: 'How well the game\'s genres align with your preferred genres. Based on the genres of games you own and have swiped yes on, weighted by playtime.',
+        desc: 'Compares the game\'s genres against your top genres, weighted by how much you enjoy each one. If you\'ve played 200 hours of RPGs but only 5 hours of racing games, an RPG will contribute far more to this score than a racer. The weight reflects your real preferences, not just "yes or no."',
       },
       tag: {
         title: 'Tag Match',
-        desc: 'How well the game\'s Steam tags match your tag preferences. Tags like "Open World", "Co-op", or "Story Rich" are compared against your taste profile.',
+        desc: 'Same idea as genres, but with Steam tags like "Open World", "Co-op", or "Story Rich." Each tag carries a weight based on how strongly it appears across your library and swipe history. A game that matches your highest-weighted tags scores much better than one that matches low-weight tags.',
       },
       review: {
         title: 'Community Reviews',
-        desc: 'The game\'s overall review score on Steam, normalized to a 0-1 scale. Higher-rated games get a boost in the match calculation.',
+        desc: 'The game\'s overall review score on Steam (0–100%), scaled to a 0–1 value. This gives well-reviewed games a small boost, but it\'s the lightest factor — your personal taste matters more than the crowd.',
       },
       recency: {
         title: 'Release Recency',
-        desc: 'How recently the game was released. Newer games (within the last 10 years) score higher, helping surface fresh titles alongside classics.',
+        desc: 'How recently the game was released. Games from the last couple of years score highest; games older than 10 years score near zero. This helps surface fresh titles alongside classics without hiding older gems entirely.',
       },
     },
     tasteProfileTitle: 'Your Taste Profile',
-    tasteProfileDesc: 'Your taste profile is built automatically from two sources: your Steam library (games you own, weighted by playtime) and your swipe history (yes = strong signal, maybe = moderate, no = negative). The more you play and swipe, the more accurate your matches become.',
-    aiLayerTitle: 'AI Enhancement',
-    aiLayerDesc: 'When an AI provider is configured (Ollama or WebLLM), recommendations go through an additional scoring layer. The AI analyzes game descriptions, your profile, and contextual factors to refine the heuristic score. Games marked "AI Scored" have gone through this enhanced analysis.',
+    tasteProfileDesc: 'Your taste profile is built automatically from multiple signals, each with a different strength:',
+    tasteProfileSignals: {
+      library: 'Games you own and have played heavily count the most. A game with 10+ hours of playtime is a strong signal that you enjoy its genres and tags.',
+      wishlist: 'Wishlist games are a moderate signal — you wanted the game enough to save it, even if you haven\'t played it yet.',
+      swipes: 'Swiping "yes" on a game adds a strong positive signal; "maybe" adds a light one; "no" adds a negative signal that reduces those genres/tags over time.',
+      bookmarks: 'Bookmarked games contribute a moderate positive signal, similar to wishlisted games.',
+    },
+    tasteProfileNormalization: 'Scores are proportional: if your strongest genre has a raw score of 50 and another has 5, they normalize to 1.0 and 0.1 — not compressed together. This keeps a clear difference between "love it" and "it\'s okay."',
+    poolExpansionTitle: 'How We Find Games For You',
+    poolExpansionDesc: 'We don\'t just show you the most popular games and hope for the best. The discovery pool works in two ways:',
+    poolExpansionPoints: {
+      search: 'Taste-driven search: After your profile is built, the app searches Steam using your top genres and tags to find games that match your interests — including niche titles that wouldn\'t appear in generic "top sellers" lists.',
+      noPopGate: 'No popularity filter: Every cached game is scored against your profile, not just the top 50 most-reviewed. A hidden gem with 200 reviews that perfectly matches your taste will rank higher than a blockbuster that doesn\'t.',
+    },
+    learningLoopTitle: 'The Learning Loop',
+    learningLoopDesc: 'The system gets smarter with every interaction. When you swipe, bookmark, or add a game to a collection, your taste profile updates. That updated profile drives new game searches, which bring in fresh candidates, which lead to better recommendations. The more you use the app, the more tailored your discovery feed becomes.',
+    aiLayerTitle: 'AI Enhancement (Optional)',
+    aiLayerDesc: 'When an AI provider is configured (Ollama or WebLLM), recommendations go through an additional scoring layer. The AI reads game descriptions and your profile to add nuance that the formula alone can\'t capture — like thematic similarities or gameplay feel. Games marked "AI Scored" have gone through this enhanced analysis. Without AI, the heuristic scoring above handles everything.',
   },
 
   // Help Privacy page
