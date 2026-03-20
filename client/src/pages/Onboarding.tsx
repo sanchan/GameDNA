@@ -246,6 +246,8 @@ export default function Onboarding() {
 
       setImportStatus('Restoring database...');
       await importDb(data);
+      // Ensure setup is marked complete so routing doesn't loop back here
+      await queries.saveLocalConfig({ setupComplete: true });
       setImportStatus('Done!');
       await refreshConfig();
       navigate('/');
