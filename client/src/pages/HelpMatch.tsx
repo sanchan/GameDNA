@@ -12,6 +12,7 @@ export default function HelpMatch() {
       icon: 'fa-solid fa-masks-theater',
       color: 'text-purple-400',
       bg: 'bg-purple-500/20',
+      barBg: 'bg-purple-500/60',
       weight: w.genreWeight,
     },
     {
@@ -19,6 +20,7 @@ export default function HelpMatch() {
       icon: 'fa-solid fa-tags',
       color: 'text-blue-400',
       bg: 'bg-blue-500/20',
+      barBg: 'bg-blue-500/60',
       weight: w.tagWeight,
     },
     {
@@ -26,6 +28,7 @@ export default function HelpMatch() {
       icon: 'fa-solid fa-thumbs-up',
       color: 'text-green-400',
       bg: 'bg-green-500/20',
+      barBg: 'bg-green-500/60',
       weight: w.reviewWeight,
     },
     {
@@ -33,6 +36,7 @@ export default function HelpMatch() {
       icon: 'fa-solid fa-calendar',
       color: 'text-amber-400',
       bg: 'bg-amber-500/20',
+      barBg: 'bg-amber-500/60',
       weight: w.recencyWeight,
     },
   ];
@@ -93,7 +97,7 @@ export default function HelpMatch() {
                   </p>
                   <div className="mt-2 w-full h-2 bg-[#242424] rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${f.bg.replace('/20', '/60')}`}
+                      className={`h-full rounded-full ${f.barBg}`}
                       style={{ width: `${f.weight * 100}%` }}
                     />
                   </div>
