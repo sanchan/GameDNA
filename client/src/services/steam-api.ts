@@ -1,9 +1,37 @@
 // Client-side Steam API — calls go through the micro-proxy to avoid CORS issues
-// and to keep the API key server-side in headers.
+// in browser mode. In Tauri, calls go directly to Steam (no proxy needed).
 
 import { config } from './config';
 
 const PROXY_BASE = `${import.meta.env.VITE_API_BASE || '/api'}/steam`;
+const IS_TAURI = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+
+/**
+ * In Tauri mode, convert proxy URLs to direct Steam API URLs.
+ * In browser mode, return the proxy URL unchanged.
+ */
+function resolveSteamUrl(proxyUrl: string, apiKey?: string): string {
+  if (!IS_TAURI) return proxyUrl;
+
+  const rel = proxyUrl.startsWith(PROXY_BASE) ? proxyUrl.slice(PROXY_BASE.length) : proxyUrl;
+
+  if (rel.startsWith('/web/')) {
+    const path = rel.slice(5);
+    const sep = path.includes('?') ? '&' : '?';
+    return `https://api.steampowered.com/${path}${apiKey ? `${sep}key=${apiKey}` : ''}`;
+  }
+  if (rel.startsWith('/store/')) {
+    return `https://store.steampowered.com/api/${rel.slice(7)}`;
+  }
+  if (rel.startsWith('/tagdata/')) {
+    return `https://store.steampowered.com${rel}`;
+  }
+  if (rel.startsWith('/reviews/')) {
+    return `https://store.steampowered.com/appreviews/${rel.slice(9)}`;
+  }
+
+  return proxyUrl;
+}
 export const DAILY_LIMIT = 100_000;
 const DAILY_KEY = 'gamedna_api_calls';
 
@@ -110,9 +138,11 @@ export interface PlayerSummary {
   loccountrycode?: string;
 }
 
-/** Fetch game details via proxy → Steam Store API + reviews. */
+/** Fetch via proxy (browser) or directly (Tauri). For web API calls with API key. */
 async function fetchWithProxy(url: string, apiKey?: string): Promise<Response> {
   if (!checkDailyLimit()) throw new Error('Steam API daily limit (100,000 calls) reached. Try again tomorrow.');
+  const resolved = resolveSteamUrl(url, apiKey);
+  if (IS_TAURI) return fetch(resolved);
   const headers: Record<string, string> = {};
   if (apiKey) headers['x-steam-api-key'] = apiKey;
   return fetch(url, { headers });
@@ -157,8 +187,8 @@ export async function getAppDetails(appid: number, cc?: string): Promise<GameDet
     const ccParam = cc ? `&cc=${cc}` : '';
 
     const [detailsRes, reviewsRes] = await Promise.all([
-      fetch(`${PROXY_BASE}/store/appdetails?appids=${appid}${ccParam}`),
-      fetch(`${PROXY_BASE}/reviews/${appid}?json=1&purchase_type=all&num_per_page=0`),
+      fetch(resolveSteamUrl(`${PROXY_BASE}/store/appdetails?appids=${appid}${ccParam}`)),
+      fetch(resolveSteamUrl(`${PROXY_BASE}/reviews/${appid}?json=1&purchase_type=all&num_per_page=0`)),
     ]);
 
     if (!detailsRes.ok) return null;
@@ -265,7 +295,7 @@ export async function getPopularGameIds(): Promise<number[]> {
   try {
     await storeApiLimiter.acquire();
     if (!checkDailyLimit()) throw new Error('Steam API daily limit reached');
-    const res = await fetch(`${PROXY_BASE}/store/featured`);
+    const res = await fetch(resolveSteamUrl(`${PROXY_BASE}/store/featured`));
     if (res.ok) {
       const data = await res.json() as {
         featured_win?: Array<{ id: number }>;
@@ -296,7 +326,7 @@ export async function fetchMoreGameIds(exclude: Set<number>): Promise<number[]> 
     try {
       await storeApiLimiter.acquire();
       if (!checkDailyLimit()) break;
-      const res = await fetch(url);
+      const res = await fetch(resolveSteamUrl(url));
       if (!res.ok) continue;
       const data = await res.json() as Record<string, unknown>;
       const extractIds = (obj: unknown): void => {
@@ -328,7 +358,7 @@ export async function getSteamTags(): Promise<{ tagid: number; name: string }[]>
   try {
     await storeApiLimiter.acquire();
     if (!checkDailyLimit()) throw new Error('Steam API daily limit reached');
-    const res = await fetch(`${PROXY_BASE}/tagdata/populartags/english`);
+    const res = await fetch(resolveSteamUrl(`${PROXY_BASE}/tagdata/populartags/english`));
     if (!res.ok) return [];
     const data = await res.json();
     // Response is an array of { tagid, name } objects
@@ -349,7 +379,7 @@ export async function searchSteamStore(term: string): Promise<{ id: number; name
   try {
     await storeApiLimiter.acquire();
     if (!checkDailyLimit()) return [];
-    const res = await fetch(`${PROXY_BASE}/store/storesearch?term=${encodeURIComponent(term)}&l=english&cc=us`);
+    const res = await fetch(resolveSteamUrl(`${PROXY_BASE}/store/storesearch?term=${encodeURIComponent(term)}&l=english&cc=us`));
     if (!res.ok) return [];
     const data = await res.json() as { items?: Array<{ id: number; name: string; tiny_image: string }> };
     return (data.items ?? []).map((item) => ({
