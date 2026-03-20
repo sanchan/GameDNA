@@ -12,7 +12,8 @@ import type { AiProvider } from '../services/ai-engine';
 import type { UserSettings } from '../../../shared/types';
 import { DEFAULT_EXPLANATION_TEMPLATE } from '../services/ai-features';
 import { Select } from '../components/Select';
-import { useTheme } from '../hooks/use-theme';
+import { useTheme, type Theme } from '../hooks/use-theme';
+import ThemePicker from '../components/ThemePicker';
 import { getAuditLog, clearAuditLog, subscribeAuditLog, type ApiAuditEntry } from '../services/api-audit';
 
 export default function Settings() {
@@ -169,22 +170,10 @@ export default function Settings() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-[var(--text-body)] mb-2 block">Theme</label>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => { const s = { ...settings, theme: 'dark' as const }; setSettings(s); setTheme('dark'); saveNow(s); }}
-                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${settings.theme === 'dark' ? 'border-[var(--primary)] bg-[var(--background)]' : 'border-[var(--border)] hover:border-[var(--muted-foreground)]'}`}
-                >
-                  <i className="fa-solid fa-moon text-xl mb-2" />
-                  <span className="text-sm font-medium block">Dark</span>
-                </button>
-                <button
-                  onClick={() => { const s = { ...settings, theme: 'light' as const }; setSettings(s); setTheme('light'); saveNow(s); }}
-                  className={`flex-1 p-4 rounded-xl border transition-all text-center ${settings.theme === 'light' ? 'border-[var(--primary)] bg-[var(--background)]' : 'border-[var(--border)] hover:border-[var(--muted-foreground)]'}`}
-                >
-                  <i className="fa-solid fa-sun text-xl mb-2" />
-                  <span className="text-sm font-medium block">Light</span>
-                </button>
-              </div>
+              <ThemePicker
+                value={settings.theme}
+                onChange={(t: Theme) => { const s = { ...settings, theme: t }; setSettings(s); setTheme(t); saveNow(s); }}
+              />
             </div>
             <div>
               <label className="text-sm font-medium text-[var(--text-body)] mb-2 block">Language</label>

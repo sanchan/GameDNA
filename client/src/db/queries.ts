@@ -924,7 +924,7 @@ export function setGameStatus(userId: number, gameId: number, status: GameStatus
 export function getUserSettings(userId: number): UserSettings {
   const row = get<Record<string, unknown>>('SELECT * FROM user_settings WHERE user_id = ?', [userId]);
   return {
-    theme: ((row?.theme as string) ?? 'dark') as 'dark' | 'light',
+    theme: ((row?.theme as string) ?? 'system') as 'system' | 'dark' | 'light',
     backupDir: (row?.backup_dir as string) ?? null,
     backupIntervalHours: (row?.backup_interval_hours as number) ?? 24,
     ollamaUrl: (row?.ollama_url as string) ?? null,
@@ -941,7 +941,7 @@ export function saveUserSettings(userId: number, settings: Partial<UserSettings>
   if (!row) {
     run(`INSERT INTO user_settings (user_id, theme, ollama_url, ollama_model, cache_ttl_seconds, language, keyboard_shortcuts, explanation_template, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId, settings.theme ?? 'dark', settings.ollamaUrl ?? null, settings.ollamaModel ?? null,
+      [userId, settings.theme ?? 'system', settings.ollamaUrl ?? null, settings.ollamaModel ?? null,
        settings.cacheTtlSeconds ?? null, settings.language ?? 'en',
        settings.keyboardShortcuts ? JSON.stringify(settings.keyboardShortcuts) : null,
        settings.explanationTemplate ?? null, nowUnix()]);

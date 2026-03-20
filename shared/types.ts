@@ -126,7 +126,7 @@ export interface GameStatusEntry {
 }
 
 export interface UserSettings {
-  theme: 'dark' | 'light';
+  theme: 'system' | 'dark' | 'light';
   backupDir: string | null;
   backupIntervalHours: number;
   ollamaUrl: string | null;

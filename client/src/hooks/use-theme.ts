@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 
-type Theme = 'dark' | 'light';
+export type Theme = 'system' | 'dark' | 'light';
 
 interface ThemeContextType {
   theme: Theme;
@@ -8,7 +8,7 @@ interface ThemeContextType {
 }
 
 export const ThemeContext = createContext<ThemeContextType>({
-  theme: 'dark',
+  theme: 'system',
   setTheme: () => {},
 });
 
@@ -16,27 +16,40 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
+function applyTheme(theme: Theme) {
+  const root = document.documentElement;
+  const resolved = theme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+    : theme;
+  if (resolved === 'light') {
+    root.setAttribute('data-theme', 'light');
+  } else {
+    root.removeAttribute('data-theme');
+  }
+}
+
 export function useThemeProvider() {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem('gamedna-theme') as Theme) || 'dark';
+      return (localStorage.getItem('gamedna-theme') as Theme) || 'system';
     }
-    return 'dark';
+    return 'system';
   });
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'light') {
-      root.setAttribute('data-theme', 'light');
-    } else {
-      root.removeAttribute('data-theme');
-    }
+    applyTheme(theme);
     localStorage.setItem('gamedna-theme', theme);
+
+    if (theme === 'system') {
+      const mq = window.matchMedia('(prefers-color-scheme: light)');
+      const handler = () => applyTheme('system');
+      mq.addEventListener('change', handler);
+      return () => mq.removeEventListener('change', handler);
+    }
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    // Theme is persisted to localStorage only (local-first mode)
   };
 
   return { theme, setTheme };

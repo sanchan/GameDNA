@@ -9,6 +9,8 @@ import type { AiProvider } from '../services/ai-engine';
 import type { SyncCategory } from '../services/sync-manager';
 import { TAG_COLLECTIONS } from '../services/tag-filter';
 import { Select } from '../components/Select';
+import ThemePicker from '../components/ThemePicker';
+import type { Theme } from '../hooks/use-theme';
 
 type Step = 'welcome' | 'steam-id' | 'api-key' | 'preferences' | 'sync' | 'import';
 
@@ -38,7 +40,7 @@ export default function Onboarding() {
   const [importStatus, setImportStatus] = useState<string | null>(null);
 
   // Preferences state
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<Theme>('system');
   const [selectedAiProvider, setSelectedAiProvider] = useState<AiProvider | null>('webllm');
   const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState('llama3.1:8b');
@@ -515,22 +517,7 @@ export default function Onboarding() {
                   <i className="fa-solid fa-palette text-[var(--muted-foreground)]" />
                   Theme
                 </label>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setTheme('dark')}
-                    className={`flex-1 p-4 rounded-xl border transition-all text-center ${theme === 'dark' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[var(--border)] hover:border-[var(--primary)]/50'}`}
-                  >
-                    <i className="fa-solid fa-moon text-xl mb-2 text-[var(--foreground)]" />
-                    <span className="text-sm font-medium block text-[var(--foreground)]">Dark</span>
-                  </button>
-                  <button
-                    onClick={() => setTheme('light')}
-                    className={`flex-1 p-4 rounded-xl border transition-all text-center ${theme === 'light' ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-[var(--border)] hover:border-[var(--primary)]/50'}`}
-                  >
-                    <i className="fa-solid fa-sun text-xl mb-2 text-[var(--foreground)]" />
-                    <span className="text-sm font-medium block text-[var(--foreground)]">Light</span>
-                  </button>
-                </div>
+                <ThemePicker value={theme} onChange={setTheme} variant="onboarding" />
               </div>
 
               {/* AI Provider */}
