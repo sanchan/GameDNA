@@ -1,5 +1,5 @@
 // Client-side SQLite via sql.js (WASM).
-// Loads existing DB from OPFS on startup; creates fresh if none.
+// Loads existing DB from OPFS (web) or AppData (Tauri) on startup; creates fresh if none.
 // Exports persistDb() (debounced 500ms) and resetDb().
 
 import initSqlJs, { type Database } from 'sql.js';
@@ -8,33 +8,81 @@ import { CREATE_TABLES_SQL, MIGRATIONS_SQL } from './schema';
 let db: Database | null = null;
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
 
+const IS_TAURI = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+
 const OPFS_DIR = 'gamedna';
 const OPFS_FILE = 'gamedna.db';
+const TAURI_DB_PATH = 'gamedna.db';
 
-async function getOpfsDir(): Promise<FileSystemDirectoryHandle> {
-  const root = await navigator.storage.getDirectory();
-  return root.getDirectoryHandle(OPFS_DIR, { create: true });
-}
+// ── Storage backend abstraction ──────────────────────────────────────────────
 
-async function readFromOpfs(): Promise<Uint8Array | null> {
+async function readStorage(): Promise<Uint8Array | null> {
+  if (IS_TAURI) {
+    try {
+      const { readFile, exists, BaseDirectory } = await import('@tauri-apps/plugin-fs');
+      const fileExists = await exists(TAURI_DB_PATH, { baseDir: BaseDirectory.AppData });
+      if (!fileExists) return null;
+      const data = await readFile(TAURI_DB_PATH, { baseDir: BaseDirectory.AppData });
+      return data.byteLength > 0 ? data : null;
+    } catch {
+      return null;
+    }
+  }
+  // Web: OPFS
   try {
-    const dir = await getOpfsDir();
+    const root = await navigator.storage.getDirectory();
+    const dir = await root.getDirectoryHandle(OPFS_DIR, { create: true });
     const fileHandle = await dir.getFileHandle(OPFS_FILE);
     const file = await fileHandle.getFile();
     const buffer = await file.arrayBuffer();
     return buffer.byteLength > 0 ? new Uint8Array(buffer) : null;
   } catch {
-    return null; // File doesn't exist yet
+    return null;
   }
 }
 
-async function writeToOpfs(data: Uint8Array): Promise<void> {
-  const dir = await getOpfsDir();
+async function writeStorage(data: Uint8Array): Promise<void> {
+  if (IS_TAURI) {
+    const { writeFile, mkdir, BaseDirectory } = await import('@tauri-apps/plugin-fs');
+    // Ensure AppData dir exists
+    try {
+      await mkdir('', { baseDir: BaseDirectory.AppData, recursive: true });
+    } catch {
+      // Already exists
+    }
+    await writeFile(TAURI_DB_PATH, data, { baseDir: BaseDirectory.AppData });
+    return;
+  }
+  // Web: OPFS
+  const root = await navigator.storage.getDirectory();
+  const dir = await root.getDirectoryHandle(OPFS_DIR, { create: true });
   const fileHandle = await dir.getFileHandle(OPFS_FILE, { create: true });
   const writable = await fileHandle.createWritable();
   await writable.write(data as unknown as BufferSource);
   await writable.close();
 }
+
+async function removeStorage(): Promise<void> {
+  if (IS_TAURI) {
+    try {
+      const { remove, BaseDirectory } = await import('@tauri-apps/plugin-fs');
+      await remove(TAURI_DB_PATH, { baseDir: BaseDirectory.AppData });
+    } catch {
+      // File may not exist
+    }
+    return;
+  }
+  // Web: OPFS
+  try {
+    const root = await navigator.storage.getDirectory();
+    const dir = await root.getDirectoryHandle(OPFS_DIR, { create: true });
+    await dir.removeEntry(OPFS_FILE);
+  } catch {
+    // File may not exist
+  }
+}
+
+// ── DB lifecycle ─────────────────────────────────────────────────────────────
 
 export async function initDb(): Promise<Database> {
   if (db) return db;
@@ -43,7 +91,7 @@ export async function initDb(): Promise<Database> {
     locateFile: () => '/sql-wasm.wasm',
   });
 
-  const existing = await readFromOpfs();
+  const existing = await readStorage();
   if (existing) {
     db = new SQL.Database(existing);
     // Run CREATE IF NOT EXISTS to add any new tables from schema updates
@@ -67,16 +115,16 @@ export function getDb(): Database {
   return db;
 }
 
-/** Debounced persist — call after every write. Coalesces rapid writes into a single OPFS write. */
+/** Debounced persist — call after every write. Coalesces rapid writes into a single write. */
 export function persistDb(): void {
   if (persistTimer) clearTimeout(persistTimer);
   persistTimer = setTimeout(async () => {
     if (!db) return;
     try {
       const data = db.export();
-      await writeToOpfs(data);
+      await writeStorage(data);
     } catch (e) {
-      console.error('[db] Failed to persist to OPFS:', e);
+      console.error('[db] Failed to persist:', e);
     }
   }, 500);
 }
@@ -89,23 +137,17 @@ export async function persistDbNow(): Promise<void> {
   }
   if (!db) return;
   const data = db.export();
-  await writeToOpfs(data);
+  await writeStorage(data);
 }
 
-/** Reset database — clears OPFS and creates fresh. */
+/** Reset database — clears storage and creates fresh. */
 export async function resetDb(): Promise<Database> {
   if (db) {
     db.close();
     db = null;
   }
 
-  try {
-    const dir = await getOpfsDir();
-    await dir.removeEntry(OPFS_FILE);
-  } catch {
-    // File may not exist
-  }
-
+  await removeStorage();
   return initDb();
 }
 
@@ -132,15 +174,12 @@ export async function importDb(data: Uint8Array): Promise<Database> {
   return db;
 }
 
-// Persist before page unload
-if (typeof window !== 'undefined') {
+// Persist before page unload (best-effort, web only — Tauri uses async fs)
+if (typeof window !== 'undefined' && !IS_TAURI) {
   window.addEventListener('beforeunload', () => {
     if (db) {
-      // Best-effort sync persist
       try {
         const data = db.export();
-        // Use sync XHR-like approach via OPFS sync access handle if available
-        // Fallback: the debounced persist should have already saved recent changes
         navigator.storage.getDirectory().then(async (root) => {
           const dir = await root.getDirectoryHandle(OPFS_DIR, { create: true });
           const fh = await dir.getFileHandle(OPFS_FILE, { create: true });

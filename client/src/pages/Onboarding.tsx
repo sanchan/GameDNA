@@ -211,6 +211,7 @@ export default function Onboarding() {
   }, [refreshConfig, navigate]);
 
   const handleImportBackup = useCallback(async (e?: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[import] handleImportBackup called, isTauri:', '__TAURI_INTERNALS__' in window);
     setLoading(true);
     setError(null);
     setImportStatus('Reading backup file...');
@@ -222,16 +223,20 @@ export default function Onboarding() {
         // Use Tauri native dialog + fs
         const { open } = await import('@tauri-apps/plugin-dialog');
         const { readFile } = await import('@tauri-apps/plugin-fs');
+        console.log('[import] Opening native file dialog...');
         const selected = await open({
           filters: [{ name: 'Database', extensions: ['db', 'sqlite'] }],
           multiple: false,
         });
+        console.log('[import] Dialog result:', selected);
         if (!selected) {
           setLoading(false);
           setImportStatus(null);
           return;
         }
+        console.log('[import] Reading file:', selected);
         data = await readFile(selected);
+        console.log('[import] File read, size:', data.length);
       } else {
         // Web: use file input
         const file = e?.target?.files?.[0];
@@ -245,13 +250,18 @@ export default function Onboarding() {
       }
 
       setImportStatus('Restoring database...');
+      console.log('[import] Calling importDb...');
       await importDb(data);
+      console.log('[import] importDb done, saving config...');
       // Ensure setup is marked complete so routing doesn't loop back here
       await queries.saveLocalConfig({ setupComplete: true });
+      console.log('[import] Config saved, refreshing...');
       setImportStatus('Done!');
       await refreshConfig();
+      console.log('[import] Navigating to /');
       navigate('/');
     } catch (err) {
+      console.error('[import] Error:', err);
       setError(`Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setImportStatus(null);
     } finally {
